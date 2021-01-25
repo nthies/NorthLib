@@ -437,11 +437,11 @@ public extension UIResponder {
   private struct Dummy {
     static weak var responder: UIResponder?
   }
-  static var first: UIResponder {
+  static var first: UIResponder? {
     Dummy.responder = nil
     UIApplication.shared.sendAction(#selector(_storeFirstResponder), to: nil, 
                                     from: nil, for: nil)
-    return Dummy.responder!
+    return Dummy.responder
   }
   @objc private func _storeFirstResponder() { Dummy.responder = self }
 }
