@@ -29,6 +29,32 @@ public func onMain(closure: @escaping ()->()) {
   else { closure() }
 }
 
+/// perform closure on on main thread after given timeout
+/// - Parameters:
+///   - timeout: timeout to wait before execute in seconds, default 0,2s
+///   - closure: closure to execute
+public func onMainAfter(_ timeout : Double = 0.2,
+                        closure: @escaping ()->()) {
+  DispatchQueue.main.asyncAfter(deadline: .now() + timeout,
+                                execute: closure)
+}
+
+/// perform closure on own thread
+/// - Parameter closure: closure to execute
+public func onThread(closure: @escaping ()->()) {
+  DispatchQueue.global().async(execute: closure)
+}
+
+/// perform closure on own thread after given timeout
+/// - Parameters:
+///   - timeout: timeout to wait before execute in seconds, default 0,2s
+///   - closure: closure to execute
+public func onThreadAfter(_ timeout : Double = 0.2,
+                          closure: @escaping ()->()) {
+  DispatchQueue.global().asyncAfter(deadline: .now() + timeout,
+                                    execute: closure)
+}
+
 /// returns the type name of an object as String
 public func typeName<T>(_ obj: T) -> String { return "\(type(of:obj))" }
 
