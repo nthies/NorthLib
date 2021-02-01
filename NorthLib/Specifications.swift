@@ -58,6 +58,8 @@ public protocol ZoomedImageViewSpec where Self: UIView {
   /// The coordinates passed to the closure are relative content size 
   /// coordinates: 0 <= x,y <= 1
   func onTap(closure: ((OptionalImage, Double, Double) -> ())?)
+  
+  func invalidateLayout()
 }
 
 public extension ZoomedImageViewSpec {
