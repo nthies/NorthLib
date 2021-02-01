@@ -32,7 +32,7 @@ public protocol ZoomedImageViewSpec where Self: UIView {
   /// The Imageview displaying either the main or the waiting image
   var imageView: UIImageView { get }
   /// The image to display
-  var optionalImage: OptionalImage { get set }
+  var optionalImage: OptionalImage? { get set }
   /// The X-Button (may be used to close the ZoomedImageView)
   var xButton: Button<CircledXView> { get }
   // Spinner indicating activity if !OptionalImage.isAvailable
@@ -43,7 +43,7 @@ public protocol ZoomedImageViewSpec where Self: UIView {
   /// Initialize with optional image, displays the main image if available.
   /// Otherwise the waiting image is displayed and via 'whenAvailable' a closure
   /// is defined to replace the waiting image with the main image (when it is available)
-  init(optionalImage: OptionalImage)
+  init(optionalImage: OptionalImage?)
   
   /// Define closure to call when the X-Button is pressed
   func onX(closure: @escaping ()->())
