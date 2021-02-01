@@ -67,11 +67,22 @@ public extension UIImage {
   }
   
   /// Change Image Scale without expensive Rendering
-  func screenScaled() -> UIImage {
+  func scaled(_ scaleFactor:CGFloat = UIScreen.main.scale) -> UIImage {
     guard let cgi = self.cgImage else { return self }
-    return UIImage(cgImage: cgi,
-                   scale: UIScreen.main.scale,
+    let img = UIImage(cgImage: cgi,
+                   scale: scaleFactor,
                    orientation: self.imageOrientation)
+    //ToDo How To Exclude log just DiesLog and log did not work
+//    Log.log("Scale Image with: \(scaleFactor):"
+//            + "\n  UIImage     size: \(self.size) scale: \(self.scale)x"
+//            + "\n  cgImage     size: \(cgi.width)x\(cgi.height)"
+//                + "\n  new UIImage size: \(img.size) scale: \(img.scale)x",
+//              object: self,
+//              logLevel: .Debug,
+//              file: #file,
+//              line: #line,
+//              function: #function)
+    return img
   }
   
 } // UIImage
