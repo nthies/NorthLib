@@ -40,15 +40,16 @@ open class ImageCollectionVC: PageCollectionVC, ImageCollectionVCSpec {
     setupPageControl()
     setupViewProvider()
     xButton.isHidden = false
-    xButton.onPress {_ in
-      if let closure = self.onXClosure {
+    xButton.onPress {[weak self] _ in
+      if let closure = self?.onXClosure {
         closure()
       }
       else {
-        self.defaultOnXHandler()
+        self?.defaultOnXHandler()
       }
     }
-    onDisplay { (idx, oview) in
+    onDisplay { [weak self]  (idx, oview) in
+      guard let self = self else { return }
       ///Apply PageControll Dots Update
       guard let pageControl = self.pageControl else { return }
       if self.pageControlMaxDotsCount > 0, self.count > 0,
