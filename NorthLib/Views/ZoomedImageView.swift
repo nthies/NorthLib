@@ -131,7 +131,7 @@ open class ZoomedImageView: UIView, ZoomedImageViewSpec {
   public private(set) var xButton: Button<CircledXView> = Button<CircledXView>()
   public private(set) var spinner: UIActivityIndicatorView = UIActivityIndicatorView()
   public private(set) lazy var menu = ContextMenu(view: imageView, smoothPreviewForImage: true)
-  public var optionalImage: OptionalImage{
+  public var optionalImage: OptionalImage?{
     willSet {
       if let itm = optionalImage as? OptionalImageItem {
         itm.onUpdatingClosureClosure = nil
@@ -143,7 +143,7 @@ open class ZoomedImageView: UIView, ZoomedImageViewSpec {
   }
   
   // MARK: Life Cycle
-  public required init(optionalImage: OptionalImage) {
+  public required init(optionalImage: OptionalImage?) {
     self.optionalImage = optionalImage
     super.init(frame: CGRect.zero)
     setup()
@@ -202,7 +202,7 @@ extension ZoomedImageView{
   
   // MARK: updateImage
   func updateImage() {
-    if optionalImage.isAvailable, let detailImage = optionalImage.image {
+    if let oi = optionalImage, oi.isAvailable, let detailImage = oi.image {
       setImage(detailImage)
       zoomEnabled = true
       spinner.stopAnimating()
@@ -210,7 +210,7 @@ extension ZoomedImageView{
     }
     else {
       //show waitingImage if detailImage is not available yet
-      if let img = optionalImage.waitingImage {
+      if let img = optionalImage?.waitingImage {
         setImage(img)
         self.scrollView.zoomScale = 1
         zoomEnabled = false
@@ -219,15 +219,15 @@ extension ZoomedImageView{
         imageView.image = nil
       }
       spinner.startAnimating()
-      optionalImage.whenAvailable {
-        if let img = self.optionalImage.image {
+      optionalImage?.whenAvailable {
+        if let img = self.optionalImage?.image {
           self.setImage(img)
           self.layoutIfNeeded()
           self.zoomEnabled = true
           self.spinner.stopAnimating()
           //due all previewImages are not allowed to zoom,
           //exchanged image should be shown fully
-          self.optionalImage.whenAvailable(closure: nil)
+          self.optionalImage?.whenAvailable(closure: nil)
           //Center
           self.zoomOutAndCenter()
         }
@@ -295,7 +295,11 @@ extension ZoomedImageView{
     let loc = sender.location(in: imageView)
     let size = imageView.frame.size
     guard let closure = onTapClosure else { return }
-    closure(self.optionalImage,
+    guard let oi = self.optionalImage else { return }
+    log("Current render Zoom: \((imageView.image?.size.width ?? 0)/UIScreen.main.bounds.size.width) "
+        + "Image width: \(imageView.image?.size.width ?? 0) "
+        + "CGImage Width: \(imageView.image?.cgImage?.width ?? 0)", logLevel: .Debug)
+    closure(oi,
             Double(loc.x / (size.width / scrollView.zoomScale )),
             Double(loc.y / (size.height / scrollView.zoomScale )))
   }
@@ -396,9 +400,8 @@ extension ZoomedImageView: UIScrollViewDelegate{
     if zoomEnabled,
       self.onHighResImgNeededZoomFactor <= scrollView.zoomScale,
       self.highResImgRequested == false,
-      (optionalImage as? ZoomedPdfImageSpec)?.canRequestHighResImg ?? true,
       let closure = onHighResImgNeededClosure {
-      let _optionalImage = optionalImage
+      guard let _optionalImage = optionalImage else { return }
       self.highResImgRequested = true
       closure(_optionalImage, { success in
         if success, let img = _optionalImage.image {
