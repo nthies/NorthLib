@@ -75,3 +75,13 @@ public extension UIImage {
   }
   
 } // UIImage
+
+extension UIImage {
+  public var mbSize: CGFloat{
+    var i = 0
+    i += 2
+    
+    guard let cgimg = self.cgImage else { return 0}
+    return CGFloat((10*cgimg.height * cgimg.bytesPerRow)/(1024*1024))/10;
+  }
+}
