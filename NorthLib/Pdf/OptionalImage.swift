@@ -40,7 +40,7 @@ public class ZoomedPdfImage: OptionalImageItem, ZoomedPdfImageSpec {
     self.pdfPageIndex = index
   }
     
-  public override weak var image: UIImage? {
+  public override var image: UIImage? {
     didSet{
       if image == nil {
         zoomScales.reset()
