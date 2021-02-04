@@ -177,6 +177,28 @@ public extension UIView {
     UIView.animate(withDuration: seconds, delay: delay, options: .curveEaseOut, 
                    animations: closure, completion: nil)  
   }
+  
+  /// Centers x axis to superviews x axis
+  @discardableResult
+  func centerX(_ priority: UILayoutPriority? = nil) -> NSLayoutConstraint? {
+    translatesAutoresizingMaskIntoConstraints = false
+    guard let sv = self.superview else { return nil }
+    return pin(self.centerX, to: sv.centerX, priority: priority)
+  }
+  
+  /// Centers y axis to superviews y axis
+  @discardableResult
+  func centerY(_ priority: UILayoutPriority? = nil) -> NSLayoutConstraint? {
+    translatesAutoresizingMaskIntoConstraints = false
+    guard let sv = self.superview else { return nil }
+    return pin(self.centerY, to: sv.centerY, priority: priority)
+  }
+  
+  /// Centers  axis to superviews  axis
+  @discardableResult
+  func center(_ priority: UILayoutPriority? = nil) -> (x: NSLayoutConstraint? ,y: NSLayoutConstraint?)  {
+    return (centerX(priority), centerY(priority))
+  }
     
 } // extension UIView
 
@@ -193,10 +215,13 @@ public func pin(_ la: LayoutAnchorY, to: LayoutAnchorY,
 
 /// Pin horizontal anchor of one view to horizontal anchor of another view
 @discardableResult
-public func pin(_ la: LayoutAnchorX, to: LayoutAnchorX, 
-  dist: CGFloat = 0) -> NSLayoutConstraint {
+public func pin(_ la: LayoutAnchorX,
+                to: LayoutAnchorX,
+                dist: CGFloat = 0,
+                priority: UILayoutPriority? = nil) -> NSLayoutConstraint {
   la.view.translatesAutoresizingMaskIntoConstraints = false
   let constraint = la.anchor.constraint(equalTo: to.anchor, constant: dist)
+  if let prio = priority { constraint.priority = prio }
   constraint.isActive = true
   return constraint
 }
