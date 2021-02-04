@@ -19,12 +19,18 @@ open class Alert {
                              message: String,
                              closure: (()->())? = nil,
                              additionalActions : [UIAlertAction]? = nil) {
+    var actions = additionalActions ?? []
+    let okButton = UIAlertAction(title: "OK", style: .cancel) { _ in closure?() }
+    actions.append(okButton)
+    self.message(title: title, message: message, actions: actions)
+  }
+  
+  public static func message(title: String? = nil,
+                             message: String,
+                             actions : [UIAlertAction]) {
     onMain {
       let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-      //Prefer destructive style due it makes a red button
-      let okButton = UIAlertAction(title: "OK", style: .cancel) { _ in closure?() }
-      alert.addAction(okButton)
-      for action  in additionalActions ?? [] {
+      for action in actions {
         alert.addAction(action)
       }
       //present even if there is still a modal View presented
