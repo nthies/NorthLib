@@ -39,7 +39,10 @@ open class Alert {
     onMain {
       var okStyle: UIAlertAction.Style = .default
       if isDestructive { okStyle = .destructive }
-      let alert = UIAlertController(title: title, message: "\n\(message)", preferredStyle: .alert)
+      //Prevent Line Break if no title given
+      //message ist automatic title (bold) if no title given!
+      let popupMessage = title==nil ? message : "\n\(message)"
+      let alert = UIAlertController(title: title, message:popupMessage , preferredStyle: .alert)
       let okButton = UIAlertAction(title: okText, style: okStyle) { _ in closure?(true) }
       let cancelButton = UIAlertAction(title: "Abbrechen", style: .cancel) { _ in closure?(false) }
       alert.addAction(okButton)
