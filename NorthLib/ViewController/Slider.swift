@@ -17,7 +17,7 @@ import UIKit
  *  right) and removes it from the slider view. Following the shade and slider views
  *  are removed.
  */
-open class Slider: NSObject, DoesLog {
+open class Slider: NSObject, DoesLog, HandleOrientation {
   /// Default decoration height
   var decorationHeight: CGFloat = 20
   /// Default handle width
@@ -42,6 +42,9 @@ open class Slider: NSObject, DoesLog {
     get { return !isHorizontal && fromDefault }
     set { if !isHorizontal { fromDefault = newValue } }
   }
+  
+  // Closure called upon orientation changes
+  public var orientationChangedClosure = OrientationClosure()
   /// how much of the active view controller is covered by the slider
   /// (80% by default)
   public var coverageRatio: CGFloat = 0.8 { didSet { resetConstraints() } }
@@ -79,7 +82,7 @@ open class Slider: NSObject, DoesLog {
   }
   
   var shadeView = UIView()
-  var sliderView = UIView()
+  public private(set) var sliderView = UIView()
   var contentView = UIView()
   var handleView: RoundedRect?
   
@@ -164,7 +167,7 @@ open class Slider: NSObject, DoesLog {
   
   func resetVerticalConstraints() {
     heightConstraint.isActive = true
-    heightConstraint.constant = coverage
+    heightConstraint.constant = coverage - UIWindow.topInset
     if isOpen {
       topConstraint.constant = 0
       bottomConstraint.constant = 0
@@ -235,7 +238,7 @@ open class Slider: NSObject, DoesLog {
       pin(contentView.right, to: sliderView.right)
       sliderView.layer.cornerRadius = decorationHeight/2
       if fromBottom {
-        pin(contentView.bottom, to: sliderView.bottom)
+        pin(contentView.bottom, to: sliderView.bottom, priority: .fittingSizeLevel)
         pin(contentView.top, to: sliderView.top, dist: decorationHeight)
         // Mask top right and left corners
         sliderView.layer.maskedCorners = [.layerMaxXMinYCorner, .layerMinXMinYCorner]
@@ -286,6 +289,12 @@ open class Slider: NSObject, DoesLog {
     if isHorizontal { if ics.width > 0 { coverage = ics.width } }
     else { if ics.height > 0 { coverage = ics.height } }
     resetConstraints()
+    
+    onOrientationChange{ [weak self] in
+      onMainAfter {
+        self?.resetConstraints()
+      }
+    }
   }
   
   public func slide(toOpen: Bool, animated: Bool = true) {
@@ -437,11 +446,11 @@ public extension UIResponder {
   private struct Dummy {
     static weak var responder: UIResponder?
   }
-  static var first: UIResponder {
+  static var first: UIResponder? {
     Dummy.responder = nil
     UIApplication.shared.sendAction(#selector(_storeFirstResponder), to: nil, 
                                     from: nil, for: nil)
-    return Dummy.responder!
+    return Dummy.responder
   }
   @objc private func _storeFirstResponder() { Dummy.responder = self }
 }
@@ -458,13 +467,13 @@ open class VerticalSheet: Slider {
   // Keyboard distance slid up
   var kbDistance: CGFloat?
   
-  /// Move the slider up
+  //MARK: Slide Up
   public func slideUp(_ dist: CGFloat) {
     debug("up: \(dist)")
     guard isOpen else { return }
     UIView.animate(seconds: duration) { [weak self] in
       guard let self = self else { return }
-      self.topConstraint.constant -= dist
+      self.topConstraint.constant += dist
       self.bottomConstraint.constant -= dist
       self.active.view.layoutIfNeeded()
     }
@@ -528,6 +537,69 @@ open class VerticalSheet: Slider {
 open class BottomSheet: VerticalSheet {
   public init(slider: UIViewController, into active: UIViewController) {
     super.init(slider: slider, into: active, fromBottom: true)
+  }
+}
+
+public class FullscreenBottomSheet : BottomSheet{
+  
+  public override func slide(toOpen: Bool, animated: Bool = true) {
+    if toOpen == false {
+      onUserSlideToClose?()
+    }
+    else {
+      super.slide(toOpen: toOpen, animated: animated)
+    }
+  }
+  
+  public func slide(toOpen: Bool, animated: Bool = true, forceClose: Bool = false) {
+    if forceClose == true || toOpen == true {
+      super.slide(toOpen: toOpen, animated: animated)
+    }
+    else {
+      onUserSlideToClose?()
+    }
+  }
+  
+  public var onUserSlideToClose : (()->())?
+  
+  /// close the slider (slide out)
+  public override func close(animated: Bool = true, closure: ((Slider)->())? = nil) {
+    tmpCloseClosure = closure
+    if let closure = onUserSlideToClose {
+      closure()
+    }
+    else {
+      slide(toOpen: false, animated: animated)
+    }
+  }
+  
+  public var activeVC:UIViewController {
+    get { return active }
+    set { active = newValue }
+  }
+  
+  public var sliderVC:UIViewController {
+    get { return slider }
+    set { slider = newValue }
+  }
+  
+  // Keyboard change notification handler, shifts sheet if necessary
+  @objc override func handleKeyboardChange(notification: Notification) {
+    guard let keyboardFrame = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey]
+      as? NSValue)?.cgRectValue else { return }
+    guard kbDistance == nil else { return }
+    kbDistance = keyboardFrame.size.height
+    slideUp(keyboardFrame.size.height)
+  }
+  
+  public override func slideUp(_ dist: CGFloat) {
+    guard isOpen else { return }
+    UIView.animate(seconds: duration) { [weak self] in
+      guard let self = self else { return }
+      self.bottomConstraint.constant -= (dist)
+      self.heightConstraint.constant -= (dist)
+      self.active.view.layoutIfNeeded()
+    }
   }
 }
 
