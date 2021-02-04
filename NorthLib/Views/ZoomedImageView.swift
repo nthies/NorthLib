@@ -93,11 +93,21 @@ open class ZoomedImageView: UIView, ZoomedImageViewSpec {
   var imageViewTrailingConstraint: NSLayoutConstraint?
   var layoutInitialized = false
   
+  open override func willMove(toSuperview newSuperview: UIView?) {
+    if newSuperview == nil {
+      orientationClosure = nil
+      if var pdfImg = optionalImage as? ZoomedPdfImageSpec {
+        pdfImg.image = nil//Important to reduce VM CG Image Memory Footprint !!
+      }
+      optionalImage = nil
+    }
+  }
+  
   private var onHighResImgNeededClosure: ((OptionalImage,
   @escaping (Bool) -> ()) -> ())?
   private var onHighResImgNeededZoomFactor: CGFloat = 1.1
   private var highResImgRequested = false
-  private var orientationClosure = OrientationClosure()
+  private var orientationClosure:OrientationClosure? = OrientationClosure()
   private var singleTapRecognizer : UITapGestureRecognizer?
   private let doubleTapRecognizer = UITapGestureRecognizer()
   private var zoomEnabled :Bool = true {
@@ -180,6 +190,10 @@ open class ZoomedImageView: UIView, ZoomedImageViewSpec {
       }
     }
   }
+
+  public func invalidateLayout(){
+    zoomOutAndCenter()
+  }
 }
 
 // MARK: - Setup
@@ -190,7 +204,7 @@ extension ZoomedImageView{
     setupSpinner()
     setupDoubleTapGestureRecognizer()
     updateImage()
-    orientationClosure.onOrientationChange(closure: {
+    orientationClosure?.onOrientationChange(closure: {
       let sv = self.scrollView //local name for shorten usage
       let wasMinZoom = sv.zoomScale == sv.minimumZoomScale
       self.updateMinimumZoomScale()
@@ -310,16 +324,25 @@ extension ZoomedImageView{
       self.layoutIfNeeded()
       return
     }
-    ///Zoom Out if current zoom is maximum zoom
-    if scrollView.zoomScale == scrollView.maximumZoomScale
-      || scrollView.zoomScale >= 2 {
+    #warning("@Ringo: CANGE OF PREVIOUS BEHAVIOUR USUALLY NEEDS TO BE COVERT BY TEST!! or manually tested!")
+       
+    ///On Double Tap if not Min Zoom Scale zoom out to min Zoom Scale + eppsilon
+    /// if user manually zoomed for just a bit, to see an effect
+    if scrollView.zoomScale > 1.0 {
+      scrollView.setZoomScale(1.0, animated: true)
+    }
+    else if scrollView.zoomScale > scrollView.minimumZoomScale + 0.2 {
       scrollView.setZoomScale(scrollView.minimumZoomScale,
                               animated: true)
     }
-      ///Otherwise Zoom Out in to tap loacation
-    else {
+    else { ///Otherwise Zoom In in to tap loacation
       let maxZoom = scrollView.maximumZoomScale
-      if maxZoom > 2 { scrollView.maximumZoomScale = 2  }
+      let zoom = (self.optionalImage as? ZoomedPdfImageSpec)?.doubleTapNextZoomStep ?? 2.0
+      
+      scrollView.maximumZoomScale = zoom
+      
+      log("double tap zoom to scrollView.maximumZoomScale: \(scrollView.maximumZoomScale)",
+          logLevel: .Debug)
       let tapLocation = tapR.location(in: tapR.view)
       let newCenter = imageView.convert(tapLocation, from: scrollView)
       let zoomRect
@@ -374,12 +397,14 @@ extension ZoomedImageView{
       self.setImage(image)
       return
     }
+    scrollView.isUserInteractionEnabled = false
     let contentOffset = scrollView.contentOffset
     self.setImage(image)
     let newSc = oldImg.size.width * scrollView.zoomScale / image.size.width
     scrollView.zoomScale = newSc
     scrollView.setContentOffset(contentOffset, animated: false)
     self.updateConstraintsForSize(self.bounds.size)
+    scrollView.isUserInteractionEnabled = true
   }
 }
 
