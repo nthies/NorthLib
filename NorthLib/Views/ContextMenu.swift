@@ -19,6 +19,9 @@ open class ContextMenu: NSObject, UIContextMenuInteractionDelegate {
   ///by default the UITargetedPreview animates from real size to ScreenFitting Size
   ///for a large image view in a scroll view, this can lead to an abnormal animation/behaviour
   public var smoothPreviewForImage: Bool = false
+  /// prevent multiple appeariance of menu in iOS 12
+  /// disabling the long Tap Gesture Recognizer did not worked
+  private var open: Bool = false
   
   /// Initialize with a view on which to define the context menu  
   public init(view: UIView, smoothPreviewForImage: Bool = false) {
@@ -47,11 +50,14 @@ open class ContextMenu: NSObject, UIContextMenuInteractionDelegate {
   }
   
   @objc func actionMenuTapped(_ sender: UIGestureRecognizer) {
+    if open { return } else { open = true }
     var actionMenu: [UIAlertAction] = []
     for m in menu {
       actionMenu += Alert.action(m.title, closure: m.closure)
     }
-    Alert.actionSheet(actions: actionMenu)
+    Alert.actionSheet(actions: actionMenu) { [weak self] in
+      self?.open = false
+    }
   }
   
   /// Add an additional menu item
