@@ -56,16 +56,29 @@ open class Alert {
   }
 
   /// Presents an action sheet with a number of buttons
-  public static func actionSheet(title: String? = nil, message: String? = nil, 
-                                 actions: [UIAlertAction])  {
+  public static func actionSheet(title: String? = nil, message: String? = nil,
+                                 actions: [UIAlertAction], completion : (()->())? = nil)  {
+    
+    /// Add option to store dismiss Handler/completion for actionSheet Function as nested class
+    class MyAlertController : UIAlertController {
+      var dismissHandler : (()->())?
+      override func viewDidDisappear(_ animated: Bool) {
+        dismissHandler?()
+        super.viewDidDisappear(animated)
+      }
+    }
+    
     onMain {
       var msg: String? = nil
       if let message = message { msg = "\n\(message)" }
-      let alert = UIAlertController(title: title, message: msg, preferredStyle: .actionSheet)
+      //Use Alert on iPad due provide popoverPresentationControllers Source view is unknown
+      let style : UIAlertController.Style = Device.singleton == .iPad ? .alert : .actionSheet
+      let alert = MyAlertController(title: title, message: msg, preferredStyle: style)
       let cancelButton = UIAlertAction(title: "Abbrechen", style: .cancel)
+      alert.dismissHandler = completion
       for a in actions { alert.addAction(a) }
       alert.addAction(cancelButton)
-      UIWindow.rootVC?.present(alert, animated: true, completion: nil)    
+      UIViewController.top()?.present(alert, animated: true, completion: nil)
     }
   }
 
