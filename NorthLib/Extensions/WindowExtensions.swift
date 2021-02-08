@@ -43,5 +43,13 @@ public extension UIWindow {
     }
     return 0
   }
+  
+  /// Returns the bottom inset of the window
+  static var verticalInsets: CGFloat {
+    if #available(iOS 11.0, *) {
+      if let window = keyWindow { return window.safeAreaInsets.top + window.safeAreaInsets.bottom}
+    }
+    return 0
+  }
 
 } // UIWindow
