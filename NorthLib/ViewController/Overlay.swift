@@ -45,6 +45,7 @@ public class Overlay: NSObject, OverlaySpec, UIGestureRecognizerDelegate {
   private var closeDuration: Double { get { return debug ? 3.0 : 0.25 } }
   private var debug = false
   private var closeAction : (() -> ())?
+  private var updatedCloseFrame : (() -> (CGRect?))?
   private var onCloseHandler: (() -> ())?
   
   var shadeView: UIView?
@@ -74,7 +75,29 @@ public class Overlay: NSObject, OverlaySpec, UIGestureRecognizerDelegate {
   
   // MARK: - onClose/onCloseHandler
   public func onClose(closure: (() -> ())?) {
+    if closure == nil {
+      self.closeAction = nil
+    }
     self.onCloseHandler = closure
+  }
+  
+  public func onRequestUpdatedCloseFrame(closure: (() -> (CGRect?))?) {
+    self.updatedCloseFrame = closure
+  }
+  
+  public func setCloseActionToShrink(){
+    closeAction = { [weak self] in
+      guard let self = self else { return }
+      guard let fromFrame = self.overlayView?.frame else {
+        self.close(animated: true, toBottom: true)
+        return
+      }
+      guard let toFrame = self.updatedCloseFrame?() else {
+        self.close(animated: true, toBottom: true)
+        return
+      }
+      self.close(fromRect: fromFrame, toRect: toFrame)
+    }
   }
   
   // MARK: - addToActiveVC
@@ -165,7 +188,7 @@ public class Overlay: NSObject, OverlaySpec, UIGestureRecognizerDelegate {
     overlayView?.isHidden = false
     closeAction = {self.close(animated: false)}
   }
-  
+    
   // MARK: open animated
   public func open(animated: Bool, fromBottom: Bool) {
     addToActiveVC()
@@ -285,23 +308,47 @@ public class Overlay: NSObject, OverlaySpec, UIGestureRecognizerDelegate {
     }
   }
 
-
   
   // MARK: open fromFrame
-  public func openAnimated(fromFrame: CGRect, toFrame: CGRect) {
+  /// open the overlay view animated, use snapshot from source/background view
+  /// - Parameters:
+  ///   - fromFrame: source frame for source snapshot
+  ///   - toFrame: target frame for overlay view
+  ///   - snapshot: provided snapshot, otherwise a new one will be created from source view with source frame
+  ///   - noTargetSnapshot: do not animate target snapshot, show target view without previous snapshot of it
+  public func openAnimated(fromFrame: CGRect,
+                           toFrame: CGRect,
+                           snapshot: UIView? = nil,
+                           animateTargetSnapshot : Bool = true) {
     addToActiveVC()
     closeAction = { self.close(fromRect: toFrame, toRect: fromFrame) }
-    guard let fromSnapshot = activeVC.view.resizableSnapshotView(from: fromFrame, afterScreenUpdates: false, withCapInsets: .zero) else {
-      showWithoutAnimation()
-      return
+    
+    var snapshot = snapshot
+    
+    if snapshot == nil {
+      snapshot = activeVC.view.resizableSnapshotView(from: fromFrame,
+                                                     afterScreenUpdates: false,
+                                                     withCapInsets: .zero)
     }
-    guard let targetSnapshot = overlayVC.view.snapshotView(afterScreenUpdates: true) else {
+    
+    guard let fromSnapshot = snapshot else {
       showWithoutAnimation()
       return
     }
     
+    var targetSnapshot : UIView?
+    
+    if animateTargetSnapshot {
+      guard let snap = overlayVC.view.snapshotView(afterScreenUpdates: true) else {
+        showWithoutAnimation()
+        return
+      }
+      targetSnapshot = snap
+    }
+    
+    self.contentView?.isHidden = true
     overlayView?.isHidden = false
-    targetSnapshot.alpha = 0.0
+    targetSnapshot?.alpha = 0.0
     
     if debug {
       overlayView?.layer.borderColor = UIColor.green.cgColor
@@ -310,8 +357,8 @@ public class Overlay: NSObject, OverlaySpec, UIGestureRecognizerDelegate {
       fromSnapshot.layer.borderColor = UIColor.red.cgColor
       fromSnapshot.layer.borderWidth = 2.0
       
-      targetSnapshot.layer.borderColor = UIColor.blue.cgColor
-      targetSnapshot.layer.borderWidth = 2.0
+      targetSnapshot?.layer.borderColor = UIColor.blue.cgColor
+      targetSnapshot?.layer.borderWidth = 2.0
       
       contentView?.layer.borderColor = UIColor.orange.cgColor
       contentView?.layer.borderWidth = 2.0
@@ -321,30 +368,43 @@ public class Overlay: NSObject, OverlaySpec, UIGestureRecognizerDelegate {
     }
     
     fromSnapshot.layer.masksToBounds = true
+    
+    var fromFrame = fromFrame
+    fromFrame.origin.y -= overlayView?.frame.origin.y ?? 0
     fromSnapshot.frame = fromFrame
     
-    overlayView?.addSubview(fromSnapshot)
-    overlayView?.addSubview(targetSnapshot)
+    fromSnapshot.contentMode = .scaleAspectFit
     
-    UIView.animateKeyframes(withDuration: openDuration, delay: 0, animations: {
-      UIView.addKeyframe(withRelativeStartTime: 0.0, relativeDuration: 0.3) {
+    overlayView?.addSubview(fromSnapshot)
+    if let ts = targetSnapshot {
+      overlayView?.addSubview(ts)
+    }
+    
+    
+    let ratio = animateTargetSnapshot ? 1.0 : 0.7
+    
+    UIView.animateKeyframes(withDuration: openDuration*ratio, delay: 0, animations: {
+            
+      UIView.addKeyframe(withRelativeStartTime: 0.0, relativeDuration: 0.3/ratio) {
         self.shadeView?.alpha = CGFloat(self.maxAlpha)
       }
-      UIView.addKeyframe(withRelativeStartTime: 0.0, relativeDuration: 0.7) {
+      UIView.addKeyframe(withRelativeStartTime: 0.0, relativeDuration: 0.7/ratio) {
         fromSnapshot.frame = toFrame
       }
       
-      UIView.addKeyframe(withRelativeStartTime: 0.5, relativeDuration: 0.4) {
-        fromSnapshot.alpha = 0.0
+      if animateTargetSnapshot == false { return }
+      
+      UIView.addKeyframe(withRelativeStartTime: 0.7/ratio, relativeDuration: 0.15/ratio) {
+        targetSnapshot?.alpha = 1.0
       }
-      UIView.addKeyframe(withRelativeStartTime: 0.7, relativeDuration: 0.3) {
-        targetSnapshot.alpha = 1.0
+      UIView.addKeyframe(withRelativeStartTime: 0.85/ratio, relativeDuration: 0.15/ratio) {
+        fromSnapshot.alpha = 0.0
       }
       
     }) { (success) in
       self.contentView?.isHidden = false
-      targetSnapshot.removeFromSuperview()
-      targetSnapshot.removeFromSuperview()
+      targetSnapshot?.removeFromSuperview()
+      fromSnapshot.removeFromSuperview()
     }
   }
   
@@ -361,6 +421,7 @@ public class Overlay: NSObject, OverlaySpec, UIGestureRecognizerDelegate {
     overlayVC.removeFromParent()
     closing = false
     self.onCloseHandler?()
+    self.closeAction = nil
   }
   
   // MARK: close
@@ -407,25 +468,35 @@ public class Overlay: NSObject, OverlaySpec, UIGestureRecognizerDelegate {
       return
     }
     
+    var toRect = toRect
+    
+    if let updatedFrame = self.updatedCloseFrame?() {
+      toRect = updatedFrame
+    }
+    
+    overlaySnapshot.contentMode = .scaleAspectFit
+    
+    
     if debug {
       print("todo close fromRect", fromRect, "toRect", toRect)
       overlaySnapshot.layer.borderColor = UIColor.magenta.cgColor
       overlaySnapshot.layer.borderWidth = 2.0
     }
-    
+    toRect.origin.y -= overlayView?.frame.origin.y ?? 0
     overlaySnapshot.frame = fromRect
+    overlaySnapshot.contentMode = .scaleAspectFill
     overlayView?.addSubview(overlaySnapshot)
     if closing { return }
     closing = true
     UIView.animateKeyframes(withDuration: closeDuration, delay: 0, animations: {
-      UIView.addKeyframe(withRelativeStartTime: 0.0, relativeDuration: 0.4) {
+      UIView.addKeyframe(withRelativeStartTime: 0.0, relativeDuration: 0.1) {
         self.contentView?.alpha = 0.0
       }
-      UIView.addKeyframe(withRelativeStartTime: 0.0, relativeDuration: 0.7) {
+      UIView.addKeyframe(withRelativeStartTime: 0.1, relativeDuration: 0.7) {
         overlaySnapshot.frame = toRect
         
       }
-      UIView.addKeyframe(withRelativeStartTime: 0.7, relativeDuration: 0.3) {
+      UIView.addKeyframe(withRelativeStartTime: 0.8, relativeDuration: 0.2) {
         overlaySnapshot.alpha = 0.0
       }
       UIView.addKeyframe(withRelativeStartTime: 0.0, relativeDuration: 1) {
@@ -507,20 +578,53 @@ public class Overlay: NSObject, OverlaySpec, UIGestureRecognizerDelegate {
   
   // MARK: - didPinchWith
   var pinchStartTransform: CGAffineTransform?
+  let panCloseRatio:CGFloat = 0.7 //ensure not 1!!
+  let panShadowRatio:CGFloat = 0.4 //ensure not 1!!
   var canCloseOnEnd = false
+  var widthToClose : CGFloat?
+  var heightToClose : CGFloat?
+  var _a : CGFloat = 0.0
+  var _b : CGFloat = 0.0
   @IBAction func didPinchWith(gestureRecognizer: UIPinchGestureRecognizer) {
     if let sv = otherGestureRecognizersScrollView {
-      //the .ended comes delayed, after the inner scrollview bounced back,
-      //so i remember the last value and close of pinch ended
-      //!Not closing due pinch this would be non natural behaviour
-      if canCloseOnEnd, gestureRecognizer.state == .ended {
-        self.close(animated: true)
+      if gestureRecognizer.state == .began {
+        if UIDevice.current.orientation.isLandscape {
+          heightToClose = panCloseRatio * sv.frame.size.height
+          widthToClose = nil
+          _a = 1/((1-panShadowRatio)*sv.frame.size.height)
+        } else {
+          heightToClose = nil
+          widthToClose = panCloseRatio * sv.frame.size.width
+          _a = 1/((1-panShadowRatio)*sv.frame.size.width)
+        }
+        _b = 1+1/(panShadowRatio-1)
+        canCloseOnEnd = false
       }
-      //The inner scrollview can zoom out to half of its minimum zoom factor
-      //e.g. minimum zoom factor = 0.2 current zooFactor = 0.2
-      //its had to zoom smaller than 0.1 on Device
-      //if close ratio is 0.5, the limit would be reached at 0.15
-      canCloseOnEnd = sv.zoomScale < closeRatio*0.5*sv.minimumZoomScale + 0.5*sv.minimumZoomScale
+      else if gestureRecognizer.state == .ended {
+        if canCloseOnEnd {
+          self.close(animated: true)
+        } else {
+          UIView.animate(withDuration: closeDuration, animations: { [weak self] in
+            guard let self = self else { return }
+            self.shadeView?.alpha = CGFloat(self.maxAlpha)
+          })
+        }
+      }
+      else if gestureRecognizer.state == .changed {
+        if let minH = heightToClose {
+          /// Hack: use scrollviews contentSize height did not change on pinch close only on pinchOpen
+          /// width worked, may because of center and pinned contentView
+          /// if its not a propper solution calculate alpha with the relation of started and current width
+          let currH = sv.subviews.first?.frame.size.height ?? sv.contentSize.height
+          canCloseOnEnd = currH < minH
+          self.shadeView?.alpha = max(0.0, min(CGFloat(self.maxAlpha),currH*_a + _b))
+        }
+        else if let minW = widthToClose {
+          let currW = sv.contentSize.width
+          canCloseOnEnd = currW < minW
+          self.shadeView?.alpha = max(0.0, min(CGFloat(self.maxAlpha),currW*_a + _b))
+        }
+      }
       return;
     }
     ///handle pinch for non inner ScrollView ...do the zoom out here!
@@ -567,9 +671,9 @@ extension ZoomedImageView : OverlayChildViewTransfer{
   /// add and Layout to Child Views
   public func addToOverlayContainer(_ container:UIView?){
     guard let container = container else { return }
-    container.addSubview(self.xButton)
-    NorthLib.pin(self.xButton.right, to: container.rightGuide(), dist: -15)
-    NorthLib.pin(self.xButton.top, to: container.topGuide(), dist: 15)
+    container.addSubview(xButton)
+    NorthLib.pin(xButton.right, to: container.rightGuide(), dist: -15)
+    NorthLib.pin(xButton.top, to: container.topGuide(), dist: 15)
   }
   ///optional
   public func removeFromOverlay(){
@@ -583,10 +687,10 @@ extension ImageCollectionVC : OverlayChildViewTransfer{
   /// add and Layout to Child Views
   public func addToOverlayContainer(_ container:UIView?){
     guard let container = container else { return }
-    self.collectionView.backgroundColor = .clear
-    container.addSubview(self.xButton)
-    pin(self.xButton.right, to: container.rightGuide(), dist: -15)
-    pin(self.xButton.top, to: container.topGuide(), dist: 15)
+    self.collectionView?.backgroundColor = .clear
+    container.addSubview(xButton)
+    pin(xButton.right, to: container.rightGuide(), dist: -15)
+    pin(xButton.top, to: container.topGuide(), dist: 15)
     if let pc = self.pageControl {
       container.addSubview(pc)
       pin(pc.centerX, to: container.centerX)
