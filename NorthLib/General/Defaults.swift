@@ -40,6 +40,17 @@ public enum Device: CustomStringConvertible {
     default:     self = .unknown
     }
   }
+  
+  public static var deviceType = "apple"
+  
+  public static var deviceFormat : String {
+    switch Device.singleton {
+       case .iPad :  return "tablet"
+       case .iPhone: return "mobile"
+       default: return "desktop"
+     }
+  }
+ 
   /// The Device singleton specifying the current device type
   static public let singleton = Device()
   

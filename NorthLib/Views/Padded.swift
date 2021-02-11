@@ -34,7 +34,6 @@ public struct Padded {
   
   open class TextView : UITextView, PaddedView {
     public var paddingTop: CGFloat?, paddingBottom: CGFloat?
-    //    public var paddingTop = CGFloat(12.0), paddingBottom = CGFloat(12.0)
   }
 }
 

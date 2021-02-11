@@ -172,6 +172,7 @@ public extension ImageCollectionVCSpec {
   func setupPageControl() {
     guard let pageControl = self.pageControl else { return }
     pageControl.hidesForSinglePage = true
+    pageControl.isUserInteractionEnabled = false
     self.view.addSubview(pageControl)
     pin(pageControl.centerX, to: self.view.centerX)
     // Example values for dist to bottom and height
