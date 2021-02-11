@@ -215,6 +215,25 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
     onDisplayClosures += closure
   }
   
+  // closure to execute on end display
+  fileprivate var onEndDisplayClosures: [(Int, OptionalView?)->()] = []
+  
+  /// Define closure to call when a cell is not displayed
+  public func onEndDisplayCell(closure: @escaping (Int, OptionalView?)->()) {
+    onEndDisplayClosures += closure
+  }
+  
+  public func collectionView(_ collectionView: UICollectionView,
+                             didEndDisplaying cell: UICollectionViewCell,
+                             forItemAt indexPath: IndexPath) {
+    guard let pageCell = cell as? PageCell else {
+      return
+    }
+    for cl in onEndDisplayClosures {
+      cl(indexPath.row, pageCell.page)
+    }
+  }
+
   /// Call all onDisplay closures
   fileprivate func callOnDisplay(idx: Int, oview: OptionalView?) 
     { for cl in onDisplayClosures { cl(idx, oview) } }

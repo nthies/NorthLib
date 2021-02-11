@@ -50,12 +50,12 @@ open class PdfPage {
   
   public func image(width: CGFloat) -> UIImage? {
     let frame = self.frame
-    return image(scale:  UIScreen.main.scale * width/frame.size.width)?.screenScaled()
+    return image(scale:  UIScreen.main.scale * width/frame.size.width)?.scaled()
   }
   
   public func image(height: CGFloat) -> UIImage? {
     let frame = self.frame
-    return image(scale:  UIScreen.main.scale * height/frame.size.height)?.screenScaled()
+    return image(scale:  UIScreen.main.scale * height/frame.size.height)?.scaled()
   }
   
   fileprivate init(page: CGPDFPage) { self.page = page }

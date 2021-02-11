@@ -54,7 +54,7 @@ public extension Array {
   }
   
   ///Safe acces to Array Items by Index returns null if Index did not exist
-  func valueAt(_ index : Int) -> Any?{
+  func valueAt(_ index : Int) -> Element?{
     return self.indices.contains(index) ? self[index] : nil
   }
   

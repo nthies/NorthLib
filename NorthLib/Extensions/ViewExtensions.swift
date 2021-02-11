@@ -347,4 +347,27 @@ public extension NSObject{
       }
     }
   }
+  
+  var iosLower14 : Self?{
+    get{
+      if #available(iOS 14, *) {
+        return nil
+      }
+      else {
+        return self
+        
+      }
+    }
+  }
+  
+  var iosHigher14 : Self?{
+    get{
+      if #available(iOS 14, *) {
+        return self
+      }
+      else {
+        return nil
+      }
+    }
+  }
 }
