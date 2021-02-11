@@ -254,9 +254,15 @@ open class WebViewCollectionVC: PageCollectionVC, WKUIDelegate,
         }
         decisionHandler(.cancel)
       }
-      else { decisionHandler(.allow) }
+      else {
+        decisionHandler(.allow)
+        onPageChange()
+      }
     }
   }
+  
+  ///Overrideable
+  open func onPageChange(){}
   
 //  override public func scrollViewDidScroll(_ scrollView: UIScrollView) {
 //    debug(scrollView.contentOffset.toString())

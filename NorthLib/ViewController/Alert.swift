@@ -19,12 +19,18 @@ open class Alert {
                              message: String,
                              closure: (()->())? = nil,
                              additionalActions : [UIAlertAction]? = nil) {
+    var actions = additionalActions ?? []
+    let okButton = UIAlertAction(title: "OK", style: .cancel) { _ in closure?() }
+    actions.append(okButton)
+    self.message(title: title, message: message, actions: actions)
+  }
+  
+  public static func message(title: String? = nil,
+                             message: String,
+                             actions : [UIAlertAction]) {
     onMain {
       let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-      //Prefer destructive style due it makes a red button
-      let okButton = UIAlertAction(title: "OK", style: .cancel) { _ in closure?() }
-      alert.addAction(okButton)
-      for action  in additionalActions ?? [] {
+      for action in actions {
         alert.addAction(action)
       }
       //present even if there is still a modal View presented
@@ -39,7 +45,10 @@ open class Alert {
     onMain {
       var okStyle: UIAlertAction.Style = .default
       if isDestructive { okStyle = .destructive }
-      let alert = UIAlertController(title: title, message: "\n\(message)", preferredStyle: .alert)
+      //Prevent Line Break if no title given
+      //message ist automatic title (bold) if no title given!
+      let popupMessage = title==nil ? message : "\n\(message)"
+      let alert = UIAlertController(title: title, message:popupMessage , preferredStyle: .alert)
       let okButton = UIAlertAction(title: okText, style: okStyle) { _ in closure?(true) }
       let cancelButton = UIAlertAction(title: "Abbrechen", style: .cancel) { _ in closure?(false) }
       alert.addAction(okButton)
@@ -56,16 +65,29 @@ open class Alert {
   }
 
   /// Presents an action sheet with a number of buttons
-  public static func actionSheet(title: String? = nil, message: String? = nil, 
-                                 actions: [UIAlertAction])  {
+  public static func actionSheet(title: String? = nil, message: String? = nil,
+                                 actions: [UIAlertAction], completion : (()->())? = nil)  {
+    
+    /// Add option to store dismiss Handler/completion for actionSheet Function as nested class
+    class MyAlertController : UIAlertController {
+      var dismissHandler : (()->())?
+      override func viewDidDisappear(_ animated: Bool) {
+        dismissHandler?()
+        super.viewDidDisappear(animated)
+      }
+    }
+    
     onMain {
       var msg: String? = nil
       if let message = message { msg = "\n\(message)" }
-      let alert = UIAlertController(title: title, message: msg, preferredStyle: .actionSheet)
+      //Use Alert on iPad due provide popoverPresentationControllers Source view is unknown
+      let style : UIAlertController.Style = Device.singleton == .iPad ? .alert : .actionSheet
+      let alert = MyAlertController(title: title, message: msg, preferredStyle: style)
       let cancelButton = UIAlertAction(title: "Abbrechen", style: .cancel)
+      alert.dismissHandler = completion
       for a in actions { alert.addAction(a) }
       alert.addAction(cancelButton)
-      UIWindow.rootVC?.present(alert, animated: true, completion: nil)    
+      UIViewController.top()?.present(alert, animated: true, completion: nil)
     }
   }
 

@@ -20,6 +20,8 @@ extension DoesLog {
   
   public func log(_ msg: String? = nil, logLevel: Log.LogLevel = .Info, file: String = #file,
             line: Int = #line, function: String = #function) {
+    //true|false enable disable PDF Filter
+    if true, ["PdfRenderService", "PDFPage", "ZoomedImageView", "PdfModelItem"].contains(Log.class2s(self)) { return }
     Log.log(msg, object: self, logLevel: logLevel, file: file, line: line, function: function)
   }
   

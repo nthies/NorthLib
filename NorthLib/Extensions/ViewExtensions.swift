@@ -117,21 +117,23 @@ public extension UIView {
   
   /// Pin width of view
   @discardableResult
-  func pinWidth(_ width: CGFloat) -> NSLayoutConstraint {
+  func pinWidth(_ width: CGFloat, priority: UILayoutPriority? = nil) -> NSLayoutConstraint {
     translatesAutoresizingMaskIntoConstraints = false
     let constraint = widthAnchor.constraint(equalToConstant: width)
+    if let prio = priority { constraint.priority = prio }
     constraint.isActive = true
     return constraint
   }
   @discardableResult
-  func pinWidth(_ width: Int) -> NSLayoutConstraint { return pinWidth(CGFloat(width)) }
+  func pinWidth(_ width: Int, priority: UILayoutPriority? = nil) -> NSLayoutConstraint { return pinWidth(CGFloat(width)) }
   
   @discardableResult
-  func pinWidth(to: LayoutDimension, dist: CGFloat = 0, factor: CGFloat = 0) 
+  func pinWidth(to: LayoutDimension, dist: CGFloat = 0, factor: CGFloat = 0, priority: UILayoutPriority? = nil)
     -> NSLayoutConstraint { 
       translatesAutoresizingMaskIntoConstraints = false
       let constraint = widthAnchor.constraint(equalTo: to.anchor, 
         multiplier: factor, constant: dist)
+      if let prio = priority { constraint.priority = prio }
       constraint.isActive = true
       return constraint
   }
@@ -146,22 +148,23 @@ public extension UIView {
     return constraint
   }
   @discardableResult
-  func pinHeight(_ height: Int) -> NSLayoutConstraint { return pinHeight(CGFloat(height)) }
+  func pinHeight(_ height: Int, priority: UILayoutPriority? = nil) -> NSLayoutConstraint { return pinHeight(CGFloat(height), priority: priority) }
   
   @discardableResult
-  func pinHeight(to: LayoutDimension, dist: CGFloat = 0, factor: CGFloat = 0) 
+  func pinHeight(to: LayoutDimension, dist: CGFloat = 0, factor: CGFloat = 0, priority: UILayoutPriority? = nil)
     -> NSLayoutConstraint { 
       translatesAutoresizingMaskIntoConstraints = false
       let constraint = heightAnchor.constraint(equalTo: to.anchor,
         multiplier: factor, constant: dist)
+      if let prio = priority { constraint.priority = prio}
       constraint.isActive = true
       return constraint
   }
   
   /// Pin size (width + height)
   @discardableResult
-  func pinSize(_ size: CGSize) -> (width: NSLayoutConstraint, height: NSLayoutConstraint) { 
-    return (pinWidth(size.width), pinHeight(size.height))
+  func pinSize(_ size: CGSize, priority: UILayoutPriority? = nil) -> (width: NSLayoutConstraint, height: NSLayoutConstraint) {
+    return (pinWidth(size.width, priority: priority), pinHeight(size.height, priority: priority))
   }
   
   /// Pin aspect ratio (width/height)
@@ -176,6 +179,28 @@ public extension UIView {
   static func animate(seconds: Double, delay: Double = 0, closure: @escaping ()->()) {
     UIView.animate(withDuration: seconds, delay: delay, options: .curveEaseOut, 
                    animations: closure, completion: nil)  
+  }
+  
+  /// Centers x axis to superviews x axis
+  @discardableResult
+  func centerX(_ priority: UILayoutPriority? = nil) -> NSLayoutConstraint? {
+    translatesAutoresizingMaskIntoConstraints = false
+    guard let sv = self.superview else { return nil }
+    return pin(self.centerX, to: sv.centerX, priority: priority)
+  }
+  
+  /// Centers y axis to superviews y axis
+  @discardableResult
+  func centerY(_ priority: UILayoutPriority? = nil) -> NSLayoutConstraint? {
+    translatesAutoresizingMaskIntoConstraints = false
+    guard let sv = self.superview else { return nil }
+    return pin(self.centerY, to: sv.centerY, priority: priority)
+  }
+  
+  /// Centers  axis to superviews  axis
+  @discardableResult
+  func center(_ priority: UILayoutPriority? = nil) -> (x: NSLayoutConstraint? ,y: NSLayoutConstraint?)  {
+    return (centerX(priority), centerY(priority))
   }
     
 } // extension UIView
@@ -193,10 +218,13 @@ public func pin(_ la: LayoutAnchorY, to: LayoutAnchorY,
 
 /// Pin horizontal anchor of one view to horizontal anchor of another view
 @discardableResult
-public func pin(_ la: LayoutAnchorX, to: LayoutAnchorX, 
-  dist: CGFloat = 0) -> NSLayoutConstraint {
+public func pin(_ la: LayoutAnchorX,
+                to: LayoutAnchorX,
+                dist: CGFloat = 0,
+                priority: UILayoutPriority? = nil) -> NSLayoutConstraint {
   la.view.translatesAutoresizingMaskIntoConstraints = false
   let constraint = la.anchor.constraint(equalTo: to.anchor, constant: dist)
+  if let prio = priority { constraint.priority = prio }
   constraint.isActive = true
   return constraint
 }
@@ -312,6 +340,29 @@ public extension NSObject{
   var iosHigher13 : Self?{
     get{
       if #available(iOS 13, *) {
+        return self
+      }
+      else {
+        return nil
+      }
+    }
+  }
+  
+  var iosLower14 : Self?{
+    get{
+      if #available(iOS 14, *) {
+        return nil
+      }
+      else {
+        return self
+        
+      }
+    }
+  }
+  
+  var iosHigher14 : Self?{
+    get{
+      if #available(iOS 14, *) {
         return self
       }
       else {
