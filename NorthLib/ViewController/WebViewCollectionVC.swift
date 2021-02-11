@@ -213,7 +213,7 @@ open class WebViewCollectionVC: PageCollectionVC, WKUIDelegate,
     }
   }
   
-  public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+  open func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
 //    if let wview = webView as? WebView {
 //      debug("Webview loaded: \(wview.url?.lastPathComponent ?? "[undefined URL]")")
 //    }
