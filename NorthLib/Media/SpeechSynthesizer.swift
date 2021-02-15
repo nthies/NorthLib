@@ -28,7 +28,6 @@ public class SpeechSynthesizer : AVSpeechSynthesizer {
   var partStarted:Date = Date()
   
   public static let sharedInstance = SpeechSynthesizer()
-  #warning("TTS: What happen if no german available?")
   private let germanVoice = AVSpeechSynthesisVoice(language: "de-DE")
   fileprivate var finishedClosure:(()->())?
   private var lastSpeechUtterance:AVSpeechUtterance?
@@ -201,7 +200,6 @@ public class SpeechSynthesizer : AVSpeechSynthesizer {
       self?.previousTrackCommand(); return .success
     }
     
-    #warning("Problem: not updating in App UI Currently")
     commandCenter.pauseCommand.addTarget { _ in
       self.pauseSpeaking(at: .word)
       print("pauseCommand"); return .success;

@@ -295,9 +295,8 @@ extension ZoomedImageView{
       self.layoutIfNeeded()
       return
     }
-    #warning("@Ringo: CANGE OF PREVIOUS BEHAVIOUR USUALLY NEEDS TO BE COVERT BY TEST!! or manually tested!")
        
-    ///On Double Tap if not Min Zoom Scale zoom out to min Zoom Scale + eppsilon
+    /// On Double Tap if not Min Zoom Scale zoom out to min Zoom Scale + eppsilon
     /// if user manually zoomed for just a bit, to see an effect
     if scrollView.zoomScale > 1.0 {
       scrollView.setZoomScale(1.0, animated: true)

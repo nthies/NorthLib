@@ -123,6 +123,7 @@
 		08DDCFF524A20EA1000CB1DA /* Overlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Overlay.swift; sourceTree = "<group>"; };
 		770482C625D41AC600CBABDC /* ObjectExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectExtension.swift; sourceTree = "<group>"; };
 		7754452825D15F2300ABE3F8 /* SpeechSynthesizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpeechSynthesizer.swift; sourceTree = "<group>"; };
+		77C00CFE25DA9A5C00964861 /* TODO.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TODO.md; sourceTree = "<group>"; };
 		AE08C492240D476300D41E91 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		AE08C49624101CA900D41E91 /* FontExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontExtensions.swift; sourceTree = "<group>"; };
 		AE11F79324B715140080CF51 /* PageCollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageCollectionView.swift; sourceTree = "<group>"; };
@@ -260,6 +261,7 @@
 		AE7122BB23197AFA00B715A8 = {
 			isa = PBXGroup;
 			children = (
+				77C00CFE25DA9A5C00964861 /* TODO.md */,
 				AE7122F623197B5900B715A8 /* LICENSE */,
 				AE7122F823197B6200B715A8 /* README.md */,
 				AE7122C723197AFA00B715A8 /* NorthLib */,
