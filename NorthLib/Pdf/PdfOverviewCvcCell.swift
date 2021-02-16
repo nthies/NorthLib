@@ -46,7 +46,7 @@ public class PdfOverviewCvcCell : UICollectionViewCell {
     if let button = button {
       self.contentView.addSubview(button)
       pin(button, to: contentView, exclude: .top)
-      button.pinHeight(30)
+      button.pinHeight(30, priority: .defaultHigh)
       button.imageEdgeInsets = UIEdgeInsets(top: 2, left: 8, bottom: -2, right: -8)
       button.semanticContentAttribute = UIApplication.shared
           .userInterfaceLayoutDirection == .rightToLeft ? .forceLeftToRight : .forceRightToLeft

@@ -85,7 +85,6 @@ public class ZoomedPdfImage: OptionalImageItem, ZoomedPdfImageSpec {
     let pageHeight = 3.3/2*UIScreen.main.bounds.width
     
     let baseheight = pageHeight*UIScreen.main.scale
-    #warning("@R: here is the initial image size")
     log("Optional Image, render Image with scale: \(scale) is height: \(baseheight*scale) 1:1 image width should be: \(baseheight)")
     PdfRenderService.render(item: self,
                             height: baseheight*scale) { img in
@@ -140,7 +139,6 @@ public class ZoomedPdfImage: OptionalImageItem, ZoomedPdfImageSpec {
     
     //Prevent Multiple time max rendering
     let baseWidth = UIScreen.main.bounds.width*UIScreen.main.scale
-    #warning("@R: here is the initial image size")
     log("Optional Image, render Image with scale: \(scale) is width: \(baseWidth*scale) 1:1 image width should be: \(baseWidth)")
     PdfRenderService.render(item: self,
                             width: baseWidth*scale) { img in
@@ -272,11 +270,7 @@ public class ZoomScales {
   var renderNextFailedCount:Int = 0
 
   /// current Index of zoomBehaviour.zoomSteps
-  var currentZoomStepIndex : Int? = nil {
-    didSet{
-      print("currentZoomStepIndex set to: \(currentZoomStepIndex)")
-    }
-  }
+  var currentZoomStepIndex : Int? = nil
   
   public var doubleTapNextZoomStep : CGFloat? {
     get {
