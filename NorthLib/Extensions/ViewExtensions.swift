@@ -52,6 +52,17 @@ public extension UIView {
   }
 }
 
+/// A UIView extension to check if view is on top in parents view hirarchy
+public extension UIView {
+  var isTopmost : Bool {
+    get {
+      guard let sv = self.superview else { return false }
+      return sv.subviews.last == self
+    }
+  }
+}
+
+
 // Layout anchors and corresponding views:
 public struct LayoutAnchorX {
   public var anchor: NSLayoutXAxisAnchor

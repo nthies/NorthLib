@@ -542,24 +542,6 @@ open class BottomSheet: VerticalSheet {
 
 public class FullscreenBottomSheet : BottomSheet{
   
-  public override func slide(toOpen: Bool, animated: Bool = true) {
-    if toOpen == false {
-      onUserSlideToClose?()
-    }
-    else {
-      super.slide(toOpen: toOpen, animated: animated)
-    }
-  }
-  
-  public func slide(toOpen: Bool, animated: Bool = true, forceClose: Bool = false) {
-    if forceClose == true || toOpen == true {
-      super.slide(toOpen: toOpen, animated: animated)
-    }
-    else {
-      onUserSlideToClose?()
-    }
-  }
-  
   public var onUserSlideToClose : (()->())?
   
   /// close the slider (slide out)

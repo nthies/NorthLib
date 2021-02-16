@@ -11,9 +11,7 @@ import PDFKit
 
 struct PdfDisplayOptions {
   struct Overview{
-    @available(*, deprecated, message: "not used extern")
     fileprivate static let totalRowSpacing = (2 * PdfDisplayOptions.Overview.spacing) + (CGFloat(itemsPerRow - 1) * spacing)
-    #warning("PDF Thumbs: need calculation later for landscape or ipad layout")
     static let itemsPerRow:Int = 2 //need calculation later for landscape or ipad layout
     static let spacing:CGFloat = 12.0
   }
@@ -30,19 +28,6 @@ protocol PdfModel {
   func thumbnail(atIndex: Int, finishedClosure: ((UIImage?)->())?) -> UIImage?
 }
 
-//protocol PDFOutlineStructure {
-//  /// Due usage in UICollection View and probably structured PDF (otherwise sections = 1) use this structure later
-//  var referenceForStructure : UICollectionViewDataSource? {get}
-//  var numberOfSections : Int { get }
-//  func numberOfItemsInSection(_ section: Int) -> Int
-//  func pageForItemAt(indexPath: IndexPath) -> PDFPage
-//}
-
-// MARK: PdfArrayModel
-extension PdfModel{
- 
-}
-
 // MARK: PdfDocModel
 class PdfModelItem : PdfModel, DoesLog/*, PDFOutlineStructure*/ {
   
@@ -52,11 +37,10 @@ class PdfModelItem : PdfModel, DoesLog/*, PDFOutlineStructure*/ {
   var url:URL?
   
   //Ip 7+ ::: ScreenScale(414 - 12*5)/4
-  #warning("PDF Thumbs: need Calculation")
   let thumbWidth = UIScreen.main.scale*(UIScreen.main.bounds.size.width - PdfDisplayOptions.Overview.totalRowSpacing)/CGFloat(PdfDisplayOptions.Overview.itemsPerRow)
   
   func item(atIndex: Int) -> ZoomedPdfImageSpec? {
-    return images.valueAt(atIndex) as? ZoomedPdfImage
+    return images.valueAt(atIndex)
   }
   
   static let previewDeviceWithScale : CGFloat = 0.25//4 in a row
@@ -86,29 +70,6 @@ class PdfModelItem : PdfModel, DoesLog/*, PDFOutlineStructure*/ {
     for pagenumber in 0...pdfDocument.pageCount-1{
       self.images.append(ZoomedPdfImage(url: url, index: pagenumber))
     }
-    
-    log("Screen Data: "
-       +   "  \nbounds:\(UIScreen.main.bounds) nativeBounds: \(UIScreen.main.nativeBounds)"
-     + "  \nscale: \(UIScreen.main.scale) nativeScale: \(UIScreen.main.nativeScale)")
-
-    /*****    No Outline Parsing Needed
-    if let outline = pdfDocument.outlineRoot {
-      for sectionIdx in 0...outline.numberOfChildren-1{
-        if let sectionOutline = outline.child(at: sectionIdx) {
-          print("Parsing PDF By Outline Section \(sectionOutline) has \(sectionOutline.numberOfChildren) Pages")
-          for pageIdx in 0...sectionOutline.numberOfChildren-1 {
-            if let pageOutline = sectionOutline.child(at: pageIdx) {
-              if let page = pageOutline.destination?.page {
-                if var itm = item(atIndex: pdfDocument.index(for: page)) {
-                  itm.pageTitle = pageOutline.label
-                  itm.sectionTitle = sectionOutline.label
-                }
-              }
-            }
-          }
-        }
-      }
-    }**********************************************************/
   }
   
   func thumbnail(atIndex: Int, finishedClosure: ((UIImage?)->())?) -> UIImage? {
@@ -131,9 +92,7 @@ class PdfModelItem : PdfModel, DoesLog/*, PDFOutlineStructure*/ {
         
     return nil
   }
-
 }
-
 
 // MARK: PdfModelHelper
 class PdfModelHelper{
