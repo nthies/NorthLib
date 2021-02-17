@@ -12,6 +12,13 @@ import UIKit
 //may work just with IMages and delegate handles what hapen on tap
 public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
   
+  /// Vars for Extension : PdfOverviewCollectionVC : UIScrollViewDelegate
+  // The closure to call when content scrolled more than scrollRatio
+  private var whenScrolledClosure: ((CGFloat)->())?
+  private var scrollRatio: CGFloat = 0
+  // content y offset at start of dragging
+  private var startDragging: CGFloat?
+  
   /// Define the menu to display on long touch of a MomentView
   public var menuItems: [(title: String, icon: String, closure: (String)->())] = [] 
   public var cellLabelFont:UIFont? = UIFont.systemFont(ofSize: 8)
@@ -132,5 +139,32 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
 extension PdfOverviewCollectionVC: UICollectionViewDelegateFlowLayout {
   public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
     return self.generellItemSize
+  }
+}
+
+// MARK: - PdfOverviewCollectionVC
+extension PdfOverviewCollectionVC {
+  
+  /// Define closure to call when web content has been scrolled
+  public func whenScrolled( minRatio: CGFloat, _ closure: @escaping (CGFloat)->() ) {
+    scrollRatio = minRatio
+    whenScrolledClosure = closure
+  }
+  
+  
+  
+  open override func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+    startDragging = scrollView.contentOffset.y
+  }
+  
+  open override func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+    if let sd = startDragging {
+      let scrolled = sd-scrollView.contentOffset.y
+      let ratio = scrolled / scrollView.bounds.size.height
+      if let closure = whenScrolledClosure, abs(ratio) >= scrollRatio {
+        closure(ratio)
+      }
+    }
+    startDragging = nil
   }
 }
