@@ -18,12 +18,12 @@ open class PdfPage {
   public var page: CGPDFPage
   
   /// The frame of the page's media box - "defines the boundaries of the physical
-  ///  medium on which the page is intended to be displayed or printed"
+  /// medium on which the page is intended to be displayed or printed"
   public var mediaBox: CGRect { page.getBoxRect(.mediaBox) }
   
   /// The frame of the page's crop box - "defines the visible region of default
-  ///  user space. When the page is displayed or printed, its contents are to be
-  ///   clipped to this rectangle"
+  /// user space. When the page is displayed or printed, its contents are to be
+  /// clipped to this rectangle"
   public var frame: CGRect { page.getBoxRect(.cropBox) }
   
   public func image(scale: CGFloat = 1.0) -> UIImage? {
