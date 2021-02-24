@@ -25,25 +25,6 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
   
   // MARK: - Properties
   private let reuseIdentifier = "pdfCell"
-  private let itemsPerRow:Int = PdfDisplayOptions.Overview.itemsPerRow
-  private let interItemSpacing:CGFloat = 4
-  private let sideSpacing:CGFloat = PdfDisplayOptions.Overview.spacing
-  private let rowSpacing:CGFloat = PdfDisplayOptions.Overview.spacing
-  
-  /// Change to display Panoramaseiten!
-  /// 1. UC Hochformat Handy
-  /// 2 nebeneinander
-  ///
-  ///
-  ///
-  /// ...
-  
-  lazy var generellItemSize : CGSize = {
-    let width = min(UIScreen.main.bounds.size.width, UIScreen.main.bounds.size.height)
-    let cellWidth = (width - 2*sideSpacing - interItemSpacing)/2
-    let ratio:CGFloat = 16/15//Startseite has 2:3 Ratio - margins on pano pages...looks good
-    return CGSize(width: cellWidth, height: cellWidth/ratio)
-  }()
   
   var pdfModel: PdfModel?
   var clickCallback: ((CGRect, PdfModel?)->())?
@@ -51,15 +32,15 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
   init(pdfModel: PdfModel) {//Wrong can also be pdfpage
     self.pdfModel = pdfModel
     let layout = UICollectionViewFlowLayout()
-    layout.sectionInset = UIEdgeInsets(top: self.sideSpacing,
-                                       left: self.sideSpacing,
-                                       bottom: self.sideSpacing,
-                                       right: self.sideSpacing)
+    layout.sectionInset = UIEdgeInsets(top: PdfDisplayOptions.Overview.sideSpacing,
+                                       left: PdfDisplayOptions.Overview.sideSpacing,
+                                       bottom: PdfDisplayOptions.Overview.sideSpacing,
+                                       right: PdfDisplayOptions.Overview.sideSpacing)
     /// reduced currently to 0 because label not filled
     /// possible data may come from datamodel, can be: titel, Seite 1 // taz 2, Seite 14 //  die wahrheit; S. 20
     /// Daten sind da, da die PDF diese enthällt
     layout.minimumLineSpacing = 0 // self.rowSpacing//more spacing comes from label!
-    layout.minimumInteritemSpacing = self.interItemSpacing
+    layout.minimumInteritemSpacing = PdfDisplayOptions.Overview.interItemSpacing-1
     super.init(collectionViewLayout: layout)
   }
   
@@ -77,7 +58,7 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
       pin(cv.bottom, to: cvsv.bottomGuide())
       pin(cv.top, to: cvsv.topGuide())
       pin(cv.left, to: cvsv.leftGuide())
-      pin(cv.right, to: cvsv.rightGuide())
+      cv.pinWidth(PdfDisplayOptions.Overview.sliderWidth)
     }
   }
   
@@ -94,13 +75,24 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
   public override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
     let _cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath)
     guard let cell = _cell as? PdfOverviewCvcCell else { return _cell }
-    cell.label?.font = self.cellLabelFont
+    cell.label.font = self.cellLabelFont
+    cell.label.textColor = .white
     if let pdfModel = self.pdfModel {
-      cell.imageView?.image = pdfModel.thumbnail(atIndex: indexPath.row, finishedClosure: { (img) in
-        onMain { cell.imageView?.image = img  }
+      cell.imageView.image = pdfModel.thumbnail(atIndex: indexPath.row, finishedClosure: { (img) in
+        onMain { cell.imageView.image = img  }
       })
-      cell.label?.text = pdfModel.item(atIndex: indexPath.row)?.pageTitle
-      cell.menu?.menu = self.menuItems //would be a leak!
+//      cell.imageView?.contentMode = .left
+      
+      let title = "\(pdfModel.pageTitle(forItem: indexPath.row))\nallign: \(pdfModel.allignment(forItem: indexPath.row))"
+      
+      cell.label.text = title
+      #warning("Check if set Memory Leak again!")
+      cell.menu?.menu = self.menuItems
+//      cel
+      #warning("test contentMode")
+//      cell.contentMode
+      cell.cellAlignment = pdfModel.allignment(forItem: indexPath.row)
+      cell.imageView.contentMode = .scaleToFill
     }
     return cell
   }
@@ -116,20 +108,28 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
     clickCallback?(sourceFrame, pdfModel)
   }
   
-  
   /// Returns Cell Frame for given Index
   /// - Parameters:
   ///   - index: index of requested Frame
   ///   - fixFullFrame: if cell is out of view this returns a full cell size
   /// - Returns: frame for requested cell at index Path
+  ///
+  /// **Warning** Only used for Source and Target Frame to animate transition between background
+  /// thumbnails and foreground full page - did not define cell's frame e.g. for change cell alignment
+  /// ...unfortunately this is more complex
   public func frameAtIndex(index:Int, fixFullFrame:Bool = false) -> CGRect {
-    let attributes
-      = collectionView.layoutAttributesForItem(at: IndexPath(row: index,
-                                                             section: 0))
+    
+    let indexPath = IndexPath(row: index, section: 0)
+    
+    let attributes = collectionView.layoutAttributesForItem(at: indexPath)
+    let size = collectionView(collectionView,
+                              layout: collectionViewLayout,
+                              sizeForItemAt: indexPath)
+    
     var sourceFrame = CGRect.zero
     if let attr = attributes {
       sourceFrame = self.collectionView.convert(attr.frame, to: self.collectionView.superview?.superview)
-      sourceFrame.size = self.generellItemSize
+      sourceFrame.size = size
     }
     return sourceFrame
   }
@@ -137,8 +137,11 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
 
 // MARK: - UICollectionViewDelegateFlowLayout
 extension PdfOverviewCollectionVC: UICollectionViewDelegateFlowLayout {
-  public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-    return self.generellItemSize
+  public func collectionView(_ collectionView: UICollectionView,
+                             layout collectionViewLayout: UICollectionViewLayout,
+                             sizeForItemAt indexPath: IndexPath) -> CGSize {
+    return self.pdfModel?.size(forItem: indexPath.row)
+      ?? PdfDisplayOptions.Overview.fallbackPageSize
   }
 }
 

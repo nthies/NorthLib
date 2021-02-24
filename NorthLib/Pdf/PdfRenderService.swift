@@ -56,6 +56,18 @@ class PdfRenderService : DoesLog{
   
   public static func render(item:ZoomedPdfImageSpec,
                             height: CGFloat,
+                            screenScaled: Bool = true,
+                            backgroundRenderer : Bool = false,
+                            finishedCallback: @escaping((UIImage?)->())){
+    sharedInstance.enqueueRender(item: item,
+                                 height: height,
+                                 screenScaled: screenScaled,
+                                 backgroundRenderer : backgroundRenderer,
+                                 finishedCallback: finishedCallback)
+  }
+  
+  public static func render(item:ZoomedPdfImageSpec,
+                            height: CGFloat,
                             backgroundRenderer : Bool = false,
                             finishedCallback: @escaping((UIImage?)->())){
     sharedInstance.enqueueRender(item: item,
@@ -94,7 +106,7 @@ class PdfRenderService : DoesLog{
           img = pdfPage.image(width: w, screenScaled)
         }
         else if let h = height {
-          img = pdfPage.image(height: h)
+          img = pdfPage.image(height: h, screenScaled)
         }
         else {
           img = pdfPage.image(scale:scale)
@@ -186,8 +198,11 @@ extension PDFPage : DoesLog {
     return image(scale:  width/frame.size.width)?.scaled()
   }
   
-  fileprivate func image(height: CGFloat) -> UIImage? {
+  fileprivate func image(height: CGFloat, _ screenScaled: Bool = true) -> UIImage? {
     guard let frame = self.frame else { return nil }
+    if screenScaled == false {
+      return image(scale:  height/frame.size.height)
+    }
     return image(scale:  height/frame.size.height)?.scaled()
   }
   

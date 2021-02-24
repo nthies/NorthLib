@@ -10,67 +10,114 @@ import UIKit
 
 public class PdfOverviewCvcCell : UICollectionViewCell {
   
-  public let imageView:UIImageView? = UIImageView()
-  public let label:UILabel? = UILabel()
-  public let button:UIButton? = UIButton()
+  public let imageView = UIImageView()
+  public let label = UILabel()
+  public let button = UIButton()
+  private let wrapper = UIView()
+  
   var menu:ContextMenu?
   
+  private var leftSideContentConstraint : NSLayoutConstraint?//pinned to left side
+  private var rightSideContentConstraint : NSLayoutConstraint?//pinned to right side
+  private var leftCenterContentConstraint : NSLayoutConstraint?//left pinned to center
+  private var rightCenterContentConstraint : NSLayoutConstraint?//right pinned to center
+
+  public var cellAlignment : Toolbar.Direction {
+    didSet {
+      switch cellAlignment {
+        case .left:
+          leftCenterContentConstraint?.isActive = false
+          rightSideContentConstraint?.isActive = false
+          leftSideContentConstraint?.isActive = true
+          rightCenterContentConstraint?.isActive = true
+        case .right:
+          leftSideContentConstraint?.isActive = false
+          rightCenterContentConstraint?.isActive = false
+          rightSideContentConstraint?.isActive = true
+          leftCenterContentConstraint?.isActive = true
+        case .center:
+          leftCenterContentConstraint?.isActive = false
+          rightCenterContentConstraint?.isActive = false
+          leftSideContentConstraint?.isActive = true
+          rightSideContentConstraint?.isActive = true
+      }
+    }
+  }
+  
   override init(frame: CGRect) {
+    cellAlignment = .left
     super.init(frame: frame)
-    if let iv = imageView {
-      /**
-        Bugfix after Merge
-        set ImageViews BG Color to same color like Collection Views BG fix white layer on focus
-       UIColor.clear or UIColor(white: 0, alpha: 0) did not work
-       Issue is not in last Build before Merge 0.4.18-2021011501 ...but flickering is there on appearing so its half of the bug
-          - was also build with same xcode version/ios sdk
-       issue did not disappear if deployment target is set back to 11.4
-       */
-      iv.backgroundColor = .black
-      menu = ContextMenu(view: iv)
-    }
-    if let imageView = imageView {
-      imageView.contentMode = .scaleAspectFit
-      self.contentView.addSubview(imageView)
-      pin(imageView, to: contentView, exclude: .bottom)
-      pin(imageView.bottom, to: contentView.bottom, priority: .defaultHigh)
-    }
+    /**
+     Bugfix after Merge
+     set ImageViews BG Color to same color like Collection Views BG fix white layer on focus
+     UIColor.clear or UIColor(white: 0, alpha: 0) did not work
+     Issue is not in last Build before Merge 0.4.18-2021011501 ...but flickering is there on appearing so its half of the bug
+     - was also build with same xcode version/ios sdk
+     issue did not disappear if deployment target is set back to 11.4
+     */
+    imageView.backgroundColor = .black
+    imageView.contentMode = .scaleAspectFit
+    menu = ContextMenu(view: imageView)
     
-    if let label = label {
-      label.numberOfLines = 2
-      self.contentView.addSubview(label)
-      pin(label, to: contentView, exclude: .top)
-      label.pinHeight(30)
-    }
+    wrapper.addSubview(imageView)
+    pin(imageView, to: wrapper, exclude: .bottom)
+    pin(imageView.bottom,
+        to: wrapper.bottom,
+        dist: -PdfDisplayOptions.Overview.labelHeight,
+        priority: .defaultHigh)
     
-    if let button = button {
-      self.contentView.addSubview(button)
-      pin(button, to: contentView, exclude: .top)
-      button.pinHeight(30, priority: .defaultHigh)
-      button.imageEdgeInsets = UIEdgeInsets(top: 2, left: 8, bottom: -2, right: -8)
-      button.semanticContentAttribute = UIApplication.shared
-          .userInterfaceLayoutDirection == .rightToLeft ? .forceLeftToRight : .forceRightToLeft
-      button.imageView?.tintColor = .white
-    }
+    label.numberOfLines = 2
+    wrapper.addSubview(label)
+    pin(label, to: wrapper, exclude: .top)
+    label.pinHeight(PdfDisplayOptions.Overview.labelHeight)
     
-    if let label = label, let imageView = imageView  {
-      pin(label.top, to: imageView.bottom, dist: 3, priority: .required)
-    }
-    if let button = button, let imageView = imageView  {
-      pin(button.top, to: imageView.bottom, priority: .required)
-    }
+    wrapper.addSubview(button)
+    pin(button, to: wrapper, exclude: .top)
+    button.pinHeight(PdfDisplayOptions.Overview.labelHeight, priority: .defaultHigh)
+    
+    button.imageEdgeInsets = UIEdgeInsets(top: 2, left: 8, bottom: -2, right: -8)
+    button.semanticContentAttribute = UIApplication.shared
+      .userInterfaceLayoutDirection == .rightToLeft ? .forceLeftToRight : .forceRightToLeft
+    button.imageView?.tintColor = .white
+    
+    contentView.addSubview(wrapper)
+    pin(wrapper.top, to: contentView.top)
+    pin(wrapper.bottom, to: contentView.bottom)
+    
+    let centerOffset = PdfDisplayOptions.Overview.interItemSpacing/2
+    
+    leftSideContentConstraint = pin(wrapper.left, to: contentView.left)
+    leftSideContentConstraint?.isActive = false
+    
+    leftCenterContentConstraint = pin(wrapper.left,
+                                      to: contentView.centerX,
+                                      dist: centerOffset)
+    leftCenterContentConstraint?.isActive = false
+    
+    rightSideContentConstraint = pin(wrapper.right, to: contentView.right)
+    rightSideContentConstraint?.isActive = false
+    
+    rightCenterContentConstraint = pin(wrapper.right,
+                                      to: contentView.centerX,
+                                      dist: -centerOffset)
+    rightCenterContentConstraint?.isActive = false
+    cellAlignment = .left
+//    
+//    self.addBorder(.green, 1.0)
+//    self.contentView.addBorder(.yellow, 2.0)
+//    self.wrapper.addBorder(.red, 4.0)
+//    self.imageView.addBorder(.blue, 6.0)
+    
   }
   
   public var text : String? {
     didSet {
-      guard let button = button else { return }
       button.setTitle(text, for: .normal)
     }
   }
   
   public var cloudHidden : Bool = false {
     didSet {
-      guard let button = button else { return }
       if cloudHidden {
         button.setImage(nil, for: .normal)
       }
