@@ -88,19 +88,14 @@ class PdfRenderService : DoesLog{
     
     queue.async { [weak self] in
       let debugEnqueuedStart = Date()
-      guard let url = item.pdfUrl else {
-        finishedCallback(nil)
-        return
-      }
-      guard let index = item.pdfPageIndex else{
+      guard let pdfPage = item.page else {
         finishedCallback(nil)
         return
       }
       semaphore.wait()
       let debugRenderStart = Date()
-      let pdfPage = PDFDocument(url: url)?.page(at: index)
-      ///Check if stopped meanwhile
-      if let pdfPage = pdfPage, item.renderingStoped == false {
+      ///Check if stopped meanwhile, then no finishedCallback !? TODO Verify logic!
+      if item.renderingStoped == false {
         var img : UIImage?
         if let w = width {
           img = pdfPage.image(width: w, screenScaled)
@@ -111,7 +106,16 @@ class PdfRenderService : DoesLog{
         else {
           img = pdfPage.image(scale:scale)
         }
-        self?.log("Render for PageIdx: \(item.pdfPageIndex ?? 0) done"
+        
+        var additionalInfo = ""
+        if let zpdfi = item as? ZoomedPdfImage {
+          additionalInfo = "ZoomedPdfImage with url: \(String(describing:zpdfi.pdfUrl)) and index: \(String(describing: zpdfi.pdfPageIndex))"
+        }
+        else {
+          additionalInfo = "A Page with Document: \(String(describing:item.page?.document?.documentURL))"
+        }
+        
+        self?.log("Render for: \(additionalInfo) done"
               + "\n   scale: \(scale) width: \(width ?? 0) height: \(height ?? 0) screenScaled: \(screenScaled)"
               + "\n   screenScaled: \(screenScaled) backgroundRenderer: \(backgroundRenderer)"
               + "\n   Duration since enqueued: \(Date().timeIntervalSince(debugEnqueuedStart)) "
@@ -206,6 +210,6 @@ extension PDFPage : DoesLog {
     return image(scale:  height/frame.size.height)?.scaled()
   }
   
-  var frame: CGRect? { self.pageRef?.getBoxRect(.cropBox) }
+  public var frame: CGRect? { self.pageRef?.getBoxRect(.cropBox) }
 }
 

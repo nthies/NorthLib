@@ -77,13 +77,22 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
     guard let cell = _cell as? PdfOverviewCvcCell else { return _cell }
     cell.label.font = self.cellLabelFont
     cell.label.textColor = .white
+    
     if let pdfModel = self.pdfModel {
       cell.imageView.image = pdfModel.thumbnail(atIndex: indexPath.row, finishedClosure: { (img) in
         onMain { cell.imageView.image = img  }
       })
-//      cell.imageView?.contentMode = .left
       
-      let title = "\(pdfModel.pageTitle(forItem: indexPath.row))\nallign: \(pdfModel.allignment(forItem: indexPath.row))"
+      guard let item = pdfModel.item(atIndex: indexPath.row) else {
+        return cell
+      }
+       
+//      cell.imageView?.contentMode = .left
+      var title = item.pageTitle ?? ""
+      
+//      title += " (S.\(indexPath.row))\nallign: \(pdfModel.allignment(forItem: indexPath.row))"
+//      title = "\(title) w: \(self.pdfModel?.size(forItem: indexPath.row)?.width ?? 0)\n\(pdfModel.allignment(forItem: indexPath.row)) - \(indexPath.row+1)"
+      title = title + ": \(item.sectionTitle ?? "") : \(item.isDoublePage)" + "\n\(item.alignment) - \(indexPath.row+1)"
       
       cell.label.text = title
       #warning("Check if set Memory Leak again!")

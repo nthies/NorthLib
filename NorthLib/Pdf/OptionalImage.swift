@@ -13,24 +13,37 @@ import PDFKit
 public protocol ZoomedPdfImageSpec : OptionalImage, DoesLog {
   var sectionTitle: String? { get set}
   var pageTitle: String? { get set}
-  var pdfUrl: URL? { get }
-  var pdfPageIndex: Int? { get }
   var renderingStoped: Bool { get }
   var preventNextRenderingDueFailed: Bool { get }
-  
+  var page : PDFPage? { get }
   /// ratio between current zoom and next zoom
   var doubleTapNextZoomStep : CGFloat? { get }
+  var alignment : ContentAlignment { get }
+  var isDoublePage : Bool { get }
   
   func renderImageWithNextScale(finishedCallback: ((Bool) -> ())?)
   func renderFullscreenImageIfNeeded(finishedCallback: ((Bool) -> ())?)
   func renderImageWithScale(scale: CGFloat, finishedCallback: ((Bool) -> ())?)
 }
 
-public class ZoomedPdfImage: OptionalImageItem, ZoomedPdfImageSpec {
+public enum ContentAlignment { case left, right, fill }
+
+open class ZoomedPdfImage: OptionalImageItem, ZoomedPdfImageSpec {
+  public var alignment: ContentAlignment = .fill
+  public var isDoublePage: Bool = false
+  
   public var sectionTitle: String?
-  public var pageTitle: String?
+  open var pageTitle: String?
   public private(set) var pdfUrl: URL?
   public private(set) var pdfPageIndex: Int?
+  
+  open var page: PDFPage? {
+    get {
+      guard let url = pdfUrl else { return nil }
+      guard let index = pdfPageIndex else { return nil }
+      return PDFDocument(url: url)?.page(at: index)
+    }
+  }
   
   lazy var zoomScales = ZoomScales()
   

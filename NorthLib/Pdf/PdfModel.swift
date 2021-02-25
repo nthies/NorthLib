@@ -9,18 +9,18 @@
 import Foundation
 import PDFKit
 
-struct PdfDisplayOptions {
-  struct Overview{
+public struct PdfDisplayOptions {
+  public struct Overview{
     static let singlePageItemsPerRow:Int = 2 //need calculation later for landscape or ipad layout
-    static let sideSpacing:CGFloat = 4.0
-    static let interItemSpacing:CGFloat = 12
+    public static let sideSpacing:CGFloat = 4.0
+    public static let interItemSpacing:CGFloat = 12
     static let rowSpacing:CGFloat = 12.0
-    static let labelHeight:CGFloat = 30.0
+    public static let labelHeight:CGFloat = 30.0
     
     /// width of pdf menu slider, page sizes are calculated for this
     /// |-sideSpacing-[Page]-interItemSpacing-[Page]-sideSpacing-|
     /// |-sideSpacing-[               PanoramaPage           ]-sideSpacing-|
-    static let sliderWidth:CGFloat = {
+    public static let sliderWidth:CGFloat = {
       let screenWidth = min(UIScreen.main.bounds.size.width,
                             UIScreen.main.bounds.size.height)
       return 0.6*screenWidth
@@ -32,7 +32,7 @@ struct PdfDisplayOptions {
 
 
 // MARK: PdfArrayModel
-protocol PdfModel {
+public protocol PdfModel {
   var count : Int { get }
   var imageSizeMb : UInt64 { get }
   var index : Int { get set }
@@ -43,9 +43,35 @@ protocol PdfModel {
   func item(atIndex: Int) -> ZoomedPdfImageSpec?
   func size(forItem atIndex: Int) -> CGSize?
   func pageTitle(forItem atIndex: Int) -> String?
-  func allignment(forItem atIndex: Int) -> Toolbar.Direction
+  func allignment(forItem atIndex: Int) -> ContentAlignment
   func thumbnail(atIndex: Int, finishedClosure: ((UIImage?)->())?) -> UIImage?
 }
+
+extension PdfModel {
+  public func thumbnail(atIndex: Int, finishedClosure: ((UIImage?)->())?) -> UIImage? {
+    guard var pdfImg = self.item(atIndex: atIndex) else {
+      return nil
+    }
+    if let waitingImage = pdfImg.waitingImage {
+      return waitingImage
+    }
+    
+    let height
+      = singlePageSize?.height ?? PdfDisplayOptions.Overview.fallbackPageSize.height
+      - PdfDisplayOptions.Overview.labelHeight
+    
+    PdfRenderService.render(item: pdfImg,
+                            height: height*UIScreen.main.scale,
+                            screenScaled: false,
+                            backgroundRenderer: true){ img in
+      pdfImg.waitingImage = img
+      finishedClosure?(img)
+    }
+    return nil
+  }
+}
+
+
 
 // MARK: PdfDocModel
 class PdfModelItem : PdfModel, DoesLog/*, PDFOutlineStructure*/ {
@@ -115,16 +141,16 @@ class PdfModelItem : PdfModel, DoesLog/*, PDFOutlineStructure*/ {
   /// 7=>6 weil seite 7 allein stehen soll    RIGHT
   let doublePages = [0, 3, 6]
   
-  func allignment(forItem atIndex: Int) -> Toolbar.Direction {
+  func allignment(forItem atIndex: Int) -> ContentAlignment {
     switch atIndex {
       case 0:
         return .left
       case 3:
-        return .center
+        return .fill
       case 6:
         return .right
       default:
-        return .center
+        return .fill
     }
   }
   
@@ -136,28 +162,6 @@ class PdfModelItem : PdfModel, DoesLog/*, PDFOutlineStructure*/ {
   
   func pageTitle(forItem atIndex: Int) -> String? {
     return "Seite:\(atIndex)"
-  }
-  
-  func thumbnail(atIndex: Int, finishedClosure: ((UIImage?)->())?) -> UIImage? {
-    guard var pdfImg = self.item(atIndex: atIndex) else {
-      return nil
-    }
-    if let waitingImage = pdfImg.waitingImage {
-      return waitingImage
-    }
-    
-    let height
-      = singlePageSize?.height ?? PdfDisplayOptions.Overview.fallbackPageSize.height
-      - PdfDisplayOptions.Overview.labelHeight
-    
-    PdfRenderService.render(item: pdfImg,
-                            height: height*UIScreen.main.scale,
-                            screenScaled: false,
-                            backgroundRenderer: true){ img in
-      pdfImg.waitingImage = img
-      finishedClosure?(img)
-    }
-    return nil
   }
 }
 

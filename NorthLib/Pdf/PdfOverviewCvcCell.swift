@@ -22,7 +22,7 @@ public class PdfOverviewCvcCell : UICollectionViewCell {
   private var leftCenterContentConstraint : NSLayoutConstraint?//left pinned to center
   private var rightCenterContentConstraint : NSLayoutConstraint?//right pinned to center
 
-  public var cellAlignment : Toolbar.Direction {
+  public var cellAlignment : ContentAlignment {
     didSet {
       switch cellAlignment {
         case .left:
@@ -35,13 +35,18 @@ public class PdfOverviewCvcCell : UICollectionViewCell {
           rightCenterContentConstraint?.isActive = false
           rightSideContentConstraint?.isActive = true
           leftCenterContentConstraint?.isActive = true
-        case .center:
+        case .fill:
           leftCenterContentConstraint?.isActive = false
           rightCenterContentConstraint?.isActive = false
           leftSideContentConstraint?.isActive = true
           rightSideContentConstraint?.isActive = true
       }
     }
+  }
+  
+  public override func prepareForReuse() {
+    self.imageView.image = nil
+    self.label.text = nil
   }
   
   override init(frame: CGRect) {
@@ -103,10 +108,10 @@ public class PdfOverviewCvcCell : UICollectionViewCell {
     rightCenterContentConstraint?.isActive = false
     cellAlignment = .left
 //    
-//    self.addBorder(.green, 1.0)
-//    self.contentView.addBorder(.yellow, 2.0)
-//    self.wrapper.addBorder(.red, 4.0)
-//    self.imageView.addBorder(.blue, 6.0)
+    self.addBorder(.green, 1.0)
+    self.contentView.addBorder(.yellow, 2.0)
+    self.wrapper.addBorder(.red, 4.0)
+    self.imageView.addBorder(.blue, 6.0)
     
   }
   
