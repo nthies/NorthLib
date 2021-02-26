@@ -10,7 +10,7 @@ import UIKit
 
 //PagePDFVC array von pages mit Image und page
 /// Provides functionallity to view, zoom in PDF Pages. Swipe on Side Corner shows next/prev Page if available
-public class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
+open class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
     
   var _menuItems: [(title: String, icon: String, closure: (String)->())] = []
   public var menuItems: [(title: String, icon: String, closure: (String)->())] {
@@ -31,7 +31,7 @@ public class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
   }
   
     
-  var pdfModel : PdfModel? {
+  public var pdfModel : PdfModel? {
     didSet{
       updateData()
     }
@@ -44,18 +44,18 @@ public class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
     self.collectionView?.reloadData()
   }
   
-  init(data:PdfModel) {
+  public init(data:PdfModel) {
     self.pdfModel = data
     super.init()
     updateData()
   }
   
-  required init?(coder: NSCoder) {
+  public required init?(coder: NSCoder) {
     fatalError("init(coder:) has not been implemented")
   }
   
   
-  public override func viewDidLoad() {
+  open override func viewDidLoad() {
     super.viewDidLoad()
     self.iosLower14?.pageControlMaxDotsCount = Device.singleton == .iPad ? 25 : 9
     self.iosHigher14?.pageControlMaxDotsCount = self.pdfModel?.count ?? 0
@@ -68,7 +68,7 @@ public class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
     self.pinBottomToSafeArea = false
   }
   
-  public override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+  open override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
     super.viewWillTransition(to: size, with: coordinator)
     //Fix Issue iPad: rotation page is missalligned
     //simple soloution due rotation animation is much longer
@@ -84,7 +84,7 @@ public class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
     print("☠️☠️☠️\nRECIVE MEMORY WARNING\n☠️☠️☠️☠️\nPdfPagesCollectionVC->didReceiveMemoryWarning\n   ")
   }
 
-  public override func setupViewProvider(){
+  open override func setupViewProvider(){
     viewProvider { [weak self] (index, oview) in
       guard let self = self else { return UIView() }
       let dataItem = self.pdfModel?.item(atIndex: index)

@@ -28,9 +28,9 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
   private let reuseIdentifier = "pdfCell"
   
   var pdfModel: PdfModel
-  var clickCallback: ((CGRect, PdfModel?)->())?
+  public var clickCallback: ((CGRect, PdfModel?)->())?
   
-  init(pdfModel: PdfModel) {//Wrong can also be pdfpage
+  public init(pdfModel: PdfModel) {//Wrong can also be pdfpage
     self.pdfModel = pdfModel
     let layout = TwoColumnUICollectionViewFlowLayout(pdfModel: pdfModel)
     layout.sectionInset = UIEdgeInsets(top: PdfDisplayOptions.Overview.sideSpacing,
