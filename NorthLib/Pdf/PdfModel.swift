@@ -13,8 +13,8 @@ public struct PdfDisplayOptions {
   public struct Overview{
     static let singlePageItemsPerRow:Int = 2 //need calculation later for landscape or ipad layout
     public static let sideSpacing:CGFloat = 4.0
-    public static let interItemSpacing:CGFloat = 12
-    static let rowSpacing:CGFloat = 12.0
+    public static let interItemSpacing:CGFloat = 4
+    public static let rowSpacing:CGFloat = 12.0
     public static let labelHeight:CGFloat = 30.0
     
     /// width of pdf menu slider, page sizes are calculated for this
@@ -26,7 +26,7 @@ public struct PdfDisplayOptions {
       return 0.6*screenWidth
     }()
     
-    static let fallbackPageSize:CGSize = CGSize(width: 300, height: 500)
+    public static let fallbackPageSize:CGSize = CGSize(width: 300, height: 500)
   }
 }
 
@@ -37,13 +37,10 @@ public protocol PdfModel {
   var imageSizeMb : UInt64 { get }
   var index : Int { get set }
   var defaultRawPageSize: CGSize? { get }
-  var singlePageSize: CGSize? { get }
-  var panoPageSize: CGSize? { get }
-  var defaultItemSize : CGSize? { get }
+  var singlePageSize: CGSize { get }
   func item(atIndex: Int) -> ZoomedPdfImageSpec?
-  func size(forItem atIndex: Int) -> CGSize?
-  func pageTitle(forItem atIndex: Int) -> String?
-  func allignment(forItem atIndex: Int) -> ContentAlignment
+  var images : [ZoomedPdfImageSpec] { get }
+  func size(forItem atIndex: Int) -> CGSize
   func thumbnail(atIndex: Int, finishedClosure: ((UIImage?)->())?) -> UIImage?
 }
 
@@ -56,13 +53,11 @@ extension PdfModel {
       return waitingImage
     }
     
-    let height
-      = singlePageSize?.height ?? PdfDisplayOptions.Overview.fallbackPageSize.height
-      - PdfDisplayOptions.Overview.labelHeight
+    let height = singlePageSize.height - PdfDisplayOptions.Overview.labelHeight
     
     PdfRenderService.render(item: pdfImg,
                             height: height*UIScreen.main.scale,
-                            screenScaled: false,
+                            screenScaled: true,
                             backgroundRenderer: true){ img in
       pdfImg.waitingImage = img
       finishedClosure?(img)
@@ -75,6 +70,11 @@ extension PdfModel {
 
 // MARK: PdfDocModel
 class PdfModelItem : PdfModel, DoesLog/*, PDFOutlineStructure*/ {
+  
+  func size(forItem atIndex: Int) -> CGSize {
+    return CGSize(width: 200, height: 260)
+  }
+  
   private var url:URL?
   
   var count: Int = 0
@@ -82,7 +82,7 @@ class PdfModelItem : PdfModel, DoesLog/*, PDFOutlineStructure*/ {
   var defaultItemSize: CGSize?
     
   var defaultRawPageSize: CGSize?
-  var singlePageSize: CGSize?
+  var singlePageSize: CGSize
   var panoPageSize: CGSize?
   
   func item(atIndex: Int) -> ZoomedPdfImageSpec? {
@@ -91,14 +91,14 @@ class PdfModelItem : PdfModel, DoesLog/*, PDFOutlineStructure*/ {
   #warning("Needed anymore?")
   static let previewDeviceWithScale : CGFloat = 0.25//4 in a row
   
-  var images : [ZoomedPdfImage] = []
+  var images : [ZoomedPdfImageSpec] = []
   
   var pageMeta : [Int:String] = [:]
   
   var imageSizeMb : UInt64 {
     get{
       var totalSize:UInt64 = 0
-      for img in self.images {
+      for case let img as ZoomedPdfImage in self.images {
         log("page: \(img.pdfPageIndex ?? -1) size:\(img.image?.mbSize ?? 0)")
         totalSize += UInt64(img.image?.mbSize ?? 0)
       }
@@ -107,6 +107,7 @@ class PdfModelItem : PdfModel, DoesLog/*, PDFOutlineStructure*/ {
   }
   
   init(url:URL?) {
+    singlePageSize = .zero
     guard let url = url else { return }
     guard let pdfDocument = PDFDocument(url: url) else { return }
     self.url = url
@@ -141,18 +142,6 @@ class PdfModelItem : PdfModel, DoesLog/*, PDFOutlineStructure*/ {
   /// 7=>6 weil seite 7 allein stehen soll    RIGHT
   let doublePages = [0, 3, 6]
   
-  func allignment(forItem atIndex: Int) -> ContentAlignment {
-    switch atIndex {
-      case 0:
-        return .left
-      case 3:
-        return .fill
-      case 6:
-        return .right
-      default:
-        return .fill
-    }
-  }
   
   func size(forItem atIndex: Int) -> CGSize? {
     return doublePages.contains(atIndex)

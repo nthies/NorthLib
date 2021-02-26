@@ -74,7 +74,7 @@ open class PdfViewController : UIViewController, CanRotate{
       pageController?.collectionView = nil
       pageController?.removeFromParent()
       thumbnailController?.clickCallback = nil
-      thumbnailController?.pdfModel = nil
+//      thumbnailController?.pdfModel = nil
       thumbnailController?.menuItems = []
       thumbnailController?.removeFromParent()
       thumbnailController = nil

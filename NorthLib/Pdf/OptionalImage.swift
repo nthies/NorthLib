@@ -9,6 +9,8 @@
 import Foundation
 import PDFKit
 
+public enum PdfPageType { case left, right, double}
+
 // MARK: - ZoomedPdfImageSpec : OptionalImage (Protocol)
 public protocol ZoomedPdfImageSpec : OptionalImage, DoesLog {
   var sectionTitle: String? { get set}
@@ -18,20 +20,19 @@ public protocol ZoomedPdfImageSpec : OptionalImage, DoesLog {
   var page : PDFPage? { get }
   /// ratio between current zoom and next zoom
   var doubleTapNextZoomStep : CGFloat? { get }
-  var alignment : ContentAlignment { get }
-  var isDoublePage : Bool { get }
+  var pageType : PdfPageType { get }
+  var size : CGSize { get }
   
   func renderImageWithNextScale(finishedCallback: ((Bool) -> ())?)
   func renderFullscreenImageIfNeeded(finishedCallback: ((Bool) -> ())?)
   func renderImageWithScale(scale: CGFloat, finishedCallback: ((Bool) -> ())?)
 }
 
-public enum ContentAlignment { case left, right, fill }
+//public enum ContentAlignment { case left, right, fill }
 
 open class ZoomedPdfImage: OptionalImageItem, ZoomedPdfImageSpec {
-  public var alignment: ContentAlignment = .fill
-  public var isDoublePage: Bool = false
-  
+  open var pageType : PdfPageType = .left
+  public var size: CGSize = CGSize(width: 100, height: 80)
   public var sectionTitle: String?
   open var pageTitle: String?
   public private(set) var pdfUrl: URL?

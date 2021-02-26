@@ -13,44 +13,15 @@ public class PdfOverviewCvcCell : UICollectionViewCell {
   public let imageView = UIImageView()
   public let label = UILabel()
   public let button = UIButton()
-  private let wrapper = UIView()
   
   var menu:ContextMenu?
-  
-  private var leftSideContentConstraint : NSLayoutConstraint?//pinned to left side
-  private var rightSideContentConstraint : NSLayoutConstraint?//pinned to right side
-  private var leftCenterContentConstraint : NSLayoutConstraint?//left pinned to center
-  private var rightCenterContentConstraint : NSLayoutConstraint?//right pinned to center
-
-  public var cellAlignment : ContentAlignment {
-    didSet {
-      switch cellAlignment {
-        case .left:
-          leftCenterContentConstraint?.isActive = false
-          rightSideContentConstraint?.isActive = false
-          leftSideContentConstraint?.isActive = true
-          rightCenterContentConstraint?.isActive = true
-        case .right:
-          leftSideContentConstraint?.isActive = false
-          rightCenterContentConstraint?.isActive = false
-          rightSideContentConstraint?.isActive = true
-          leftCenterContentConstraint?.isActive = true
-        case .fill:
-          leftCenterContentConstraint?.isActive = false
-          rightCenterContentConstraint?.isActive = false
-          leftSideContentConstraint?.isActive = true
-          rightSideContentConstraint?.isActive = true
-      }
-    }
-  }
-  
+ 
   public override func prepareForReuse() {
     self.imageView.image = nil
     self.label.text = nil
   }
   
   override init(frame: CGRect) {
-    cellAlignment = .left
     super.init(frame: frame)
     /**
      Bugfix after Merge
@@ -64,20 +35,20 @@ public class PdfOverviewCvcCell : UICollectionViewCell {
     imageView.contentMode = .scaleAspectFit
     menu = ContextMenu(view: imageView)
     
-    wrapper.addSubview(imageView)
-    pin(imageView, to: wrapper, exclude: .bottom)
+    contentView.addSubview(imageView)
+    pin(imageView, to: contentView, exclude: .bottom)
     pin(imageView.bottom,
-        to: wrapper.bottom,
+        to: contentView.bottom,
         dist: -PdfDisplayOptions.Overview.labelHeight,
         priority: .defaultHigh)
     
     label.numberOfLines = 2
-    wrapper.addSubview(label)
-    pin(label, to: wrapper, exclude: .top)
+    contentView.addSubview(label)
+    pin(label, to: contentView, exclude: .top)
     label.pinHeight(PdfDisplayOptions.Overview.labelHeight)
     
-    wrapper.addSubview(button)
-    pin(button, to: wrapper, exclude: .top)
+    contentView.addSubview(button)
+    pin(button, to: contentView, exclude: .top)
     button.pinHeight(PdfDisplayOptions.Overview.labelHeight, priority: .defaultHigh)
     
     button.imageEdgeInsets = UIEdgeInsets(top: 2, left: 8, bottom: -2, right: -8)
@@ -85,34 +56,9 @@ public class PdfOverviewCvcCell : UICollectionViewCell {
       .userInterfaceLayoutDirection == .rightToLeft ? .forceLeftToRight : .forceRightToLeft
     button.imageView?.tintColor = .white
     
-    contentView.addSubview(wrapper)
-    pin(wrapper.top, to: contentView.top)
-    pin(wrapper.bottom, to: contentView.bottom)
-    
-    let centerOffset = PdfDisplayOptions.Overview.interItemSpacing/2
-    
-    leftSideContentConstraint = pin(wrapper.left, to: contentView.left)
-    leftSideContentConstraint?.isActive = false
-    
-    leftCenterContentConstraint = pin(wrapper.left,
-                                      to: contentView.centerX,
-                                      dist: centerOffset)
-    leftCenterContentConstraint?.isActive = false
-    
-    rightSideContentConstraint = pin(wrapper.right, to: contentView.right)
-    rightSideContentConstraint?.isActive = false
-    
-    rightCenterContentConstraint = pin(wrapper.right,
-                                      to: contentView.centerX,
-                                      dist: -centerOffset)
-    rightCenterContentConstraint?.isActive = false
-    cellAlignment = .left
-//    
-    self.addBorder(.green, 1.0)
-    self.contentView.addBorder(.yellow, 2.0)
-    self.wrapper.addBorder(.red, 4.0)
-    self.imageView.addBorder(.blue, 6.0)
-    
+//    self.addBorder(.green, 0.5)
+//    self.contentView.addBorder(.yellow, 1.0)
+//    self.imageView.addBorder(.blue, 1.5)
   }
   
   public var text : String? {
