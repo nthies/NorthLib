@@ -7,5 +7,6 @@ Things that should be done soon
 - ZoomedImageView :: handleDoubleTap changed check behaviour in Article Image Galery
 - SpeechSynthesizer :: TTS: What happen if no german available?  Line 32 German Voice!
 - SpeechSynthesizer :: CommandCenter Pause not recognized in App UI may regiter for notifications
+- PdfOverviewCollectionVC :: memory leak for cell menu check!
 
 ## Less-Important keep in mind for future releases

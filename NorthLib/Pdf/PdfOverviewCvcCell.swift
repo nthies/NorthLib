@@ -12,7 +12,6 @@ public class PdfOverviewCvcCell : UICollectionViewCell {
   
   public let imageView = UIImageView()
   public let label = UILabel()
-  public let button = UIButton()
   
   var menu:ContextMenu?
  
@@ -42,40 +41,18 @@ public class PdfOverviewCvcCell : UICollectionViewCell {
         dist: -PdfDisplayOptions.Overview.labelHeight,
         priority: .defaultHigh)
     
-    label.numberOfLines = 2
+    label.numberOfLines = 0
     contentView.addSubview(label)
-    pin(label, to: contentView, exclude: .top)
-    label.pinHeight(PdfDisplayOptions.Overview.labelHeight)
+    pin(label.leftGuide(), to: contentView.leftGuide())
+    pin(label.rightGuide(), to: contentView.rightGuide())
+    pin(label.topGuide(), to: imageView.bottomGuide(), dist: 2.0)
+    pin(label.bottomGuide(), to: contentView.bottomGuide(), priority: .fittingSizeLevel)
     
-    contentView.addSubview(button)
-    pin(button, to: contentView, exclude: .top)
-    button.pinHeight(PdfDisplayOptions.Overview.labelHeight, priority: .defaultHigh)
-    
-    button.imageEdgeInsets = UIEdgeInsets(top: 2, left: 8, bottom: -2, right: -8)
-    button.semanticContentAttribute = UIApplication.shared
-      .userInterfaceLayoutDirection == .rightToLeft ? .forceLeftToRight : .forceRightToLeft
-    button.imageView?.tintColor = .white
     
 //    self.addBorder(.green, 0.5)
 //    self.contentView.addBorder(.yellow, 1.0)
 //    self.imageView.addBorder(.blue, 1.5)
-  }
-  
-  public var text : String? {
-    didSet {
-      button.setTitle(text, for: .normal)
-    }
-  }
-  
-  public var cloudHidden : Bool = false {
-    didSet {
-      if cloudHidden {
-        button.setImage(nil, for: .normal)
-      }
-      else {
-        button.setImage(UIImage(name: "icloud.and.arrow.down"), for: .normal)
-      }
-    }
+//    self.label.addBorder(.orange, 1.0)
   }
   
   required init?(coder: NSCoder) {

@@ -12,7 +12,7 @@ import UIKit
 //may work just with IMages and delegate handles what hapen on tap
 public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
   
-  /// Vars for Extension : PdfOverviewCollectionVC : UIScrollViewDelegate
+  // MARK: - Properties used in: UIScrollViewDelegate Extension
   // The closure to call when content scrolled more than scrollRatio
   private var whenScrolledClosure: ((CGFloat)->())?
   private var scrollRatio: CGFloat = 0
@@ -22,6 +22,7 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
   /// Define the menu to display on long touch of a MomentView
   public var menuItems: [(title: String, icon: String, closure: (String)->())] = [] 
   public var cellLabelFont:UIFont? = UIFont.systemFont(ofSize: 8)
+  public var cellLabelLinesCount = 0
   
   // MARK: - Properties
   private let reuseIdentifier = "pdfCell"
@@ -59,7 +60,6 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
       pin(cv.top, to: cvsv.topGuide())
       pin(cv.left, to: cvsv.leftGuide())
       cv.pinWidth(PdfDisplayOptions.Overview.sliderWidth)
-      cv.addBorder(.red)
     }
   }
   
@@ -72,7 +72,6 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
   public override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
     return pdfModel.count
   }
-  
   
   public override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
     let _cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath)
@@ -87,28 +86,14 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
     guard let item = self.pdfModel.item(atIndex: indexPath.row) else {
       return cell
     }
-    
-    //      cell.imageView?.contentMode = .left
-    var title = item.pageTitle ?? ""
-    
-    //      title += " (S.\(indexPath.row))\nallign: \(pdfModel.allignment(forItem: indexPath.row))"
-    //      title = "\(title) w: \(self.pdfModel?.size(forItem: indexPath.row)?.width ?? 0)\n\(pdfModel.allignment(forItem: indexPath.row)) - \(indexPath.row+1)"
-    //      title = title + ": \(item.sectionTitle ?? "") : \(item.isDoublePage)" + "\n\(item.alignment) - \(indexPath.row+1)"
-    
-    cell.label.text = title
-    #warning("Check if set Memory Leak again!")
+    cell.label.numberOfLines = self.cellLabelLinesCount
+    cell.label.text = item.pageTitle
     cell.menu?.menu = self.menuItems
-    //      cel
-    #warning("test contentMode")
-    //      cell.contentMode
     cell.imageView.contentMode = .scaleToFill
     return cell
   }
   
   public override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-    //Did not work if cell has label with Outline description!
-    print("cv content size: \(collectionView.contentSize)")
-    
     let attributes = collectionView.layoutAttributesForItem(at: indexPath)
     var sourceFrame = CGRect.zero
     if let attr = attributes {
@@ -128,9 +113,6 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
   /// thumbnails and foreground full page - did not define cell's frame e.g. for change cell alignment
   /// ...unfortunately this is more complex
   public func frameAtIndex(index:Int, fixFullFrame:Bool = false) -> CGRect {
-    return .zero
-    #warning("TODO!")
-    /**
      let indexPath = IndexPath(row: index, section: 0)
      
      let attributes = collectionView.layoutAttributesForItem(at: indexPath)
@@ -144,7 +126,6 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
      sourceFrame.size = size
      }
      return sourceFrame
-     */
   }
 }
 
@@ -187,6 +168,7 @@ class TwoColumnUICollectionViewFlowLayout : UICollectionViewFlowLayout {
   
   //An array to cache the calculated attributes
   fileprivate var cache = [UICollectionViewLayoutAttributes]()
+  fileprivate var calculatedContentSize : CGSize?
 
   let pdfModel: PdfModel
   let cellHeight: CGFloat
@@ -229,13 +211,12 @@ class TwoColumnUICollectionViewFlowLayout : UICollectionViewFlowLayout {
     let panoWidth = max(0, collectionView.frame.size.width - self.sectionInset.left - self.sectionInset.right)
     let singleWidth = max(0, panoWidth/2 - spacing/2)
     let xRight = singleWidth + spacing + xLeft
-    #warning("Something is wrong with cell height blocking stuff between sizeForItemAt above and here")
     var prevPageType : PdfPageType?
     for idx in 0..<pdfModel.count {
       let indexPath = IndexPath(item: idx, section: 0)
       let attributes = UICollectionViewLayoutAttributes(forCellWith: indexPath)
       if let item = pdfModel.item(atIndex: idx) {
-        print("Layout Item \(item.pageTitle) type: \(item.pageType) atIndex: \(idx)")
+        //print("Layout Item \(item.pageTitle) type: \(item.pageType) atIndex: \(idx)")
         switch (prevPageType, item.pageType) {
         case (.left, .right):
           attributes.frame = CGRect(x: xRight, y: yOffset, width: singleWidth, height: cellHeight)
@@ -256,10 +237,8 @@ class TwoColumnUICollectionViewFlowLayout : UICollectionViewFlowLayout {
       cache.append(attributes)
     }
     calculatedContentSize = CGSize(width: collectionView.frame.size.width,
-                                   height: yOffset + cellHeight - self.sectionInset.bottom - 25)//WTF usually only yoffset + cellheight
+                                   height: yOffset + cellHeight - self.sectionInset.bottom)
   }
-  
-  var calculatedContentSize : CGSize?
   
   override var collectionViewContentSize: CGSize {
     get {
@@ -269,9 +248,7 @@ class TwoColumnUICollectionViewFlowLayout : UICollectionViewFlowLayout {
 
   override func invalidateLayout() {
     super.invalidateLayout()
-    
     cache = []
-//    contentHeight = 0
+    calculatedContentSize = nil
   }
-  
 }

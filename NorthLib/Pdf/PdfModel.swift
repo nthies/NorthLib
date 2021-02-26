@@ -12,10 +12,10 @@ import PDFKit
 public struct PdfDisplayOptions {
   public struct Overview{
     static let singlePageItemsPerRow:Int = 2 //need calculation later for landscape or ipad layout
-    public static let sideSpacing:CGFloat = 4.0
-    public static let interItemSpacing:CGFloat = 4
-    public static let rowSpacing:CGFloat = 12.0
-    public static let labelHeight:CGFloat = 30.0
+    public static let sideSpacing:CGFloat = 12.0
+    public static let interItemSpacing:CGFloat = 12.0
+    public static let rowSpacing:CGFloat = 4.0
+    public static let labelHeight:CGFloat = 20.0
     
     /// width of pdf menu slider, page sizes are calculated for this
     /// |-sideSpacing-[Page]-interItemSpacing-[Page]-sideSpacing-|
