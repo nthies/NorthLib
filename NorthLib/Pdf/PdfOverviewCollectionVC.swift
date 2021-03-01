@@ -59,7 +59,7 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
       pin(cv.bottom, to: cvsv.bottomGuide())
       pin(cv.top, to: cvsv.topGuide())
       pin(cv.left, to: cvsv.leftGuide())
-      cv.pinWidth(PdfDisplayOptions.Overview.sliderWidth)
+      pin(cv.right, to: cvsv.rightGuide())
     }
   }
   
@@ -237,7 +237,7 @@ class TwoColumnUICollectionViewFlowLayout : UICollectionViewFlowLayout {
       cache.append(attributes)
     }
     calculatedContentSize = CGSize(width: collectionView.frame.size.width,
-                                   height: yOffset + cellHeight - self.sectionInset.bottom)
+                                   height: yOffset + rowHeight)
   }
   
   override var collectionViewContentSize: CGSize {

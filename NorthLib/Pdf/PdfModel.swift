@@ -12,6 +12,10 @@ import PDFKit
 public struct PdfDisplayOptions {
   public struct Overview{
     static let singlePageItemsPerRow:Int = 2 //need calculation later for landscape or ipad layout
+    /// On some devices default ratio 0f 0.8 is too big => resized slider width due taz icon need space also
+    /// result: images rendered bigger than needed @see: PdfOverviewCollectionVC
+    /// collectionView.cellForItemAt...  cell.imageView.contentMode = .topLeft
+    public static let sliderCoverageRatio:CGFloat = 0.7
     public static let sideSpacing:CGFloat = 12.0
     public static let interItemSpacing:CGFloat = 12.0
     public static let rowSpacing:CGFloat = 4.0
@@ -23,7 +27,7 @@ public struct PdfDisplayOptions {
     public static let sliderWidth:CGFloat = {
       let screenWidth = min(UIScreen.main.bounds.size.width,
                             UIScreen.main.bounds.size.height)
-      return 0.8*screenWidth
+      return PdfDisplayOptions.Overview.sliderCoverageRatio*screenWidth
     }()
     
     public static let fallbackPageSize:CGSize = CGSize(width: 300, height: 500)
