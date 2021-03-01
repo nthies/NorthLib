@@ -13,7 +13,7 @@ import PDFKit
 /// Service that renders PDF's on limited count of Threads,
 /// each parallel render open its own file handle
 /// to avoid memory leaks within unclosed UIGraphicsContext PDF File handles
-class PdfRenderService : DoesLog{
+public class PdfRenderService : DoesLog{
 
   private static let sharedInstance = PdfRenderService()
   private init(){}
