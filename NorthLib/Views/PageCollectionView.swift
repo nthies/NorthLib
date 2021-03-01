@@ -37,7 +37,6 @@ import UIKit
  */
 open class PageCollectionView: UICollectionView, UICollectionViewDelegate, 
   UICollectionViewDataSource, UIScrollViewDelegate, UICollectionViewDelegateFlowLayout {
-  open var useSelfReuse: Bool = false
   
   /// relative spacing between pages (in relation to the Carousel's width)
   open var relativeSpacing: CGFloat = 0.12
@@ -165,11 +164,7 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
   
   /// Returns the optional view at a given index (if that view is visible)
   open func optionalView(at idx: Int) -> OptionalView? {
-    if useSelfReuse, let cell = self.collectionView(self, cellForItemAt: IndexPath(item: idx, section: 0))as? PageCell {
-      return cell.page
-    }
-    // Gets the visible cell object at the specified index path.
-    else if let cell = cellForItem(at: IndexPath(item: idx, section: 0)) as? PageCell {
+    if let cell = cellForItem(at: IndexPath(item: idx, section: 0)) as? PageCell {
       return cell.page
     }
     else { return nil }
