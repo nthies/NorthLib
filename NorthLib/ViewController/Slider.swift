@@ -351,6 +351,12 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
     slide(toOpen: false, animated: animated)
   }
   
+  /// Hides left Background layer, which hides previoud pushed VC
+  /// use this to fix back block on disappear of current vc
+  public func hideLeftBackground() {
+    leftBackground.isHidden = true
+  }
+  
 } // class Slider
 
 
