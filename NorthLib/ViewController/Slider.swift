@@ -424,6 +424,15 @@ open class ButtonSlider: Slider {
     button.addTarget(self, action: #selector(buttonPressed(sender:)), for: .touchUpInside)
   }
   
+  public func buttonMoveOut( _ duration: TimeInterval, atEnd: (()->())? = nil ) {
+    UIView.animate(withDuration: duration, delay: 0, options: .curveEaseOut, animations: {
+      self.leadingButtonConstraint.constant = -90
+      self.active.view.layoutIfNeeded()
+    } ) { _ in
+      if let closure = atEnd { closure() }
+    }
+  }
+  
   public func buttonFadeOut( _ duration: TimeInterval, atEnd: (()->())? = nil ) {
     UIView.animate(withDuration: duration, delay: 0, options: .curveEaseOut, animations: {
       self.button.alpha = 0
