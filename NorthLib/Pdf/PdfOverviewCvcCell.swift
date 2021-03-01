@@ -16,6 +16,7 @@ public class PdfOverviewCvcCell : UICollectionViewCell {
   var menu:ContextMenu?
  
   public override func prepareForReuse() {
+    print("PdfOverviewCvcCell prepareForReuse \(self.hash)")
     self.imageView.image = nil
     self.label.text = nil
   }

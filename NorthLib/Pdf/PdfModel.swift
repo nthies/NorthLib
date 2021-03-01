@@ -23,7 +23,7 @@ public struct PdfDisplayOptions {
     public static let sliderWidth:CGFloat = {
       let screenWidth = min(UIScreen.main.bounds.size.width,
                             UIScreen.main.bounds.size.height)
-      return 0.6*screenWidth
+      return 0.8*screenWidth
     }()
     
     public static let fallbackPageSize:CGSize = CGSize(width: 300, height: 500)
