@@ -82,6 +82,7 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
   }
   
   var shadeView = UIView()
+  let leftBackground = UIView()//hide previous vc. content if vertical slider on spring open
   public private(set) var sliderView = UIView()
   var contentView = UIView()
   var handleView: RoundedRect?
@@ -284,6 +285,14 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
     decorateSlider(isDecorate)
     active.view.addSubview(shadeView)
     active.view.addSubview(sliderView)
+    
+    active.view.addSubview(leftBackground)
+    leftBackground.backgroundColor = .black
+    pin(leftBackground.rightGuide(), to: sliderView.leftGuide())
+    pin(leftBackground.topGuide(), to: sliderView.topGuide(), dist: -30)
+    pin(leftBackground.bottomGuide(), to: sliderView.bottomGuide(), dist: -30)
+    leftBackground.pinWidth(12)
+    
     setupInvariableConstraints()
     let ics = slider.view.intrinsicContentSize
     if isHorizontal { if ics.width > 0 { coverage = ics.width } }
@@ -299,6 +308,7 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
   
   public func slide(toOpen: Bool, animated: Bool = true) {
     let view = active.view!
+    leftBackground.isHidden = isHorizontal && !toOpen
     shadeView.isHidden = false
     sliderView.isHidden = false
     if !isOpen {
