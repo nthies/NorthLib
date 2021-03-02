@@ -437,11 +437,11 @@ open class ButtonSlider: Slider {
       self.active.view.layoutIfNeeded()
     } ) { _ in
       UIView.animate(withDuration: duration/3, delay: 0, options: .curveEaseOut, animations: {
-        self.leadingButtonConstraint.constant = -95
+        self.leadingButtonConstraint.constant = -self.button.frame.size.width
         self.active.view.layoutIfNeeded()
       } ) { _ in
         UIView.animate(withDuration: duration/3, delay: 0, options: .curveEaseOut, animations: {
-          self.leadingButtonConstraint.constant = -90
+          self.leadingButtonConstraint.constant = -self.button.frame.size.width+7
           self.active.view.layoutIfNeeded()
         } ) { _ in
       if let closure = atEnd { closure() }
