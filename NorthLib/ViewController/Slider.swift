@@ -375,6 +375,7 @@ open class ButtonSlider: Slider {
       coverage = active.view!.bounds.size.width - img.size.width
     }
   }
+  public var hideButtonOnClose = false
   public var button = UIButton(type: .custom)
   public var buttonAlpha: CGFloat = 1.0 {
     didSet { button.alpha = buttonAlpha }
@@ -430,11 +431,49 @@ open class ButtonSlider: Slider {
     button.addTarget(self, action: #selector(buttonPressed(sender:)), for: .touchUpInside)
   }
   
-  public func buttonMoveOut( _ duration: TimeInterval, atEnd: (()->())? = nil ) {
-    UIView.animate(withDuration: duration, delay: 0, options: .curveEaseOut, animations: {
+  public func buttonMoveOut( _ duration: TimeInterval = 0.5, _ delay: TimeInterval = 0.3, atEnd: (()->())? = nil ) {
+    UIView.animate(withDuration: duration, delay: delay, options: .curveEaseOut, animations: {
       self.leadingButtonConstraint.constant = -90
       self.active.view.layoutIfNeeded()
     } ) { _ in
+      if let closure = atEnd { closure() }
+    }
+  }
+  
+  public func buttonMoveOut3( _ duration: TimeInterval = 0.9, _ delay: TimeInterval = 0.1, atEnd: (()->())? = nil ) {
+    UIView.animate(withDuration: duration/3, delay: delay, options: .curveEaseOut, animations: {
+      self.leadingButtonConstraint.constant = 3
+      self.active.view.layoutIfNeeded()
+    } ) { _ in
+      UIView.animate(withDuration: duration/3, delay: 0, options: .curveEaseOut, animations: {
+        self.leadingButtonConstraint.constant = -95
+        self.active.view.layoutIfNeeded()
+      } ) { _ in
+        UIView.animate(withDuration: duration/3, delay: 0, options: .curveEaseOut, animations: {
+          self.leadingButtonConstraint.constant = -90
+          self.active.view.layoutIfNeeded()
+        } ) { _ in
+      if let closure = atEnd { closure() }
+        }
+      }
+    }
+  }
+  
+  public func buttonMoveOut2( _ duration: TimeInterval = 0.9, _ delay: TimeInterval = 0.0, atEnd: (()->())? = nil ) {
+    UIView.animateKeyframes(withDuration: duration, delay: delay, options: .calculationModeCubic, animations: {
+      UIView.addKeyframe(withRelativeStartTime: 0.0, relativeDuration: 0.33) {
+        self.leadingButtonConstraint.constant = 3
+        self.active.view.layoutIfNeeded()
+      }
+      UIView.addKeyframe(withRelativeStartTime: 0.34, relativeDuration: 0.33) {
+        self.leadingButtonConstraint.constant = -95
+        self.active.view.layoutIfNeeded()
+      }
+      UIView.addKeyframe(withRelativeStartTime: 0.66, relativeDuration: 0.33) {
+        self.leadingButtonConstraint.constant = -90
+        self.active.view.layoutIfNeeded()
+      }
+    }) { _ in
       if let closure = atEnd { closure() }
     }
   }
@@ -454,6 +493,11 @@ open class ButtonSlider: Slider {
     } ) { _ in
       if let closure = atEnd { closure() }
     }
+  }
+  
+  public override func slide(toOpen: Bool, animated: Bool = true) {
+    super.slide(toOpen: toOpen, animated: animated)
+    if hideButtonOnClose, toOpen == false { buttonMoveOut3()}
   }
   
   public func blinkButton() {
