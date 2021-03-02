@@ -192,12 +192,29 @@ class TwoColumnUICollectionViewFlowLayout : UICollectionViewFlowLayout {
     guard let attributesArray = super.layoutAttributesForElements(in: rect) else {
       return []
     }
-    return attributesArray.map { attributes in
+    ///Bugfix disappering cells
+    /// this is called by system and loads cells screen by screen, unfortunatly 1 cell disapperas, at the transition
+    /// between 2 screens, fix it by just adding previous (missing) cell
+    /// in Tests on iPhone 12Pro Simulator this happen on cells 13,21,29
+    /// depending on pano page before and advertisig page
+    /// if no pano pages this happend for pages [14,15] and [22,23] 
+    var items:[UICollectionViewLayoutAttributes]? = attributesArray.map { attributes in
       if attributes.representedElementCategory == .cell {
         return self.layoutAttributesForItem(at:attributes.indexPath) ?? attributes
       }
       return attributes
     }
+    if let first = attributesArray.first,
+       first.indexPath.row > 0,
+       let missing = self.layoutAttributesForItem(at:IndexPath(row: first.indexPath.row-1, section: first.indexPath.section)) {
+      items?.append(missing)
+    }
+    return items
+  }
+  
+  override func shouldInvalidateLayout(forBoundsChange newBounds: CGRect) -> Bool {
+      guard let collectionView = collectionView else { return false }
+      return !newBounds.size.equalTo(collectionView.bounds.size)
   }
   
   override func prepare() {
