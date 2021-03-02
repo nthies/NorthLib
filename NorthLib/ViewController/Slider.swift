@@ -376,7 +376,7 @@ open class ButtonSlider: Slider {
     }
   }
   public var hideButtonOnClose = false
-  public var button = UIButton(type: .custom)
+  public var button = CustomButton(type: .custom)
   public var buttonAlpha: CGFloat = 1.0 {
     didSet { button.alpha = buttonAlpha }
   }
@@ -651,4 +651,13 @@ open class RoundedRect: UIView {
     backgroundColor = UIColor.clear
   }
   
+}
+
+
+public class CustomButton: UIButton {
+  public var additionalTapOffset:CGFloat = 0
+  
+  public override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
+        return bounds.insetBy(dx: -additionalTapOffset, dy: -additionalTapOffset).contains(point)
+    }
 }
