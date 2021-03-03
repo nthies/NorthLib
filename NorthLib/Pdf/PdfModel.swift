@@ -157,17 +157,3 @@ class PdfModelItem : PdfModel, DoesLog/*, PDFOutlineStructure*/ {
     return "Seite:\(atIndex)"
   }
 }
-
-// MARK: PdfModelHelper
-class PdfModelHelper{
-  
-  static func demoDocUrl() -> URL? {
-    guard var pdfUrls
-      = Bundle.main.urls(forResourcesWithExtension: "pdf",
-                         subdirectory: "DemoPdf") else { return nil }
-    pdfUrls.sort { $0.absoluteString.compare(
-      $1.absoluteString, options: .caseInsensitive) == .orderedDescending
-    }
-    return pdfUrls.first
-  }
-}

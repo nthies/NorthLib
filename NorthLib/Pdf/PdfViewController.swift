@@ -13,8 +13,7 @@ open class PdfViewController : UIViewController, CanRotate{
   public private(set) var thumbnailController : PdfOverviewCollectionVC?
   public internal(set) var pageController : PdfPagesCollectionVC?
   public internal(set) var overlay : Overlay?
-  
-   var pdfModel : PdfModel?
+  let pdfModel : PdfModel
   
   ///Difficult decission
   /// Light status bar because of black background TBD at Zoom in the white Newspaper is in bg on zoom out the black bg
@@ -25,14 +24,8 @@ open class PdfViewController : UIViewController, CanRotate{
   }
     
   
-  public init(_ pdfModel : PdfModel? = nil) {
-    if pdfModel == nil {
-      self.pdfModel = PdfModelItem(url: PdfModelHelper.demoDocUrl())
-    }
-    else {
-      self.pdfModel = pdfModel
-    }
-    guard let pdfModel = pdfModel else { fatalError("init() pdfModel is nil cannot show something usefull") }
+  public init(_ pdfModel : PdfModel) {
+    self.pdfModel = pdfModel
     Log.minLogLevel = .Debug
     thumbnailController = PdfOverviewCollectionVC(pdfModel:pdfModel)
     pageController = PdfPagesCollectionVC(data: pdfModel)
@@ -74,7 +67,6 @@ open class PdfViewController : UIViewController, CanRotate{
       pageController?.collectionView = nil
       pageController?.removeFromParent()
       thumbnailController?.clickCallback = nil
-//      thumbnailController?.pdfModel = nil
       thumbnailController?.menuItems = []
       thumbnailController?.removeFromParent()
       thumbnailController = nil
@@ -82,7 +74,6 @@ open class PdfViewController : UIViewController, CanRotate{
       overlay?.onRequestUpdatedCloseFrame(closure: nil)
       pageController = nil
       overlay = nil
-      pdfModel = nil
     }
   }
   
@@ -118,5 +109,4 @@ open class PdfViewController : UIViewController, CanRotate{
     self.overlay?.open(animated: false, fromBottom: false)
     self.overlay?.setCloseActionToShrink() //Fix where to close to
   }
-  
 }
