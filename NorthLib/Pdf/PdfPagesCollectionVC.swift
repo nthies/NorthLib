@@ -19,13 +19,11 @@ open class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
     }
     set{
       var newItems = newValue
-      if newItems.count > 0 {
-        newItems.insert((title: "Zoom 1:1", icon: "1.magnifyingglass", closure: { [weak self] _ in
-          if let ziv = self?.currentView as? ZoomedImageView  {
-            ziv.scrollView.setZoomScale(1.0, animated: true)
-          }
-        }), at: 0)
-      }
+      newItems.insert((title: "Zoom 1:1", icon: "1.magnifyingglass", closure: { [weak self] _ in
+        if let ziv = self?.currentView as? ZoomedImageView  {
+          ziv.scrollView.setZoomScale(1.0, animated: true)
+        }
+      }), at: 0)
       _menuItems = newItems
     }
   }
