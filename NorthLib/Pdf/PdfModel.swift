@@ -30,7 +30,7 @@ public struct PdfDisplayOptions {
       return PdfDisplayOptions.Overview.sliderCoverageRatio*screenWidth
     }()
     
-    public static let fallbackPageSize:CGSize = CGSize(width: 300, height: 500)
+    public static let fallbackPageSize:CGSize = CGSize(width: 893, height: 1332.5)
   }
 }
 
@@ -155,19 +155,5 @@ class PdfModelItem : PdfModel, DoesLog/*, PDFOutlineStructure*/ {
   
   func pageTitle(forItem atIndex: Int) -> String? {
     return "Seite:\(atIndex)"
-  }
-}
-
-// MARK: PdfModelHelper
-class PdfModelHelper{
-  
-  static func demoDocUrl() -> URL? {
-    guard var pdfUrls
-      = Bundle.main.urls(forResourcesWithExtension: "pdf",
-                         subdirectory: "DemoPdf") else { return nil }
-    pdfUrls.sort { $0.absoluteString.compare(
-      $1.absoluteString, options: .caseInsensitive) == .orderedDescending
-    }
-    return pdfUrls.first
   }
 }

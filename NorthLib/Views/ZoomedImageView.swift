@@ -161,7 +161,18 @@ open class ZoomedImageView: UIView, ZoomedImageViewSpec {
   public func invalidateLayout(){
     zoomOutAndCenter()
   }
+  
+  fileprivate var startDragging: CGFloat? // content y offset at start of dragging
+  private var whenScrolledHandlers : [WhenScrolledHandler] = []
+  public func whenScrolled(minRatio: CGFloat, _ closure: @escaping (CGFloat) -> ()) {
+    ///Question: memory leaks? when to remove, how to use?
+//    whenScrolledHandlers.append((minRatio, closure))
+    //currently prefer just 1 Handler
+    whenScrolledHandlers = [(minRatio, closure)]
+  }
 }
+
+public typealias WhenScrolledHandler = (minRatio: CGFloat, closure: (CGFloat) -> ())
 
 // MARK: - Setup
 extension ZoomedImageView{
@@ -401,5 +412,22 @@ extension ZoomedImageView: UIScrollViewDelegate{
         self.highResImgRequested = false
       })
     }
+  }
+  
+  public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+    startDragging = scrollView.contentOffset.y
+  }
+  
+  public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+    if let sd = startDragging {
+      let scrolled = sd-scrollView.contentOffset.y
+      let ratio = scrolled / scrollView.bounds.size.height
+      for handler in whenScrolledHandlers {
+        if abs(ratio) >= handler.minRatio {
+          handler.closure(ratio)
+        }
+      }
+    }
+    startDragging = nil
   }
 }

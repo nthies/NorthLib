@@ -59,6 +59,8 @@ public protocol ZoomedImageViewSpec where Self: UIView {
   /// coordinates: 0 <= x,y <= 1
   func onTap(closure: ((OptionalImage, Double, Double) -> ())?)
   
+  func whenScrolled( minRatio: CGFloat, _ closure: @escaping (CGFloat)->() )
+  
   func invalidateLayout()
 }
 
