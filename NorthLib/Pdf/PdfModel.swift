@@ -16,8 +16,8 @@ public struct PdfDisplayOptions {
     /// result: images rendered bigger than needed @see: PdfOverviewCollectionVC
     /// collectionView.cellForItemAt...  cell.imageView.contentMode = .topLeft
     public static let sliderCoverageRatio:CGFloat = 0.7
-    public static let sideSpacing:CGFloat = 12.0
-    public static let interItemSpacing:CGFloat = 12.0
+    public static let sideSpacing:CGFloat = 26.0
+    public static let interItemSpacing:CGFloat = 13.0
     public static let rowSpacing:CGFloat = 4.0
     public static let labelHeight:CGFloat = 20.0
     
