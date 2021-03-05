@@ -1246,6 +1246,10 @@ open class ImageView: ButtonView {
       }
     }
   }
+  open override var isActivated: Bool {
+    get{ return super.isActivated }
+    set{ super.isActivated = newValue; imageView.tintColor = strokeColor }
+  }
 
   open override var color: UIColor {
     didSet { imageView.tintColor = strokeColor }
