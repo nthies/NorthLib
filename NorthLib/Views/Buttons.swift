@@ -41,7 +41,7 @@ import UIKit
  
   All ButtonViews use a clear background color.
 */
-
+// MARK: - ButtonView
 open class ButtonView: UIView {
 
   /// Main color used in drawing the button in inactive state (tintColor by default)
@@ -126,7 +126,7 @@ open class ButtonView: UIView {
     if true the primary icon is drawn in inactive state and the secondary is drawn
     when the button is pressed (active state). If false it's vice versa.
   */
-
+// MARK: - FlipFlopView
 open class FlipFlopView: ButtonView {
 
   /// Whether to use bistable mode
@@ -155,7 +155,7 @@ open class FlipFlopView: ButtonView {
   By default (in non activated state) only the primary ButtonView is displayed. In activated
   state the primary view is hidden and the secondary view is displayed (i.e. unhidden).
 */
-
+// MARK: - FlipFlop<Primary, Secondary>:
 @IBDesignable
 open class FlipFlop<Primary:ButtonView, Secondary:ButtonView>: FlipFlopView {
 
@@ -230,7 +230,7 @@ open class FlipFlop<Primary:ButtonView, Secondary:ButtonView>: FlipFlopView {
   is a FlipFlopView these methods are relayed to the view. If not, 'isPrimary' returns
   true and 'isBistable' false.
  */
-
+// MARK: - ButtonControl
 @IBDesignable
 open class ButtonControl: UIControl {
 
@@ -394,7 +394,7 @@ open class ButtonControl: UIControl {
   creates a Button aka ButtonControl `b`
   based on the BView ButtonView subclass.
  */
-
+// MARK: - Button<View: ButtonView>
 open class Button<View: ButtonView>: ButtonControl {  
   open var buttonView: View { return super.view as! View }
   public init( frame: CGRect ) { super.init( view: View(), frame: frame ) }
@@ -426,7 +426,7 @@ open class Button<View: ButtonView>: ButtonControl {
   }
   ````
 */
-
+// MARK: - SwitchControl
 @IBDesignable
 open class SwitchControl: ButtonControl {
 
@@ -470,7 +470,7 @@ open class SwitchControl: ButtonControl {
  based on the BView ButtonView subclass.
 
 */
-
+// MARK: - Switch<View: ButtonView>: SwitchControl
 open class Switch<View: ButtonView>: SwitchControl {
   open var buttonView: View { return super.view as! View }
   public init( frame: CGRect ) { super.init( view: View(), frame: frame ) }
@@ -491,7 +491,7 @@ open class Switch<View: ButtonView>: SwitchControl {
   A PlusView is a FlipFlopView subclass showing a plus sign as its primary
   icon and a minus sign as secondary icon.
 */
-
+// MARK: - PlusView
 @IBDesignable
 open class PlusView: FlipFlopView {
   
@@ -535,7 +535,7 @@ open class MinusView: PlusView {
   A ArrowView is a FlipFlopView subclass showing a left arrow as its primary
   icon and a right arrow as secondary icon.
 */
-
+// MARK: - ArrowView
 @IBDesignable
 open class ArrowView: FlipFlopView {
   
@@ -605,7 +605,7 @@ open class RightArrowView: ArrowView {
     
   In active mode the angle is set to 90 degrees. An "active" color is not used.
 */
-
+// MARK: - RotatingTriangleView
 @IBDesignable
 open class RotatingTriangleView: FlipFlopView {
 
@@ -673,7 +673,7 @@ open class RotatingTriangleView: FlipFlopView {
   some kind of selection). This is the primary icon, if isPrimary==false, then the 
   primary icon is shown "crossed out" (indicating deselection).
 */
-
+// MARK: - SelectionView
 @IBDesignable
 open class SelectionView: FlipFlopView {
   
@@ -765,7 +765,7 @@ open class SelectionView: FlipFlopView {
   * nCogs (7)<br/>
     the number of cogs to draw
 */
-
+// MARK: - GearWheelView
 @IBDesignable
 open class GearWheelView: ButtonView {
 
@@ -855,6 +855,7 @@ open class GearWheelView: ButtonView {
     * isDrawLine (false): draw line around the icon
 */
 
+// MARK: - BookmarkView
 @IBDesignable
 open class BookmarkView: FlipFlopView {
 
@@ -930,7 +931,7 @@ open class BookmarkView: FlipFlopView {
   * dogearWidth (0.2)<br/>
     Width of page dogear as a factor to the view's width.
 */
-
+// MARK: - PageView
 @IBDesignable
 open class PageView: ButtonView {
 
@@ -977,7 +978,7 @@ open class PageView: ButtonView {
 /**
   ButtonView displaying three horizontal lines (a Hamburger Menu)
 */
-
+// MARK: - MenuView
 @IBDesignable
 open class MenuView: ButtonView {
 
@@ -1060,7 +1061,7 @@ open class ContentsTableView: ButtonView {
 /**
   XCircleView displays an X optionally in a circle
 */
-
+// MARK: - CircledXView
 @IBDesignable
 open class CircledXView: ButtonView {
 
@@ -1112,7 +1113,7 @@ open class CircledXView: ButtonView {
   * arrowLength (0.6)<br/>
     length of the arrow as a factor to the view's height.
 */
-
+// MARK: - ExportView
 @IBDesignable
 open class ExportView: FlipFlopView {
 
@@ -1208,6 +1209,7 @@ open class ImportView: ExportView {
 /**
   ButtonView displaying an Image. 
 */
+// MARK: - ImageView
 @IBDesignable
 open class ImageView: ButtonView {
 
@@ -1277,7 +1279,7 @@ open class ImageView: ButtonView {
   tv.text = "Hello world"
   ````
 */
-
+// MARK: - TextView
 @IBDesignable
 open class TextView: ButtonView {
 
@@ -1353,7 +1355,7 @@ open class TextView: ButtonView {
   b.isLeftArrow = false
   ````
  */
-
+// MARK: - ArrowedTextView
 @IBDesignable
 open class ArrowedTextView: ButtonView {
   
@@ -1457,7 +1459,7 @@ open class ArrowedTextView: ButtonView {
 /**
   ButtonView drawing  a stylized trash bin icon.
 */
-
+// MARK: - TrashBinView
 @IBDesignable
 open class TrashBinView: ButtonView {
 
