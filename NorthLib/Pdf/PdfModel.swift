@@ -92,8 +92,6 @@ class PdfModelItem : PdfModel, DoesLog/*, PDFOutlineStructure*/ {
   func item(atIndex: Int) -> ZoomedPdfImageSpec? {
     return images.valueAt(atIndex)
   }
-  #warning("Needed anymore?")
-  static let previewDeviceWithScale : CGFloat = 0.25//4 in a row
   
   var images : [ZoomedPdfImageSpec] = []
   
