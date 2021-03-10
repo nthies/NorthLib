@@ -17,7 +17,7 @@ public protocol ZoomedPdfImageSpec : OptionalImage, DoesLog {
   var pageTitle: String? { get set}
   var renderingStoped: Bool { get }
   var preventNextRenderingDueFailed: Bool { get }
-  var page : PDFPage? { get }
+  var pdfPage : PDFPage? { get }
   /// ratio between current zoom and next zoom
   var doubleTapNextZoomStep : CGFloat? { get }
   var pageType : PdfPageType { get }
@@ -38,7 +38,7 @@ open class ZoomedPdfImage: OptionalImageItem, ZoomedPdfImageSpec {
   public private(set) var pdfUrl: URL?
   public private(set) var pdfPageIndex: Int?
   
-  open var page: PDFPage? {
+  open var pdfPage: PDFPage? {
     get {
       guard let url = pdfUrl else { return nil }
       guard let index = pdfPageIndex else { return nil }

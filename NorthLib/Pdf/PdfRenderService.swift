@@ -88,7 +88,7 @@ public class PdfRenderService : DoesLog{
     
     queue.async { [weak self] in
       let debugEnqueuedStart = Date()
-      guard let pdfPage = item.page else {
+      guard let pdfPage = item.pdfPage else {
         finishedCallback(nil)
         return
       }
@@ -112,7 +112,7 @@ public class PdfRenderService : DoesLog{
           additionalInfo = "ZoomedPdfImage with url: \(String(describing:zpdfi.pdfUrl)) and index: \(String(describing: zpdfi.pdfPageIndex))"
         }
         else {
-          additionalInfo = "A Page with Document: \(String(describing:item.page?.document?.documentURL))"
+          additionalInfo = "A Page with Document: \(String(describing:item.pdfPage?.document?.documentURL))"
         }
         
         self?.log("Render for: \(additionalInfo) done"
