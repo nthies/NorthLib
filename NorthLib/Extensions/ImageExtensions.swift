@@ -67,15 +67,16 @@ public extension UIImage {
   }
   
   /// Initialize with PDF data (use screen height to compute scale)
-  static func pdf(_ data: Data) -> UIImage? {
+  static func pdf(_ data: Data,
+                  width: CGFloat = UIScreen.main.bounds.width,
+                  height: CGFloat = UIScreen.main.bounds.height,
+                  useHeight: Bool = true) -> UIImage? {
     let doc = PdfDoc(data: data)
-    if let page = doc[0] {
-      let height = UIScreen.main.bounds.height
-      return page.image(height: height)
-    }
-    return nil
+    guard let page0 = doc[0] else { return nil }
+    if useHeight { return page0.image(height: height) }
+    return page0.image(width: width)
   }
-  
+    
   /// Change Image Scale without expensive Rendering
   func scaled(_ scaleFactor:CGFloat = UIScreen.main.scale) -> UIImage {
     guard let cgi = self.cgImage else { return self }
