@@ -132,24 +132,24 @@ extension PDFPage : DoesLog {
   fileprivate func image(scale: CGFloat = 1.0) -> UIImage? {
     var img: UIImage?
     guard let ref = self.pageRef else { return nil}
-    var _frame = self.bounds(for: .mediaBox)
-    _frame.size.width *= scale
-    _frame.size.height *= scale
-    _frame.origin.x = 0
-    _frame.origin.y = 0
-    if _frame.width > 300 {
-      self.log("TRY TO RENDER IMAGE WITH: \(_frame.size)", logLevel: .Debug)
+    var frame = self.frame ?? ref.getBoxRect(.cropBox)
+    frame.size.width *= scale
+    frame.size.height *= scale
+    frame.origin.x = 0
+    frame.origin.y = 0
+    if frame.width > 300 {
+      self.log("TRY TO RENDER IMAGE WITH: \(frame.size)", logLevel: .Debug)
     }
     
-    if avoidRenderDueExpectedMemoryIssue(_frame, scale) { return nil }
+    if avoidRenderDueExpectedMemoryIssue(frame, scale) { return nil }
     
-    UIGraphicsBeginImageContext(_frame.size)
+    UIGraphicsBeginImageContext(frame.size)
     
     if let ctx = UIGraphicsGetCurrentContext() {
       ctx.saveGState()
       UIColor.white.set()
-      ctx.fill(_frame)
-      ctx.translateBy(x: 0.0, y: _frame.size.height)
+      ctx.fill(frame)
+      ctx.translateBy(x: 0.0, y: frame.size.height)
       ctx.scaleBy(x: 1.0, y: -1.0)
       ctx.scaleBy(x: scale, y: scale)
       ctx.drawPDFPage(ref)
@@ -158,8 +158,8 @@ extension PDFPage : DoesLog {
     }
     
     UIGraphicsEndImageContext()
-    if _frame.width > 300 {
-      log("rendered image width: \(_frame.width) imagesize: \(img?.mbSize ?? 0) MB", logLevel: .Debug)
+    if frame.width > 300 {
+      log("rendered image width: \(frame.width) imagesize: \(img?.mbSize ?? 0) MB", logLevel: .Debug)
     }
     return img
   }
