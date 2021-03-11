@@ -56,8 +56,9 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
     // Register cell classes
     collectionView?.register(PdfOverviewCvcCell.self, forCellWithReuseIdentifier: reuseIdentifier)
     if let cv = self.collectionView, let cvsv = cv.superview {
-      pin(cv.bottom, to: cvsv.bottomGuide())
-      pin(cv.top, to: cvsv.topGuide())
+      pin(cv.bottom, to: cvsv.bottom)
+//      pin(cv.top, to: cvsv.topGuide())
+      pin(cv.top, to: cvsv.top)
       pin(cv.left, to: cvsv.leftGuide())
       pin(cv.right, to: cvsv.rightGuide())
     }

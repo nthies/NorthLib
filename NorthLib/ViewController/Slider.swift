@@ -423,6 +423,11 @@ open class ButtonSlider: Slider {
     toggleSlider()
   }
   
+  override func setupInvariableConstraints() {
+    super.setupInvariableConstraints()
+    pin(sliderView.top, to: active.view!.top, priority: .required)//THats the Point!
+    }
+  
   public init(slider: UIViewController, into active: UIViewController) {
     active.view.addSubview(button)
     button.translatesAutoresizingMaskIntoConstraints = false
