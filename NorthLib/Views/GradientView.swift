@@ -35,6 +35,5 @@ public class VerticalGradientView : UIView {
     gradientLayer.endPoint = CGPoint(x: 0.5, y: 1)
     gradientLayer.locations = [0,1]
     self.layer.addSublayer(gradientLayer)
-    self.addBorder(.red)
   }
 }
