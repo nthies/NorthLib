@@ -22,7 +22,9 @@ public protocol ZoomedPdfImageSpec : OptionalImage, DoesLog {
   var doubleTapNextZoomStep : CGFloat? { get }
   var pageType : PdfPageType { get }
   var size : CGSize { get }
+  var fullScreenPageHeight : CGFloat? { get }
   
+  func resetToSingleScaleIfNeeded()
   func renderImageWithNextScale(finishedCallback: ((Bool) -> ())?)
   func renderFullscreenImageIfNeeded(finishedCallback: ((Bool) -> ())?)
   func renderImageWithScale(scale: CGFloat, finishedCallback: ((Bool) -> ())?)
@@ -35,6 +37,7 @@ open class ZoomedPdfImage: OptionalImageItem, ZoomedPdfImageSpec {
   public var size: CGSize = CGSize(width: 100, height: 80)
   public var sectionTitle: String?
   open var pageTitle: String?
+  public var fullScreenPageHeight : CGFloat?
   public private(set) var pdfUrl: URL?
   public private(set) var pdfPageIndex: Int?
   
@@ -94,14 +97,7 @@ open class ZoomedPdfImage: OptionalImageItem, ZoomedPdfImageSpec {
     //    self.renderImageWithScale(scale:1.0, finishedCallback: finishedCallback)
     if rendering { return }//Prevent double render
     rendering = true
-    let scale : CGFloat = 0.9 // 90% height
-    //Prevent Multiple time max rendering
-    let pageHeight = 3.3/2*UIScreen.main.bounds.width
-    
-    let baseheight = pageHeight*UIScreen.main.scale
-    log("Optional Image, render Image with scale: \(scale) is height: \(baseheight*scale) 1:1 image width should be: \(baseheight)")
-    PdfRenderService.render(item: self,
-                            height: baseheight*scale) { img in
+    let finishedBlock: ((UIImage?)->()) = { img in
       onMain { [weak self] in
         guard let self = self else { return }
         
@@ -113,12 +109,10 @@ open class ZoomedPdfImage: OptionalImageItem, ZoomedPdfImageSpec {
         }
         
         guard let newImage = img else {
-          self.log("Optional Image, render Image with scale: \(scale) FAILED")
           self.zoomScales.setLastRenderSucceed(false)
           finishedCallback?(false)
           return
         }
-        self.log("Optional Image, render Image with scale: \(scale) SUCCEED ImgSize: \(newImage.size), \(newImage.mbSize) MB")
         self.zoomScales.setLastRenderSucceed(true)
         self.image = newImage
         finishedCallback?(true)
