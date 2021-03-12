@@ -24,7 +24,7 @@ public protocol ZoomedPdfImageSpec : OptionalImage, DoesLog {
   var size : CGSize { get }
   var fullScreenPageHeight : CGFloat? { get }
   
-  func resetToSingleScaleIfNeeded()
+//  func resetToSingleScaleIfNeeded()
   func renderImageWithNextScale(finishedCallback: ((Bool) -> ())?)
   func renderFullscreenImageIfNeeded(finishedCallback: ((Bool) -> ())?)
   func renderImageWithScale(scale: CGFloat, finishedCallback: ((Bool) -> ())?)
