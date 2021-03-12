@@ -11,7 +11,13 @@ import UIKit
 //PagePDFVC array von pages mit Image und page
 /// Provides functionallity to view, zoom in PDF Pages. Swipe on Side Corner shows next/prev Page if available
 open class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
-    
+  public var cellScrollIndicatorInsets:UIEdgeInsets?
+  public var cellVerticalScrollIndicatorInsets:UIEdgeInsets?
+  public var cellHorizontalScrollIndicatorInsets:UIEdgeInsets?
+  var whenScrolledHandler : WhenScrolledHandler?
+  public func whenScrolled(minRatio: CGFloat, _ closure: @escaping (CGFloat) -> ()) {
+    whenScrolledHandler = (minRatio, closure)
+  }
   var _menuItems: [(title: String, icon: String, closure: (String)->())] = []
   public var menuItems: [(title: String, icon: String, closure: (String)->())] {
     get{
@@ -107,6 +113,16 @@ open class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
         let ziv = ZoomedImageView(optionalImage: dataItem)
         ziv.scrollView.insetsLayoutMarginsFromSafeArea = true
         ziv.scrollView.contentInsetAdjustmentBehavior = .scrollableAxes
+        ziv.whenScrolledHandler = self.whenScrolledHandler
+        if let insets = self.cellScrollIndicatorInsets{
+          ziv.scrollView.scrollIndicatorInsets = insets
+        }
+        if let insets = self.cellVerticalScrollIndicatorInsets{
+          ziv.scrollView.verticalScrollIndicatorInsets = insets
+        }
+        if let insets = self.cellHorizontalScrollIndicatorInsets{
+          ziv.scrollView.horizontalScrollIndicatorInsets = insets
+        }
         ziv.backgroundColor = .clear
         ziv.scrollView.backgroundColor = .clear //.red/black work .clear not WTF
         ziv.onTap { [weak self] (oimg, x, y) in
@@ -149,7 +165,7 @@ open class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
     }
   }
   
-  func handleRenderFinished(_ success:Bool, _ ziv:ZoomedImageView){
+  public func handleRenderFinished(_ success:Bool, _ ziv:ZoomedImageView){
     if success == false { return }
     onMain {
       ziv.scrollView.setZoomScale(1.0, animated: false)
