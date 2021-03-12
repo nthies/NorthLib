@@ -105,7 +105,8 @@ open class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
       }
       else {
         let ziv = ZoomedImageView(optionalImage: dataItem)
-        ziv.scrollView.contentInset = UIWindow.safeInsets
+        ziv.scrollView.insetsLayoutMarginsFromSafeArea = true
+        ziv.scrollView.contentInsetAdjustmentBehavior = .scrollableAxes
         ziv.backgroundColor = .clear
         ziv.scrollView.backgroundColor = .clear //.red/black work .clear not WTF
         ziv.onTap { [weak self] (oimg, x, y) in
