@@ -51,5 +51,13 @@ public extension UIWindow {
     }
     return 0
   }
+  
+  /// Returns safe area Insets inset of the window
+  static var safeInsets: UIEdgeInsets {
+    if #available(iOS 11.0, *) {
+      if let window = keyWindow { return window.safeAreaInsets }
+    }
+    return .zero
+  }
 
 } // UIWindow

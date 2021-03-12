@@ -64,6 +64,16 @@ open class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
     self.pageControl?.pageIndicatorTintColor = UIColor.white
     self.pageControl?.currentPageIndicatorTintColor = UIColor.red//Const.SetColor.CIColor.color
     self.pinBottomToSafeArea = false
+    setupTopGradient()
+  }
+  
+  func setupTopGradient() {
+    let topGradient = VerticalGradientView()
+    topGradient.pinHeight(UIWindow.topInset)
+    self.view.addSubview(topGradient)
+    pin(topGradient.left, to: self.view.left)
+    pin(topGradient.right, to: self.view.right)
+    pin(topGradient.top, to: self.view.top)
   }
   
   open override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -95,6 +105,7 @@ open class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
       }
       else {
         let ziv = ZoomedImageView(optionalImage: dataItem)
+        ziv.scrollView.contentInset = UIWindow.safeInsets
         ziv.backgroundColor = .clear
         ziv.scrollView.backgroundColor = .clear //.red/black work .clear not WTF
         ziv.onTap { [weak self] (oimg, x, y) in
