@@ -118,6 +118,16 @@ open class ZoomedPdfImage: OptionalImageItem, ZoomedPdfImageSpec {
         finishedCallback?(true)
       }
     }
+    
+    if let targetHeight = fullScreenPageHeight {
+      PdfRenderService.render(item: self,
+                              height: targetHeight*UIScreen.main.scale,
+                              finishedCallback: finishedBlock)
+    } else {
+      PdfRenderService.render(item: self,
+                              width: UIScreen.main.bounds.width*UIScreen.main.scale,
+                              finishedCallback: finishedBlock)
+    }
   }
   
   public func renderImageWithNextScale(finishedCallback: ((Bool) -> ())?){
