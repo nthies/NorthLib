@@ -162,7 +162,7 @@ open class ZoomedImageView: UIView, ZoomedImageViewSpec {
     zoomOutAndCenter()
   }
   
-  fileprivate var startDragging: CGFloat? // content y offset at start of dragging
+  fileprivate var startDragging: CGPoint? // content y offset at start of dragging
   public var whenScrolledHandler : WhenScrolledHandler?
   public func whenScrolled(minRatio: CGFloat, _ closure: @escaping (CGFloat) -> ()) {
     whenScrolledHandler = (minRatio, closure)
@@ -412,16 +412,30 @@ extension ZoomedImageView: UIScrollViewDelegate{
   }
   
   public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-    startDragging = scrollView.contentOffset.y
+    startDragging = scrollView.contentOffset
   }
   
   public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
     if let sd = startDragging {
-      let scrolled = sd-scrollView.contentOffset.y
-      let ratio = scrolled / scrollView.bounds.size.height
-        if let handler = whenScrolledHandler, abs(ratio) >= handler.minRatio {
-          handler.closure(ratio)
-        }
+      let co = scrollView.contentOffset
+      let size = scrollView.bounds.size
+      if size.height == 0, size.width == 0 { return }
+      
+      guard let handler = whenScrolledHandler else { return }
+      
+      let yRatio = (sd.y - co.y)/size.height
+      if abs(yRatio) >= handler.minRatio {
+        handler.closure(yRatio)
+        startDragging = nil
+        return
+      }
+      
+      let xRatio = (sd.x - co.x)/size.width
+      if abs(xRatio) >= handler.minRatio {
+        handler.closure(xRatio)
+        startDragging = nil
+        return
+      }
     }
     startDragging = nil
   }
