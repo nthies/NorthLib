@@ -366,6 +366,7 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
  *  controller.
  */
 open class ButtonSlider: Slider {
+  private var buttonMovedOut:Bool = false
   
   /// image to use as button
   public var image: UIImage? {
@@ -405,7 +406,7 @@ open class ButtonSlider: Slider {
       heightButtonConstraint.constant = img.size.height
     }
     if fromLeft {
-      leadingButtonConstraint.constant = -shift
+      if buttonMovedOut == false { leadingButtonConstraint.constant = -shift}
       leadingButtonConstraint.isActive = true
       trailingButtonConstraint.isActive = false
     }
@@ -473,6 +474,7 @@ open class ButtonSlider: Slider {
   }
   
   public override func slide(toOpen: Bool, animated: Bool = true) {
+    buttonMovedOut = !toOpen
     super.slide(toOpen: toOpen, animated: animated)
     if hideButtonOnClose, toOpen == false { buttonMoveOut()}
   }
