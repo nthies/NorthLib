@@ -93,7 +93,7 @@ open class ZoomedPdfImage: OptionalImageItem, ZoomedPdfImageSpec {
   
   public private(set) var pageDescription: String = ""
     
-  public func renderFullscreenImageIfNeeded(finishedCallback: ((Bool) -> ())?) {
+  open func renderFullscreenImageIfNeeded(finishedCallback: ((Bool) -> ())?) {
     //    self.renderImageWithScale(scale:1.0, finishedCallback: finishedCallback)
     if rendering { return }//Prevent double render
     rendering = true
