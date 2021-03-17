@@ -57,19 +57,15 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
     collectionView?.register(PdfOverviewCvcCell.self, forCellWithReuseIdentifier: reuseIdentifier)
     if let cv = self.collectionView, let cvsv = cv.superview {
       pin(cv.bottom, to: cvsv.bottom)
-      pin(cv.top, to: cvsv.topGuide())
-      // TODO@Ringo: Where to Pin?, need Design Decission
-//      pin(cv.top, to: cvsv.top)
+      pin(cv.top, to: cvsv.top)
       pin(cv.left, to: cvsv.leftGuide())
       pin(cv.right, to: cvsv.rightGuide())
-      /* TODO@Ringo: Demo top Gradient, need Design Decission
       let topGradient = VerticalGradientView()
       topGradient.pinHeight(UIWindow.topInset)
       cvsv.addSubview(topGradient)
       pin(topGradient.left, to: cvsv.leftGuide())
       pin(topGradient.right, to: cvsv.rightGuide())
       pin(topGradient.top, to: cvsv.top)
-      */
     }
   }
   
