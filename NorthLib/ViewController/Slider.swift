@@ -130,7 +130,7 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
 
   func setupInvariableConstraints() {
     let view = active.view!
-    pin(shadeView.top, to: view.topGuide())
+    pin(shadeView.top, to: view.top)
     pin(shadeView.bottom, to: view.bottom)
     pin(shadeView.left, to: view.left)
     pin(shadeView.right, to: view.right)
