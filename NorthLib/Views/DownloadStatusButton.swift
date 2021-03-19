@@ -51,7 +51,6 @@ public class DownloadStatusButton : UIButton {
   }
   
   public var cloudImage : UIImage? = UIImage(name: "icloud.and.arrow.down")
-  public var finishedCheckmark : UIImage? = UIImage(name: "checkmark")
   
   public var buttonImage : UIImage? {
     didSet{
@@ -76,10 +75,9 @@ public class DownloadStatusButton : UIButton {
                                             bottom: 0, right: offset)
         //Center Label
       case .done:
-        buttonImage = finishedCheckmark
+        buttonImage = nil
         progressCircle.isHidden = true
-        self.titleEdgeInsets = UIEdgeInsets(top: 0, left: offset,
-                                            bottom: 0, right: 0)
+        self.titleEdgeInsets = .zero
     }
   }
   
@@ -143,7 +141,7 @@ class ProgressCircle: CALayer {
   
   public var progress: Float = 0.0 {
     didSet{
-      if let tv = self.animation.toValue as? Float, progress - tv < 0.01 { return }
+      if let tv = self.animation.toValue as? Float, progress - tv < 0.1 { return }
       self.progressCircle.strokeColor = color.cgColor
       onMain { [weak self] in
         guard let self = self else { return }
@@ -200,7 +198,7 @@ class ProgressCircle: CALayer {
   private lazy var animation : CABasicAnimation = {
     let animation = CABasicAnimation(keyPath: "strokeEnd")
     animation.duration = 0.3
-    animation.isAdditive = false
+    animation.isAdditive = true
     animation.fillMode = CAMediaTimingFillMode.forwards
     animation.isRemovedOnCompletion = false
     return animation
