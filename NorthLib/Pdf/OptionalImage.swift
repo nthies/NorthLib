@@ -26,6 +26,7 @@ public protocol ZoomedPdfImageSpec : OptionalImage, DoesLog {
   
 //  func resetToSingleScaleIfNeeded()
   func renderImageWithNextScale(finishedCallback: ((Bool) -> ())?)
+//  func renderFullscreenImageIfNeeded(_ sizeToFit: CGSize, finishedCallback: ((Bool) -> ())?)
   func renderFullscreenImageIfNeeded(finishedCallback: ((Bool) -> ())?)
   func renderImageWithScale(scale: CGFloat, finishedCallback: ((Bool) -> ())?)
 }
@@ -92,6 +93,45 @@ open class ZoomedPdfImage: OptionalImageItem, ZoomedPdfImageSpec {
   private var rendering = false
   
   public private(set) var pageDescription: String = ""
+ /*
+  open func renderFullscreenImageIfNeeded(_ sizeToFit: CGSize, singlePageRatio: CGFloat, finishedCallback: ((Bool) -> ())?){
+    //    self.renderImageWithScale(scale:1.0, finishedCallback: finishedCallback)
+    if rendering { return }//Prevent double render
+    rendering = true
+    let finishedBlock: ((UIImage?)->()) = { img in
+      onMain { [weak self] in
+        guard let self = self else { return }
+        
+        self.rendering = false
+        
+        if self.renderingStoped {
+          /// handle cancelation
+          return
+        }
+        
+        guard let newImage = img else {
+          self.zoomScales.setLastRenderSucceed(false)
+          finishedCallback?(false)
+          return
+        }
+        self.zoomScales.setLastRenderSucceed(true)
+        self.image = newImage
+        finishedCallback?(true)
+      }
+    }
+    let cropBoxSize = self.pdfPage?.bounds(for: .cropBox).size
+    let
+    
+    if let targetHeight = fullScreenPageHeight {
+      PdfRenderService.render(item: self,
+                              height: targetHeight*UIScreen.main.scale,
+                              finishedCallback: finishedBlock)
+    } else {
+      PdfRenderService.render(item: self,
+                              width: UIScreen.main.bounds.width*UIScreen.main.scale,
+                              finishedCallback: finishedBlock)
+    }
+  }*/
     
   open func renderFullscreenImageIfNeeded(finishedCallback: ((Bool) -> ())?) {
     //    self.renderImageWithScale(scale:1.0, finishedCallback: finishedCallback)
