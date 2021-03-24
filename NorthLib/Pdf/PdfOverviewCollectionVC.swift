@@ -11,13 +11,13 @@ import UIKit
 /// Provides tile Overview either of various PDF Files or of various Pages of one PDF File
 //may work just with IMages and delegate handles what hapen on tap
 public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
-  
   // MARK: - Properties used in: UIScrollViewDelegate Extension
   // The closure to call when content scrolled more than scrollRatio
   private var whenScrolledClosure: ((CGFloat)->())?
   private var scrollRatio: CGFloat = 0
   // content y offset at start of dragging
   private var startDragging: CGFloat?
+  private let topGradient = VerticalGradientView()
   
   /// Define the menu to display on long touch of a MomentView
   public var menuItems: [(title: String, icon: String, closure: (String)->())] = [] 
@@ -42,6 +42,7 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
     /// Daten sind da, da die PDF diese enthällt
     layout.minimumLineSpacing = PdfDisplayOptions.Overview.rowSpacing
     layout.minimumInteritemSpacing = PdfDisplayOptions.Overview.interItemSpacing - 0.5//fix misscalculation bug
+    layout.scrollDirection = .vertical
     super.init(collectionViewLayout: layout)
   }
   
@@ -60,13 +61,27 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
       pin(cv.top, to: cvsv.top)
       pin(cv.left, to: cvsv.leftGuide())
       pin(cv.right, to: cvsv.rightGuide())
-      let topGradient = VerticalGradientView()
       topGradient.pinHeight(UIWindow.topInset)
       cvsv.addSubview(topGradient)
-      pin(topGradient.left, to: cvsv.leftGuide())
+      
+      pin(topGradient.left, to: cvsv.leftGuide(), dist: -UIWindow.maxInset)
       pin(topGradient.right, to: cvsv.rightGuide())
       pin(topGradient.top, to: cvsv.top)
     }
+  }
+  
+  public override func viewWillAppear(_ animated: Bool) {
+    super.viewWillAppear(animated)
+    handleTraitsChange(self.view.frame.size)
+  }
+  
+  public override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+    super.viewWillTransition(to: size, with: coordinator)
+    handleTraitsChange(size)
+  }
+  
+  func handleTraitsChange(_ toSize:CGSize) {
+    topGradient.isHidden = UIDevice.current.orientation.isLandscape
   }
   
   // MARK: UICollectionViewDataSource

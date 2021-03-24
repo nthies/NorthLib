@@ -44,6 +44,12 @@ public extension UIWindow {
     return 0
   }
   
+  /// Returns the max inset for all edges
+  static var maxInset: CGFloat {
+    let inset = safeInsets
+    return max(inset.top, inset.left, inset.bottom, inset.right)
+  }
+  
   /// Returns the bottom inset of the window
   static var verticalInsets: CGFloat {
     if #available(iOS 11.0, *) {

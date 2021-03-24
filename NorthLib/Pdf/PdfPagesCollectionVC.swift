@@ -15,6 +15,7 @@ open class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
   public var cellVerticalScrollIndicatorInsets:UIEdgeInsets?
   public var cellHorizontalScrollIndicatorInsets:UIEdgeInsets?
   var whenScrolledHandler : WhenScrolledHandler?
+  let topGradient = VerticalGradientView()
   public func whenScrolled(minRatio: CGFloat, _ closure: @escaping (CGFloat) -> ()) {
     whenScrolledHandler = (minRatio, closure)
   }
@@ -74,7 +75,6 @@ open class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
   }
   
   func setupTopGradient() {
-    let topGradient = VerticalGradientView()
     topGradient.pinHeight(UIWindow.topInset)
     self.view.addSubview(topGradient)
     pin(topGradient.left, to: self.view.left)
@@ -92,6 +92,16 @@ open class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
         ziv.invalidateLayout()
       }
     }
+    handleTraitsChange(size)    
+  }
+  
+  open override func viewWillAppear(_ animated: Bool) {
+    super.viewWillAppear(animated)
+    handleTraitsChange(self.view.frame.size)
+  }
+  
+  func handleTraitsChange(_ toSize:CGSize) {
+    topGradient.isHidden = UIDevice.current.orientation.isLandscape
   }
   
   public override func didReceiveMemoryWarning() {
