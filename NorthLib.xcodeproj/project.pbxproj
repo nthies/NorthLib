@@ -13,7 +13,6 @@
 		006A0FEA255EC42E001CBB0B /* PdfRenderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 006A0FE9255EC42E001CBB0B /* PdfRenderService.swift */; };
 		006A0FF4255EECF4001CBB0B /* PdfPagesCollectionVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 006A0FF3255EECF4001CBB0B /* PdfPagesCollectionVC.swift */; };
 		006A0FFA255EEDA4001CBB0B /* PdfModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 006A0FF9255EEDA4001CBB0B /* PdfModel.swift */; };
-		006A0FFF255EEDD2001CBB0B /* PdfViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 006A0FFE255EEDD2001CBB0B /* PdfViewController.swift */; };
 		006A1004255EEDF3001CBB0B /* PdfOverviewCollectionVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 006A1003255EEDF3001CBB0B /* PdfOverviewCollectionVC.swift */; };
 		006A1008255EEE11001CBB0B /* PdfOverviewCvcCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 006A1007255EEE11001CBB0B /* PdfOverviewCvcCell.swift */; };
 		008F9A2024864F9400EF5EA5 /* ImageCollectionVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 008F9A1F24864F9400EF5EA5 /* ImageCollectionVC.swift */; };
@@ -117,7 +116,6 @@
 		006A0FE9255EC42E001CBB0B /* PdfRenderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PdfRenderService.swift; sourceTree = "<group>"; };
 		006A0FF3255EECF4001CBB0B /* PdfPagesCollectionVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PdfPagesCollectionVC.swift; sourceTree = "<group>"; };
 		006A0FF9255EEDA4001CBB0B /* PdfModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PdfModel.swift; sourceTree = "<group>"; };
-		006A0FFE255EEDD2001CBB0B /* PdfViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PdfViewController.swift; sourceTree = "<group>"; };
 		006A1003255EEDF3001CBB0B /* PdfOverviewCollectionVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PdfOverviewCollectionVC.swift; sourceTree = "<group>"; };
 		006A1007255EEE11001CBB0B /* PdfOverviewCvcCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PdfOverviewCvcCell.swift; sourceTree = "<group>"; };
 		008F9A1F24864F9400EF5EA5 /* ImageCollectionVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCollectionVC.swift; sourceTree = "<group>"; };
@@ -237,7 +235,6 @@
 			isa = PBXGroup;
 			children = (
 				006A0FDD255EBA25001CBB0B /* OptionalImage.swift */,
-				006A0FFE255EEDD2001CBB0B /* PdfViewController.swift */,
 				006A0FF3255EECF4001CBB0B /* PdfPagesCollectionVC.swift */,
 				006A1003255EEDF3001CBB0B /* PdfOverviewCollectionVC.swift */,
 				006A0FF9255EEDA4001CBB0B /* PdfModel.swift */,
@@ -604,7 +601,6 @@
 				AE4E50F9243B45870024609A /* CarouselView.swift in Sources */,
 				008F9A2024864F9400EF5EA5 /* ImageCollectionVC.swift in Sources */,
 				08DDCFF624A20EA1000CB1DA /* Overlay.swift in Sources */,
-				006A0FFF255EEDD2001CBB0B /* PdfViewController.swift in Sources */,
 				AED852A723C22241002F07E8 /* fileop.cpp in Sources */,
 				AE7122F023197B4000B715A8 /* Globals.swift in Sources */,
 				AE7122E823197B4000B715A8 /* Buttons.swift in Sources */,
