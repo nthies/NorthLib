@@ -135,7 +135,7 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
     pin(shadeView.left, to: view.left)
     pin(shadeView.right, to: view.right)
     if isHorizontal {
-      pin(sliderView.top, to: view.topGuide())
+      pin(sliderView.top, to: view.top)
       pin(sliderView.bottom, to: view.bottom)
     }
     else {
