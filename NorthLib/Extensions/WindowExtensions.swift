@@ -65,5 +65,13 @@ public extension UIWindow {
     }
     return .zero
   }
+  
+  /// Returns safe area Insets inset of the window
+  static var size: CGSize {
+    if let window = keyWindow {
+      return window.frame.size
+    }
+    return .zero
+  }
 
 } // UIWindow
