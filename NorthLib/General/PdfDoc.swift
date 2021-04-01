@@ -97,8 +97,10 @@ open class PdfDoc {
   }
   
   /// Init with raw PDF data
-  public init(data: Data) {
-    doc = CGPDFDocument(CGDataProvider(data: data as CFData)!)
+  public init(data: Data?) {
+    if let d = data, d.count > 0 {
+      doc = CGPDFDocument(CGDataProvider(data: d as CFData)!)
+    }
   }
   
   /// Init with file name (path)

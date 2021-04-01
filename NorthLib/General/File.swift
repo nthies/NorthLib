@@ -216,6 +216,14 @@ open class File: DoesLog {
     return ret
   }
   
+  /// Returns the prefname (path without extension) of a given pathname
+  public var prefname: String {
+    var str = fn_prefname(path.cString(using: .utf8)!)
+    let ret = String(cString: str!)
+    str_release(&str)
+    return ret
+  }
+
   /// Returns the extname (extension) of a given pathname
   public var extname: String {
     var str = fn_extname(path.cString(using: .utf8)!)
@@ -279,6 +287,11 @@ open class File: DoesLog {
   /// Returns the progname (basename without extension) of a given pathname
   public static func progname(_ fn: String) -> String {
     return Dir(fn).progname
+  }
+  
+  /// Returns the prefname (path without extension) of a given pathname
+  public static func prefname(_ fn: String) -> String {
+    return Dir(fn).prefname
   }
   
   /// Returns the extname (extension) of a given pathname

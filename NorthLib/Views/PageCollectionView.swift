@@ -273,7 +273,7 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
     if let cell = collectionView.dequeueReusableCell(withReuseIdentifier: 
       PageCollectionView.reuseIdent, for: indexPath) as? PageCell {
       let itemIndex = indexPath.item
-      debug("index \(itemIndex) requested in cell \(address(cell))")
+      //debug("index \(itemIndex) requested in cell \(address(cell))")
       cell.update(pcv: self, idx: itemIndex)
       initialize(itemIndex)
       return cell

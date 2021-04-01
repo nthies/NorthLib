@@ -137,6 +137,27 @@ open class Defaults: NSObject {
     return observer
   }
   
+  /// Receive Defaults change notification of a specific key
+  public static func receive(key: String, closure: @escaping(String)->()) {
+    self.receive { dnfc in
+      if dnfc.key == key, let val = dnfc.val { closure(val) }
+    }
+  }
+  
+  /// Receive Defaults change notification of a specific key as Bool
+  public static func receive(key: String, closure: @escaping(Bool)->()) {
+    self.receive { dnfc in
+      if dnfc.key == key, let val = dnfc.val?.bool { closure(val) }
+    }
+  }
+  
+  /// Receive Defaults change notification of a specific key as Int
+  public static func receive(key: String, closure: @escaping(Int)->()) {
+    self.receive { dnfc in
+      if dnfc.key == key, let str = dnfc.val, let val = Int(str) { closure(val) }
+    }
+  }
+
   /// The Values class used to set a dictionary of key/values
   public class Values {
     var scope: String?
