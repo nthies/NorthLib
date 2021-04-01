@@ -66,12 +66,18 @@ public extension UIWindow {
     return .zero
   }
   
-  /// Returns safe area Insets inset of the window
+  /// Returns size the key window otherwise screen size
   static var size: CGSize {
     if let window = keyWindow {
       return window.frame.size
     }
-    return .zero
+    return UIScreen.main.bounds.size
+  }
+  
+  /// Returns safe area Insets inset of the window
+  static var shortSide: CGFloat {
+    let s = size
+    return min(s.width, s.height)
   }
 
 } // UIWindow
