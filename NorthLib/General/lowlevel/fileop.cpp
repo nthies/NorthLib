@@ -466,6 +466,13 @@ char *fn_dirname(const char *fn) {
   return str_heap(f, 0);
 }
 
+/// fn_prefname applies 'fn_prefix' and returns the allocated result.
+char *fn_prefname(const char *fn) {
+  char f [1000];
+  fn_prefix(f, 1000, fn);
+  return str_heap(f, 0);
+}
+
 /// fn_extname applies 'fn_ext' and returns the allocated result.
 char *fn_extname(const char *fn) {
   char f [1000];

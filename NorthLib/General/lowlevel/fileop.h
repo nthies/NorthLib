@@ -56,6 +56,7 @@ char *fn_basename(const char *fn);
 char *fn_progname(const char *fn);
 char *fn_dirname(const char *fn);
 char *fn_extname(const char *fn);
+char *fn_prefname(const char *fn);
 char *fn_pathname(const char *dir, const char *fn);
 int fn_mkpath(const char *dir, stat_t *st);
 int fn_mkfpath (const char *path, stat_t *st);
