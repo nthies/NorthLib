@@ -7,7 +7,6 @@
 
 import Foundation
 import UIKit
-import NorthLib
 
 public enum DownloadStatusButtonState { case notStarted, process, done }
 
