@@ -420,6 +420,15 @@ open class ButtonSlider: Slider {
     active.view?.layoutIfNeeded()
   }
   
+  /// Updates the Horizontal Button Slider Width if open
+  /// - Parameter newWidth: new Slider Width otherwise coverage will be used
+  /// keep in mind, if called from: "viewWillTransition(to size:" coverage my returns wrong value
+  public func updateSliderWidthIfNeeded(_ newWidth: CGFloat? = nil){
+    if isOpen == false { return }
+    widthConstraint.constant = newWidth ?? coverage
+  }
+
+  
   @objc public func buttonPressed(sender: UIButton) {
     toggleSlider()
   }
