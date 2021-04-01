@@ -175,7 +175,7 @@ open class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
     }
   }
   
-  public func handleRenderFinished(_ success:Bool, _ ziv:ZoomedImageView){
+  open func handleRenderFinished(_ success:Bool, _ ziv:ZoomedImageView){
     if success == false { return }
     onMain {
       ziv.scrollView.setZoomScale(1.0, animated: false)
