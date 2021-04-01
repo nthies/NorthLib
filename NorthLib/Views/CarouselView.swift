@@ -49,6 +49,7 @@ public class CarouselFlowLayout: UICollectionViewFlowLayout, DoesLog {
   }
   
   /// Increase the cell at indexPath up to maxScale
+  /// ToDo: Remove unused!
   public override func layoutAttributesForItem(at indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
     return super.layoutAttributesForItem(at: indexPath)
   }
