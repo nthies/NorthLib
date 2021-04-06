@@ -164,6 +164,8 @@ open class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
       guard let ziv = optionalView as? ZoomedImageView,
             let pdfImg = ziv.optionalImage as? ZoomedPdfImageSpec else { return }
       ziv.menu.menu = self?.menuItems ?? []
+      ///enables scrolling on page, even if page is much smaller, so tolbar can (dis)appear on scroll
+      ziv.scrollView.contentInset = UIEdgeInsets(top: 1, left: 1, bottom: 1, right: 1)
       if ziv.imageView.image == nil
       {
         ziv.optionalImage = pdfImg
