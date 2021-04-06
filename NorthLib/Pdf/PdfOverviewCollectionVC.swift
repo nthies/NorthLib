@@ -181,7 +181,10 @@ extension PdfOverviewCollectionVC: UICollectionViewDelegateFlowLayout {
   public func collectionView(_ collectionView: UICollectionView,
                              layout collectionViewLayout: UICollectionViewLayout,
                              sizeForItemAt indexPath: IndexPath) -> CGSize {
-    return self.pdfModel.size(forItem: indexPath.row)
+    guard let layout = collectionViewLayout as? TwoColumnUICollectionViewFlowLayout else {
+      return self.pdfModel.size(forItem: indexPath.row)
+    }
+    return layout.collectedSizes.valueAt(indexPath.row) ?? self.pdfModel.size(forItem: indexPath.row)
   }
 }
 
@@ -195,6 +198,8 @@ class TwoColumnUICollectionViewFlowLayout : UICollectionViewFlowLayout {
   let cellHeight: CGFloat
   
   var collectedFrames: [UIView] = []
+  var collectedSizes: [CGSize] = []
+  
   init(pdfModel: PdfModel) {
     self.pdfModel = pdfModel
     self.cellHeight = pdfModel.singlePageSize.height
@@ -246,6 +251,7 @@ class TwoColumnUICollectionViewFlowLayout : UICollectionViewFlowLayout {
       v.removeFromSuperview()
     }
     collectedFrames = []
+    collectedSizes = []
     let spacing = self.minimumInteritemSpacing
     let rowHeight = self.cellHeight + self.minimumLineSpacing
     var yOffset = self.sectionInset.top
@@ -278,6 +284,7 @@ class TwoColumnUICollectionViewFlowLayout : UICollectionViewFlowLayout {
         prevPageType = item.pageType
       }
       collectedFrames.append(UIView(frame: attributes.frame))
+      collectedSizes.append(attributes.frame.size)
       cache.append(attributes)
     }
     calculatedContentSize = CGSize(width: collectionView.frame.size.width,
