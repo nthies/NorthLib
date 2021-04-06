@@ -197,7 +197,6 @@ class TwoColumnUICollectionViewFlowLayout : UICollectionViewFlowLayout {
   let pdfModel: PdfModel
   let cellHeight: CGFloat
   
-  var collectedFrames: [UIView] = []
   var collectedSizes: [CGSize] = []
   
   init(pdfModel: PdfModel) {
@@ -247,10 +246,6 @@ class TwoColumnUICollectionViewFlowLayout : UICollectionViewFlowLayout {
   override func prepare() {
     //We begin measuring the location of items only if the cache is empty
     guard cache.isEmpty == true, let collectionView = collectionView else {return}
-    for v in collectedFrames {
-      v.removeFromSuperview()
-    }
-    collectedFrames = []
     collectedSizes = []
     let spacing = self.minimumInteritemSpacing
     let rowHeight = self.cellHeight + self.minimumLineSpacing
@@ -283,18 +278,11 @@ class TwoColumnUICollectionViewFlowLayout : UICollectionViewFlowLayout {
         }
         prevPageType = item.pageType
       }
-      collectedFrames.append(UIView(frame: attributes.frame))
       collectedSizes.append(attributes.frame.size)
       cache.append(attributes)
     }
     calculatedContentSize = CGSize(width: collectionView.frame.size.width,
                                    height: yOffset + rowHeight)
-    var even = false
-    for v in collectedFrames {
-      v.addBorder(even ? .red : .blue)
-      self.collectionView?.addSubview(v)
-      even = !even
-    }
   }
   
   override var collectionViewContentSize: CGSize {
