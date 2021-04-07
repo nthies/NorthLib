@@ -15,11 +15,10 @@ public struct PdfDisplayOptions {
     /// On some devices default ratio 0f 0.8 is too big => resized slider width due taz icon need space also
     /// result: images rendered bigger than needed @see: PdfOverviewCollectionVC
     /// collectionView.cellForItemAt...  cell.imageView.contentMode = .topLeft
-    public static let sliderCoverageRatio:CGFloat = 0.7
-    public static let sideSpacing:CGFloat = 26.0
-    public static let interItemSpacing:CGFloat = 13.0
-    public static let rowSpacing:CGFloat = 4.0
-    public static let labelHeight:CGFloat = 20.0
+    public static let sliderCoverageRatio:CGFloat = Device.isIphone ? 0.855 : 0.5
+    public static let sideSpacing:CGFloat = 16.0
+    public static let interItemSpacing:CGFloat = 9.0
+    public static let rowSpacing:CGFloat = 40.0
     
     /// width of pdf menu slider, page sizes are calculated for this
     /// |-sideSpacing-[Page]-interItemSpacing-[Page]-sideSpacing-|
@@ -57,7 +56,7 @@ extension PdfModel {
       return waitingImage
     }
     
-    let height = singlePageSize.height - PdfDisplayOptions.Overview.labelHeight
+    let height = singlePageSize.height
     
     PdfRenderService.render(item: pdfImg,
                             height: height*UIScreen.main.scale,
@@ -129,9 +128,9 @@ class PdfModelItem : PdfModel, DoesLog/*, PDFOutlineStructure*/ {
       = (panoPageWidth - PdfDisplayOptions.Overview.interItemSpacing)/2
     let pageHeight = singlePageWidth * rawPageSize.height / rawPageSize.width
     self.singlePageSize = CGSize(width: singlePageWidth,
-                                 height: pageHeight + PdfDisplayOptions.Overview.labelHeight)
+                                 height: pageHeight)
     self.panoPageSize = CGSize(width: panoPageWidth,
-                               height: pageHeight + PdfDisplayOptions.Overview.labelHeight)
+                               height: pageHeight)
     
     for pagenumber in 0...pdfDocument.pageCount-1{
       self.images.append(ZoomedPdfImage(url: url, index: pagenumber))

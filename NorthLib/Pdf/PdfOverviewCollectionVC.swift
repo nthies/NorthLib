@@ -44,6 +44,7 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
     layout.minimumInteritemSpacing = PdfDisplayOptions.Overview.interItemSpacing - 0.5//fix misscalculation bug
     layout.scrollDirection = .vertical
     super.init(collectionViewLayout: layout)
+    collectionView.layoutMargins = .zero
   }
   
   required init?(coder aDecoder: NSCoder) {
@@ -67,24 +68,6 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
       pin(topGradient.left, to: cvsv.leftGuide(), dist: -UIWindow.maxInset)
       pin(topGradient.right, to: cvsv.rightGuide())
       pin(topGradient.top, to: cvsv.top)
-    }
-  }
-  
-  public override func viewWillAppear(_ animated: Bool) {
-    super.viewWillAppear(animated)
-    handleTraitsChange(self.view.frame.size)
-  }
-  
-  public override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
-    super.viewWillTransition(to: size, with: coordinator)
-    handleTraitsChange(size)
-  }
-  
-  func handleTraitsChange(_ toSize:CGSize) {
-    topGradient.isHidden = UIDevice.current.orientation.isLandscape
-    if let layout = self.collectionView.collectionViewLayout as? TwoColumnUICollectionViewFlowLayout {
-      layout.collectionViewSize = toSize
-      layout.invalidateLayout()
     }
   }
   
@@ -138,19 +121,10 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
   /// thumbnails and foreground full page - did not define cell's frame e.g. for change cell alignment
   /// ...unfortunately this is more complex
   public func frameAtIndex(index:Int, fixFullFrame:Bool = false) -> CGRect {
-     let indexPath = IndexPath(row: index, section: 0)
-     
-     let attributes = collectionView.layoutAttributesForItem(at: indexPath)
-     let size = collectionView(collectionView,
-     layout: collectionViewLayout,
-     sizeForItemAt: indexPath)
-     
-     var sourceFrame = CGRect.zero
-     if let attr = attributes {
-     sourceFrame = self.collectionView.convert(attr.frame, to: self.collectionView.superview?.superview)
-     sourceFrame.size = size
-     }
-     return sourceFrame
+    if let attributes = collectionView.layoutAttributesForItem(at: IndexPath(row: index, section: 0)) {
+      return self.collectionView.convert(attributes.frame, to: self.collectionView.superview?.superview)
+    }
+    return .zero
   }
 }
 
@@ -179,34 +153,18 @@ extension PdfOverviewCollectionVC {
   }
 }
 
-// MARK: - UICollectionViewDelegateFlowLayout
-/// Not scrollable if not available!
-extension PdfOverviewCollectionVC: UICollectionViewDelegateFlowLayout {
-  public func collectionView(_ collectionView: UICollectionView,
-                             layout collectionViewLayout: UICollectionViewLayout,
-                             sizeForItemAt indexPath: IndexPath) -> CGSize {
-    guard let layout = collectionViewLayout as? TwoColumnUICollectionViewFlowLayout else {
-      return self.pdfModel.size(forItem: indexPath.row)
-    }
-    return layout.collectedSizes.valueAt(indexPath.row) ?? self.pdfModel.size(forItem: indexPath.row)
-  }
-}
-
 class TwoColumnUICollectionViewFlowLayout : UICollectionViewFlowLayout {
   
   //An array to cache the calculated attributes
-  fileprivate var cache = [UICollectionViewLayoutAttributes]()
-  fileprivate var calculatedContentSize : CGSize?
+  fileprivate var cachedAttributes = [UICollectionViewLayoutAttributes]()
+  fileprivate var contentSize : CGSize = .zero
 
   let pdfModel: PdfModel
   let singlePageRatio: CGFloat
   
   public var  singleItemSize:CGSize = .zero
   public var  panoItemSize:CGSize = .zero
-  public var  collectionViewSize:CGSize = .zero
-  public var  needLayout:Bool = false
-  
-  var collectedSizes: [CGSize] = []
+  public var  collectionViewWidth:CGFloat = 0
   
   init(pdfModel: PdfModel) {
     self.pdfModel = pdfModel
@@ -220,53 +178,40 @@ class TwoColumnUICollectionViewFlowLayout : UICollectionViewFlowLayout {
   
   //The attributes for the item at the indexPath
   override func layoutAttributesForItem(at indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
-    return cache[indexPath.item]
+    return cachedAttributes.valueAt(indexPath.item)
   }
   
   override func layoutAttributesForElements(in rect: CGRect) -> [UICollectionViewLayoutAttributes]? {
-    guard let attributesArray = super.layoutAttributesForElements(in: rect) else {
-      return []
-    }
-    ///Bugfix disappering cells
-    /// this is called by system and loads cells screen by screen, unfortunatly 1 cell disapperas, at the transition
-    /// between 2 screens, fix it by just adding previous (missing) cell
-    /// in Tests on iPhone 12Pro Simulator this happen on cells 13,21,29
-    /// depending on pano page before and advertisig page
-    /// if no pano pages this happend for pages [14,15] and [22,23] 
-    var items:[UICollectionViewLayoutAttributes]? = attributesArray.map { attributes in
-      if attributes.representedElementCategory == .cell {
-        return self.layoutAttributesForItem(at:attributes.indexPath) ?? attributes
+    var attributesArray = [UICollectionViewLayoutAttributes]()
+    for attributes in cachedAttributes {
+      if attributes.frame.intersects(rect) {
+        attributesArray.append(attributes)
       }
-      return attributes
     }
-    if let first = attributesArray.first,
-       first.indexPath.row > 0,
-       let missing = self.layoutAttributesForItem(at:IndexPath(row: first.indexPath.row-1, section: first.indexPath.section)) {
-      items?.append(missing)
-    }
-    return items
+    return attributesArray
   }
   
   override func shouldInvalidateLayout(forBoundsChange newBounds: CGRect) -> Bool {
       guard let collectionView = collectionView else { return false }
-      return needLayout
+      return !newBounds.size.equalTo(collectionView.bounds.size)
   }
   
   public override func prepare() {
     super.prepare()///if not called here before/after the UICollectionViewFlowLayoutBreakForInvalidSizes occoures for each cell
-    //We begin measuring the location of items only if the cache is empty
-    guard cache.isEmpty == true, let collectionView = collectionView else {return}
-    collectedSizes = []
-    let width = collectionViewSize == .zero ? collectionView.frame.size.width : collectionViewSize.width
+    guard let collectionView = collectionView else {return}
+    cachedAttributes.removeAll()
     let spacing = self.minimumInteritemSpacing
-    let panoItemWidth = max(1, width - self.sectionInset.left - self.sectionInset.right - collectionView.contentInset.left - collectionView.contentInset.right)
+    let panoItemWidth
+      = collectionView.bounds.inset(by: collectionView.layoutMargins).width
+      - self.sectionInset.left
+      - self.sectionInset.right
     let singleItemWidth =  max(1, panoItemWidth/2 - spacing/2)
     let itemHeight = singleItemWidth * singlePageRatio
     singleItemSize = CGSize(width: singleItemWidth, height: itemHeight)
     panoItemSize = CGSize(width: panoItemWidth, height: itemHeight)
     let rowHeight = itemHeight + self.minimumLineSpacing
     var yOffset = self.sectionInset.top
-    let xLeft = self.sectionInset.left
+    let xLeft = self.sectionInset.left + collectionView.layoutMargins.left
     /// UI:  |-sectionInset.left-[cell]-spacing-[cell]-sectionInset.right-|
     let xRight = singleItemWidth + spacing + xLeft
     var prevPageType : PdfPageType?
@@ -276,40 +221,32 @@ class TwoColumnUICollectionViewFlowLayout : UICollectionViewFlowLayout {
       if let item = pdfModel.item(atIndex: idx) {
         //print("Layout Item \(item.pageTitle) type: \(item.pageType) atIndex: \(idx)")
         switch (prevPageType, item.pageType) {
-        case (.left, .right):
-          attributes.frame = CGRect(origin: CGPoint(x: xRight, y: yOffset), size: singleItemSize)
-        case (_, .double):
-          yOffset += rowHeight
-          attributes.frame = CGRect(origin: CGPoint(x: xLeft, y: yOffset), size: panoItemSize)
-        case (.right, .right):
-          yOffset += rowHeight
-          attributes.frame = CGRect(origin: CGPoint(x: xRight, y: yOffset), size: singleItemSize)
-        case (_, .left):
-          fallthrough
-        default:
-          if prevPageType != nil { yOffset += rowHeight}
-          attributes.frame = CGRect(origin: CGPoint(x: xLeft, y: yOffset), size: singleItemSize)
+          case (.left, .right):
+            attributes.frame = CGRect(origin: CGPoint(x: xRight, y: yOffset), size: singleItemSize)
+          case (_, .double):
+            yOffset += rowHeight
+            attributes.frame = CGRect(origin: CGPoint(x: xLeft, y: yOffset), size: panoItemSize)
+          case (.right, .right):
+            yOffset += rowHeight
+            attributes.frame = CGRect(origin: CGPoint(x: xRight, y: yOffset), size: singleItemSize)
+          case (_, .left):
+            fallthrough
+          default:
+            if prevPageType != nil { yOffset += rowHeight}
+            attributes.frame = CGRect(origin: CGPoint(x: xLeft, y: yOffset), size: singleItemSize)
         }
         prevPageType = item.pageType
       }
-      collectedSizes.append(attributes.frame.size)
-      cache.append(attributes)
+
+      cachedAttributes.append(attributes)
     }
-    calculatedContentSize = CGSize(width: width,
-                                   height: yOffset + rowHeight)
-    needLayout = false
+    contentSize = CGSize(width: collectionView.bounds.size.width,
+                         height: yOffset + rowHeight)
   }
   
   override var collectionViewContentSize: CGSize {
     get {
-      return calculatedContentSize ?? super.collectionViewContentSize
+      return contentSize
     }
-  }
-
-  override func invalidateLayout() {
-    super.invalidateLayout()
-    cache = []
-    needLayout = true
-    calculatedContentSize = nil
   }
 }
