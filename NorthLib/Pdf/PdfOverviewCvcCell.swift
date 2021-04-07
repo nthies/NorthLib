@@ -12,12 +12,14 @@ public class PdfOverviewCvcCell : UICollectionViewCell {
   
   public let imageView = UIImageView()
   public let label = UILabel()
+  public let dateLabel = UILabel()
   
   var menu:ContextMenu?
  
   public override func prepareForReuse() {
     self.imageView.image = nil
     self.label.text = nil
+    self.dateLabel.text = nil
   }
   
   override init(frame: CGRect) {
@@ -44,6 +46,11 @@ public class PdfOverviewCvcCell : UICollectionViewCell {
     //Pin the Label outside of the cell simplifies everything!
     pin(label.topGuide(), to: contentView.bottomGuide(), dist: 2.0)
     
+    contentView.addSubview(dateLabel)
+    pin(dateLabel.leftGuide(), to: contentView.rightGuide(), dist: PdfDisplayOptions.Overview.interItemSpacing)
+    pin(dateLabel.bottomGuide(), to: contentView.bottomGuide(), dist: 3.0)
+    dateLabel.numberOfLines = 2
+    
 //    self.addBorder(.green, 0.5)
 //    self.contentView.addBorder(.yellow, 1.0)
 //    self.imageView.addBorder(.blue, 1.5)
@@ -54,16 +61,3 @@ public class PdfOverviewCvcCell : UICollectionViewCell {
     fatalError("init(coder:) has not been implemented")
   }
 }
-
-
-//public class PdfOverviewTitleCvcCell : PdfOverviewCvcCell {
-//  public let dateLabel = UILabel()
-//  override init(frame: CGRect) {
-//    super.init(frame: frame)
-//    contentView.addSubview(dateLabel)
-//  }
-//  
-//  required init?(coder: NSCoder) {
-//    fatalError("init(coder:) has not been implemented")
-//  }
-//}

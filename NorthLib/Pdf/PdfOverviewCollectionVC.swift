@@ -21,7 +21,8 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
   
   /// Define the menu to display on long touch of a MomentView
   public var menuItems: [(title: String, icon: String, closure: (String)->())] = [] 
-  public var cellLabelFont:UIFont? = UIFont.systemFont(ofSize: 8)
+  public var cellLabelFont:UIFont? = UIFont.systemFont(ofSize: 11)
+  public var titleCellLabelFont:UIFont? = UIFont.systemFont(ofSize: 11)
   public var cellLabelLinesCount = 0
   
   // MARK: - Properties
@@ -94,6 +95,13 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
     guard let item = self.pdfModel.item(atIndex: indexPath.row) else {
       return cell
     }
+    
+    if indexPath.row == 0 {
+      cell.dateLabel.text = pdfModel.title
+      cell.dateLabel.font = self.titleCellLabelFont
+      cell.dateLabel.textColor = .white
+    }
+    
     cell.label.numberOfLines = self.cellLabelLinesCount
     cell.label.text = item.pageTitle
     cell.menu?.menu = self.menuItems

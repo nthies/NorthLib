@@ -36,6 +36,7 @@ public struct PdfDisplayOptions {
 
 // MARK: PdfArrayModel
 public protocol PdfModel {
+  var title : String? { get }
   var count : Int { get }
   var imageSizeMb : UInt64 { get }
   var index : Int { get set }
@@ -79,7 +80,7 @@ class PdfModelItem : PdfModel, DoesLog/*, PDFOutlineStructure*/ {
   }
   
   private var url:URL?
-  
+  var title: String?
   var count: Int = 0
   var index: Int = 0
   var defaultItemSize: CGSize?
