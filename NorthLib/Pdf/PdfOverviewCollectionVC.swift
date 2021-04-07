@@ -28,7 +28,7 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
   // MARK: - Properties
   private let reuseIdentifier = "pdfCell"
   
-  var pdfModel: PdfModel
+  var pdfModel: PdfModel?
   public var clickCallback: ((CGRect, PdfModel?)->())?
   
   public init(pdfModel: PdfModel) {//Wrong can also be pdfpage
@@ -72,6 +72,13 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
     }
   }
   
+  public override func willMove(toParent parent: UIViewController?) {
+    if parent == nil {
+      pdfModel = nil
+    }
+    super.willMove(toParent: parent)
+  }
+  
   // MARK: UICollectionViewDataSource
   public override func numberOfSections(in collectionView: UICollectionView) -> Int {
     // #warning Incomplete implementation, return the number of sections
@@ -79,20 +86,21 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
   }
   
   public override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-    return pdfModel.count
+    return pdfModel?.count ?? 0
   }
   
   public override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
     let _cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath)
-    guard let cell = _cell as? PdfOverviewCvcCell else { return _cell }
+    guard let cell = _cell as? PdfOverviewCvcCell,
+          let pdfModel = self.pdfModel else { return _cell }
     cell.label.font = self.cellLabelFont
     cell.label.textColor = .white
     
-    cell.imageView.image =  self.pdfModel.thumbnail(atIndex: indexPath.row, finishedClosure: { (img) in
+    cell.imageView.image =  pdfModel.thumbnail(atIndex: indexPath.row, finishedClosure: { (img) in
       onMain { cell.imageView.image = img  }
     })
     
-    guard let item = self.pdfModel.item(atIndex: indexPath.row) else {
+    guard let item = pdfModel.item(atIndex: indexPath.row) else {
       return cell
     }
     
@@ -115,7 +123,7 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
     if let attr = attributes {
       sourceFrame = self.collectionView.convert(attr.frame, to: self.collectionView.superview?.superview)
     }
-    pdfModel.index = indexPath.row
+    pdfModel?.index = indexPath.row
     clickCallback?(sourceFrame, pdfModel)
   }
   
