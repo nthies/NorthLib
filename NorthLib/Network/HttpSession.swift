@@ -706,7 +706,8 @@ open class HttpLoader: ToString, DoesLog {
       self.progressClosure?(self, 0, self.totalSize)
       for file in toDownload {
         self.downloadNext(file: file)
-        _ = self.semaphore.wait(timeout: .now() + 15)
+        #warning("@Ringo removed semaphore wait for tests, was usefull in authenticated not using db version but now also?")
+//        _ = self.semaphore.wait(timeout: .now() + 15)
       }
       onMain { [weak self] in self?.closure?(self!) }
     }
