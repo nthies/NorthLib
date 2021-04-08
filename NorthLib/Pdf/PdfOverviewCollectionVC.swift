@@ -72,13 +72,6 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
     }
   }
   
-  public override func willMove(toParent parent: UIViewController?) {
-    if parent == nil {
-      pdfModel = nil
-    }
-    super.willMove(toParent: parent)
-  }
-  
   // MARK: UICollectionViewDataSource
   public override func numberOfSections(in collectionView: UICollectionView) -> Int {
     // #warning Incomplete implementation, return the number of sections
