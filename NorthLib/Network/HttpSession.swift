@@ -682,6 +682,7 @@ open class HttpLoader: ToString, DoesLog {
       guard let self = self else { return }
       self.count(res, size: file.size)
       if let progressClosure = self.progressClosure, file.size > 0 {
+        #warning("For Performance Reasons the closure should not block the main thread, if ui updates needed the ctrl/view itself should update the ui!")
         onMain { progressClosure(self, self.downloadSize, self.totalSize) }
       }
     }
