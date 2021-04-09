@@ -707,7 +707,7 @@ open class HttpLoader: ToString, DoesLog {
       self.progressClosure?(self, 0, self.totalSize)
       for file in toDownload {
         self.downloadNext(file: file)
-        self.semaphore.wait()
+        _ = self.semaphore.wait(timeout: .now() + 5)
       }
       onMain { [weak self] in self?.closure?(self!) }
     }
