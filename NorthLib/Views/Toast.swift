@@ -24,7 +24,7 @@ public class Toast {
   public static func show(_ text: String, _ type: ToastType = .info) {
     let dist : CGFloat = 10 //|-Screen-10-AlertBG-10-Text-10-AlertBG-10-Screen-|
     let duration = 2 + text.count/40
-    var appFrame = UIScreen.main.bounds
+    var appFrame = CGRect(origin: .zero, size: UIWindow.size)
     let tip = UIView(frame: appFrame)
     
     var lbFrame = CGRect(x: dist,
