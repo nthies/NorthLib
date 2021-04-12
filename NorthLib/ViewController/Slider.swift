@@ -58,8 +58,14 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
       else { return active.view.bounds.height * coverageRatio }
     }
     set {
-      if isHorizontal { coverageRatio = newValue/active.view.bounds.width }
-      else { coverageRatio = newValue/active.view.bounds.height }
+      if isHorizontal {
+        let cov = min(newValue, active.view.bounds.width)
+        coverageRatio = cov/active.view.bounds.width
+      }
+      else {
+        let cov =  min(newValue, active.view.bounds.height)
+        coverageRatio = cov/active.view.bounds.height
+      }
     }
   }
   
@@ -368,12 +374,17 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
 open class ButtonSlider: Slider {
   private var buttonMovedOut:Bool = false
   
+  /// Maximum absolute coverage of the active view controller
+  public var maxCoverage: CGFloat? = nil {
+    didSet { evaluateCoverage() }
+  }
+  
   /// image to use as button
   public var image: UIImage? {
     didSet {
       guard let img = image else { return }
       button.setImage(img, for: .normal)
-      coverage = active.view!.bounds.size.width - img.size.width
+      evaluateCoverage()
     }
   }
   public var hideButtonOnClose = false
@@ -397,6 +408,13 @@ open class ButtonSlider: Slider {
     button.widthAnchor.constraint(equalToConstant: 0)
   public lazy var heightButtonConstraint: NSLayoutConstraint =
     button.heightAnchor.constraint(equalToConstant: 0)
+  
+  private func evaluateCoverage() {
+    guard let img = image else { return }
+    let awidth = active.view!.bounds.size.width
+    let cov: CGFloat = maxCoverage ?? awidth
+    coverage = min(cov, awidth - img.size.width)
+  }
   
   public override func resetConstraints() {
     super.resetConstraints()
