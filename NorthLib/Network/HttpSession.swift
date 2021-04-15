@@ -27,7 +27,12 @@ public extension DlFile {
   func exists(inDir: String) -> Bool {
     let f = File(dir: inDir, fname: name)
     return f.exists && (f.mTime == moTime) && (f.size == size)
-  }  
+  }
+  
+  func existsIgnoringTime(inDir: String) -> Bool {
+    let f = File(dir: inDir, fname: name)
+    return f.exists && (f.size == size)
+  }
 }
 
 /// Error(s) that may be encountered during HTTP operations
