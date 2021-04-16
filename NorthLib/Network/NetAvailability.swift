@@ -7,6 +7,7 @@
 
 import Foundation
 import SystemConfiguration
+import Network
 
 /**
  The class NetAvailability enables the tracking of the connection status to the 
@@ -47,7 +48,65 @@ import SystemConfiguration
    print("network no longer available")
  }
  ````
+ 
+ 
+ may we should migrate to use NSURLSession config waitForConnectivity
+ https://developer.apple.com/forums/thread/99142
+ ...needs a different concept
  */
+
+
+open class NWPathNetAvailability {
+  
+  let monitor:NWPathMonitor
+  
+  /// Is network connectivity available?
+  public var isAvailable: Bool {
+    return monitor.currentPath.status == .satisfied
+  }
+
+  /// Is network connection via mobile networks?
+  public var isMobile: Bool {
+    return monitor.currentPath.usesInterfaceType(.cellular)
+  }
+  
+  /// Defines the closure to call when a network change has happened
+  public func onChange(_ closure: ((SCNetworkReachabilityFlags)->())?) {
+    _onChangeClosure = closure
+  }
+  
+  var _onChangeClosure: ((SCNetworkReachabilityFlags)->())? = nil
+  
+//  public private(set) var online:Bool
+  
+  /// Check for reachability of the given host
+  public init() {
+    monitor = NWPathMonitor()
+    let queue = DispatchQueue.global(qos: .background)
+    monitor.start(queue: queue)
+    
+    monitor.pathUpdateHandler = {   [weak self] path in
+//      self?.online = path.status == .satisfied
+      var stat = ""
+      switch path.status {
+        case .requiresConnection:
+          stat = "requiresConnection"
+        case .satisfied:
+          stat = "satisfied"
+        case .unsatisfied:
+          stat = "unsatisfied"
+        default:
+          stat = "<unknown with raw: \(path.status.hashValue)>"
+      }
+      
+      print("NWPathNetAvailability ....update status: \(stat)")
+      guard let closure = self?._onChangeClosure else { return }
+      closure(SCNetworkReachabilityFlags.init(rawValue: 0))
+    }
+  }
+}
+
+/*
 open class NetAvailability {
   
   // destination to test for reachability
@@ -82,10 +141,29 @@ open class NetAvailability {
   public var isMobile: Bool { return isMobile() }
   
   private func isReachable(flags: SCNetworkReachabilityFlags) -> Bool {
+    if let _host = self.host, flags.rawValue == 0 {
+      return self.isReachableNewInstance(host: _host)
+    }
     let isReachable = flags.contains(.reachable)
     let needsConnection = flags.contains(.connectionRequired)
     let autoConnect = flags.contains(.connectionOnDemand) || flags.contains(.connectionOnTraffic)
     let withoutUser = autoConnect && !flags.contains(.interventionRequired)
+    return isReachable && (!needsConnection || withoutUser)
+  }
+  
+  private var host: String?
+  private func isReachableNewInstance(host:String) -> Bool {
+    guard let hdest = SCNetworkReachabilityCreateWithName(nil, "https://dl.taz.de") else {
+      return false
+    }
+    var newFlags = SCNetworkReachabilityFlags()
+    SCNetworkReachabilityGetFlags(hdest, &newFlags)
+    
+    let isReachable = newFlags.contains(.reachable)
+    let needsConnection = newFlags.contains(.connectionRequired)
+    let autoConnect = newFlags.contains(.connectionOnDemand) || newFlags.contains(.connectionOnTraffic)
+    let withoutUser = autoConnect && !newFlags.contains(.interventionRequired)
+    print("newFeeder Status... \(isReachable && (!needsConnection || withoutUser))")
     return isReachable && (!needsConnection || withoutUser)
   }
   
@@ -102,7 +180,8 @@ open class NetAvailability {
     SCNetworkReachabilityGetFlags(self.destination, &fl)
     self.lastFlags = fl
     let callback: SCNetworkReachabilityCallBack = { (reachability,flags,info) in
-      guard let info = info else { return }      
+      guard let info = info else { return }
+      print("Reachabillity info:\(info), flags:\(flags), reachability:\(reachability)")
       let net = Unmanaged<NetAvailability>.fromOpaque(info).takeUnretainedValue()
       net.changeCallback(flags: flags)
       net.lastFlags = flags
@@ -125,10 +204,17 @@ open class NetAvailability {
   convenience public init(host: String) {
     let hdest = SCNetworkReachabilityCreateWithName(nil, host)
     self.init(hdest)
+    self.host = host
   }
   
   // changeCallback is called upon network reachability changes
   private func changeCallback(flags: SCNetworkReachabilityFlags) {
+    /* all show 0 but safari works*/
+    var newFlags = SCNetworkReachabilityFlags()
+    SCNetworkReachabilityGetFlags(self.destination, &newFlags)
+    print("Compare Reachabillity Flags: \n  last: \(self.lastFlags)\n  flags: \(flags)\n  newFlags: \(newFlags)")
+    
+    
     if let closure = self._onChangeClosure {
       closure(flags)
     }
@@ -160,3 +246,4 @@ open class NetAvailability {
   }  
   
 } // NetAvailability
+*/
