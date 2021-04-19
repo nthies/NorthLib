@@ -49,6 +49,7 @@ import SystemConfiguration
  ````
  */
 open class NetAvailability {
+  public enum NetAvailabilityEvent { case Changed, Up, Down}
   
   // destination to test for reachability
   private var destination: SCNetworkReachability
@@ -90,7 +91,7 @@ open class NetAvailability {
   }
   
   /// Check for general network availability
-  required public init(_ destination: SCNetworkReachability? = nil) {
+  private init(_ destination: SCNetworkReachability? = nil) {
     if let destination = destination { self.destination = destination }
     else {
       var addr = sockaddr()
@@ -122,41 +123,59 @@ open class NetAvailability {
   }
   
   /// Check for reachability of the given host
-  convenience public init(host: String) {
+  convenience init(host: String) {
     let hdest = SCNetworkReachabilityCreateWithName(nil, host)
     self.init(hdest)
   }
   
   // changeCallback is called upon network reachability changes
   private func changeCallback(flags: SCNetworkReachabilityFlags) {
-    if let closure = self._onChangeClosure {
-      closure(flags)
-    }
-    if let closure = self._whenUpClosure {
-      if isAvailable(flags: flags) && !isAvailable(flags: lastFlags) { closure() }
-    }
-    if let closure = self._whenDownClosure {
-      if !isAvailable(flags: flags) && isAvailable(flags: lastFlags) { closure() }
+    
+    let available = isAvailable(flags: flags) && !isAvailable(flags: lastFlags)
+    ///Cleanup ..if needed
+    self.targetHandlers = self.targetHandlers.filter { item in item.target != nil }
+    
+    for handler in self.targetHandlers {
+      if handler.event == .Changed {
+        handler.action(flags)
+      }
+      else if handler.event == .Down && available == false {
+        handler.action(flags)
+      }
+      else if handler.event == .Up && available == true {
+        handler.action(flags)
+      }
     }
   }
   
-  var _onChangeClosure: ((SCNetworkReachabilityFlags)->())? = nil
-  var _whenUpClosure: (()->())? = nil
-  var _whenDownClosure: (()->())? = nil
+  /**
+   Ways
+   - Delegate: Not SOLID ...not independent
+   - single closures, multiple instances ...not working due limitations (errors) in SCNetworkReachability
+   - store closures in an array ... how to remove them  (...next)
+   - add/remove Observer, store them in an array compare, remove  ...will work but easier is:
+   - use local Notifications
+   ...try to use Observer Pattern (with addTarget!) otherwise we need to ensure this singleton is called once ...to setup
+   
+     ...init with Host Problem!
+   
+   */
+  public static let sharedInstance = NetAvailability()
   
-  /// Defines the closure to call when a network change has happened
-  public func onChange(_ closure: ((SCNetworkReachabilityFlags)->())?) {
-    _onChangeClosure = closure
+  open func addTarget(_ target: AnyObject?,
+                      action: @escaping ((SCNetworkReachabilityFlags)->()),
+                      for event: NetAvailabilityEvent = .Changed) {
+    targetHandlers.append((target, action, event))
   }
   
-  /// Defines the closure to call when the network goes up
-  public func whenUp(_ closure: (()->())?) {
-    _whenUpClosure = closure
+  open func removeTarget(_ target: AnyObject?) {
+    guard let target = target else { return }//Instance may not exist anymore
+    self.targetHandlers = self.targetHandlers.filter { item in item.target !== target }
   }
   
-  /// Defines the closure to call when the network goes down
-  public func whenDown(_ closure: (()->())?) {
-    _whenDownClosure = closure
-  }  
+  typealias TargetHandler = (target: AnyObject?,
+                             action:((SCNetworkReachabilityFlags)->()),
+                             event: NetAvailabilityEvent)
   
+  var targetHandlers:[TargetHandler] = []
 } // NetAvailability
