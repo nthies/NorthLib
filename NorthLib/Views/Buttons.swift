@@ -1287,7 +1287,7 @@ open class ImageView: ButtonView {
 @IBDesignable
 open class TextView: ButtonView {
 
-  open var label = UILabel()
+  open var label = LabelWithInsets()
   
   @IBInspectable
   open var text: String? {
@@ -1306,7 +1306,7 @@ open class TextView: ButtonView {
   
   override open func setup() {
     super.setup()
-    label.font = UIFont.boldSystemFont(ofSize: 4000.0)
+    label.font = UIFont.boldSystemFont(ofSize: 4000.0)//???
     label.adjustsFontSizeToFitWidth = true
     label.textAlignment = .center
     label.numberOfLines = 0
@@ -1332,6 +1332,13 @@ open class TextView: ButtonView {
   }
   
 } // class TextView
+
+public class LabelWithInsets : UILabel {
+  public var textInsets : UIEdgeInsets = .zero
+  public override func drawText(in rect: CGRect) {
+      super.drawText(in: rect.inset(by: textInsets))
+  }
+}
 
 
 /**
