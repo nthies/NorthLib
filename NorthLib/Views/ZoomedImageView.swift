@@ -167,6 +167,11 @@ open class ZoomedImageView: UIView, ZoomedImageViewSpec {
   public func whenScrolled(minRatio: CGFloat, _ closure: @escaping (CGFloat) -> ()) {
     whenScrolledHandler = (minRatio, closure)
   }
+  
+  public var whenZoomedHandler : ((_ isZoomIn: Bool) -> ())?
+  public func whenZoomed(closure: ((_ isZoomIn: Bool) -> ())?) {
+    whenZoomedHandler = closure
+  }
 }
 
 public typealias WhenScrolledHandler = (minRatio: CGFloat, closure: (CGFloat) -> ())
@@ -312,6 +317,7 @@ extension ZoomedImageView{
     else if scrollView.zoomScale > scrollView.minimumZoomScale + 0.2 {
       scrollView.setZoomScale(scrollView.minimumZoomScale,
                               animated: true)
+      whenZoomedHandler?(false)
     }
     else { ///Otherwise Zoom In in to tap loacation
       let maxZoom = scrollView.maximumZoomScale
@@ -329,6 +335,7 @@ extension ZoomedImageView{
                       animated: true)
       scrollView.isScrollEnabled = true
       if maxZoom > 2 { scrollView.maximumZoomScale = maxZoom  }
+      whenZoomedHandler?(true)
     }
   }
 }
