@@ -161,7 +161,20 @@ open class ZoomedImageView: UIView, ZoomedImageViewSpec {
   public func invalidateLayout(){
     zoomOutAndCenter()
   }
+  
+  fileprivate var startDragging: CGPoint? // content y offset at start of dragging
+  public var whenScrolledHandler : WhenScrolledHandler?
+  public func whenScrolled(minRatio: CGFloat, _ closure: @escaping (CGFloat) -> ()) {
+    whenScrolledHandler = (minRatio, closure)
+  }
+  
+  public var whenZoomedHandler : ((_ isZoomIn: Bool) -> ())?
+  public func whenZoomed(closure: ((_ isZoomIn: Bool) -> ())?) {
+    whenZoomedHandler = closure
+  }
 }
+
+public typealias WhenScrolledHandler = (minRatio: CGFloat, closure: (CGFloat) -> ())
 
 // MARK: - Setup
 extension ZoomedImageView{
@@ -304,6 +317,7 @@ extension ZoomedImageView{
     else if scrollView.zoomScale > scrollView.minimumZoomScale + 0.2 {
       scrollView.setZoomScale(scrollView.minimumZoomScale,
                               animated: true)
+      whenZoomedHandler?(false)
     }
     else { ///Otherwise Zoom In in to tap loacation
       let maxZoom = scrollView.maximumZoomScale
@@ -321,6 +335,7 @@ extension ZoomedImageView{
                       animated: true)
       scrollView.isScrollEnabled = true
       if maxZoom > 2 { scrollView.maximumZoomScale = maxZoom  }
+      whenZoomedHandler?(true)
     }
   }
 }
@@ -401,5 +416,34 @@ extension ZoomedImageView: UIScrollViewDelegate{
         self.highResImgRequested = false
       })
     }
+  }
+  
+  public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+    startDragging = scrollView.contentOffset
+  }
+  
+  public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+    if let sd = startDragging {
+      let co = scrollView.contentOffset
+      let size = scrollView.bounds.size
+      if size.height == 0, size.width == 0 { return }
+      
+      guard let handler = whenScrolledHandler else { return }
+      
+      let yRatio = (sd.y - co.y)/size.height
+      if abs(yRatio) >= handler.minRatio {
+        handler.closure(yRatio)
+        startDragging = nil
+        return
+      }
+      
+      let xRatio = (sd.x - co.x)/size.width
+      if abs(xRatio) >= handler.minRatio {
+        handler.closure(xRatio)
+        startDragging = nil
+        return
+      }
+    }
+    startDragging = nil
   }
 }

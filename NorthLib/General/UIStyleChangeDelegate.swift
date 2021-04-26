@@ -10,7 +10,7 @@ import Foundation
 
 public let globalStylesChangedNotification = "globalStylesChanged"
 
-public protocol UIStyleChangeDelegate {
+public protocol UIStyleChangeDelegate where Self: UIResponder {
   
   
   /// Function to be called to apply Styles, put your updateable Style Stuff here
@@ -31,13 +31,13 @@ public extension UIStyleChangeDelegate {
     self.applyStyles()
     if #available(iOS 13.0, *) {
       if alsoForiOS13AndHigher == true {
-        Notification.receive(globalStylesChangedNotification) {_ in
-          self.applyStyles()
+        Notification.receive(globalStylesChangedNotification) { [weak self] _ in
+          self?.applyStyles()
         }
       }
     } else {
-      Notification.receive(globalStylesChangedNotification) {_ in
-        self.applyStyles()
+      Notification.receive(globalStylesChangedNotification) { [weak self] _ in
+        self?.applyStyles()
       }
     }
   }

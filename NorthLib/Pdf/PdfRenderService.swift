@@ -13,7 +13,7 @@ import PDFKit
 /// Service that renders PDF's on limited count of Threads,
 /// each parallel render open its own file handle
 /// to avoid memory leaks within unclosed UIGraphicsContext PDF File handles
-class PdfRenderService : DoesLog{
+public class PdfRenderService : DoesLog{
 
   private static let sharedInstance = PdfRenderService()
   private init(){}
@@ -56,6 +56,18 @@ class PdfRenderService : DoesLog{
   
   public static func render(item:ZoomedPdfImageSpec,
                             height: CGFloat,
+                            screenScaled: Bool = true,
+                            backgroundRenderer : Bool = false,
+                            finishedCallback: @escaping((UIImage?)->())){
+    sharedInstance.enqueueRender(item: item,
+                                 height: height,
+                                 screenScaled: screenScaled,
+                                 backgroundRenderer : backgroundRenderer,
+                                 finishedCallback: finishedCallback)
+  }
+  
+  public static func render(item:ZoomedPdfImageSpec,
+                            height: CGFloat,
                             backgroundRenderer : Bool = false,
                             finishedCallback: @escaping((UIImage?)->())){
     sharedInstance.enqueueRender(item: item,
@@ -76,30 +88,34 @@ class PdfRenderService : DoesLog{
     
     queue.async { [weak self] in
       let debugEnqueuedStart = Date()
-      guard let url = item.pdfUrl else {
-        finishedCallback(nil)
-        return
-      }
-      guard let index = item.pdfPageIndex else{
+      guard let pdfPage = item.pdfPage else {
         finishedCallback(nil)
         return
       }
       semaphore.wait()
       let debugRenderStart = Date()
-      let pdfPage = PDFDocument(url: url)?.page(at: index)
-      ///Check if stopped meanwhile
-      if let pdfPage = pdfPage, item.renderingStoped == false {
+      ///Check if stopped meanwhile, then no finishedCallback !? TODO Verify logic!
+      if item.renderingStoped == false {
         var img : UIImage?
         if let w = width {
           img = pdfPage.image(width: w, screenScaled)
         }
         else if let h = height {
-          img = pdfPage.image(height: h)
+          img = pdfPage.image(height: h, screenScaled)
         }
         else {
           img = pdfPage.image(scale:scale)
         }
-        self?.log("Render for PageIdx: \(item.pdfPageIndex ?? 0) done"
+        
+        var additionalInfo = ""
+        if let zpdfi = item as? ZoomedPdfImage {
+          additionalInfo = "ZoomedPdfImage with url: \(String(describing:zpdfi.pdfUrl)) and index: \(String(describing: zpdfi.pdfPageIndex))"
+        }
+        else {
+          additionalInfo = "A Page with Document: \(String(describing:item.pdfPage?.document?.documentURL))"
+        }
+        
+        self?.log("Render for: \(additionalInfo) done"
               + "\n   scale: \(scale) width: \(width ?? 0) height: \(height ?? 0) screenScaled: \(screenScaled)"
               + "\n   screenScaled: \(screenScaled) backgroundRenderer: \(backgroundRenderer)"
               + "\n   Duration since enqueued: \(Date().timeIntervalSince(debugEnqueuedStart)) "
@@ -116,24 +132,24 @@ extension PDFPage : DoesLog {
   fileprivate func image(scale: CGFloat = 1.0) -> UIImage? {
     var img: UIImage?
     guard let ref = self.pageRef else { return nil}
-    var _frame = self.bounds(for: .mediaBox)
-    _frame.size.width *= scale
-    _frame.size.height *= scale
-    _frame.origin.x = 0
-    _frame.origin.y = 0
-    if _frame.width > 300 {
-      self.log("TRY TO RENDER IMAGE WITH: \(_frame.size)", logLevel: .Debug)
+    var frame = self.frame ?? ref.getBoxRect(.cropBox)
+    frame.size.width *= scale
+    frame.size.height *= scale
+    frame.origin.x = 0
+    frame.origin.y = 0
+    if frame.width > 300 {
+      self.log("TRY TO RENDER IMAGE WITH: \(frame.size)", logLevel: .Debug)
     }
     
-    if avoidRenderDueExpectedMemoryIssue(_frame, scale) { return nil }
+    if avoidRenderDueExpectedMemoryIssue(frame, scale) { return nil }
     
-    UIGraphicsBeginImageContext(_frame.size)
+    UIGraphicsBeginImageContext(frame.size)
     
     if let ctx = UIGraphicsGetCurrentContext() {
       ctx.saveGState()
       UIColor.white.set()
-      ctx.fill(_frame)
-      ctx.translateBy(x: 0.0, y: _frame.size.height)
+      ctx.fill(frame)
+      ctx.translateBy(x: 0.0, y: frame.size.height)
       ctx.scaleBy(x: 1.0, y: -1.0)
       ctx.scaleBy(x: scale, y: scale)
       ctx.drawPDFPage(ref)
@@ -142,8 +158,8 @@ extension PDFPage : DoesLog {
     }
     
     UIGraphicsEndImageContext()
-    if _frame.width > 300 {
-      log("rendered image width: \(_frame.width) imagesize: \(img?.mbSize ?? 0) MB", logLevel: .Debug)
+    if frame.width > 300 {
+      log("rendered image width: \(frame.width) imagesize: \(img?.mbSize ?? 0) MB", logLevel: .Debug)
     }
     return img
   }
@@ -186,11 +202,14 @@ extension PDFPage : DoesLog {
     return image(scale:  width/frame.size.width)?.scaled()
   }
   
-  fileprivate func image(height: CGFloat) -> UIImage? {
+  fileprivate func image(height: CGFloat, _ screenScaled: Bool = true) -> UIImage? {
     guard let frame = self.frame else { return nil }
+    if screenScaled == false {
+      return image(scale:  height/frame.size.height)
+    }
     return image(scale:  height/frame.size.height)?.scaled()
   }
   
-  var frame: CGRect? { self.pageRef?.getBoxRect(.cropBox) }
+  public var frame: CGRect? { self.pageRef?.getBoxRect(.cropBox) }
 }
 

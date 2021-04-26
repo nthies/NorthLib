@@ -9,28 +9,46 @@
 import Foundation
 import PDFKit
 
+public enum PdfPageType { case left, right, double}
+
 // MARK: - ZoomedPdfImageSpec : OptionalImage (Protocol)
 public protocol ZoomedPdfImageSpec : OptionalImage, DoesLog {
   var sectionTitle: String? { get set}
   var pageTitle: String? { get set}
-  var pdfUrl: URL? { get }
-  var pdfPageIndex: Int? { get }
   var renderingStoped: Bool { get }
   var preventNextRenderingDueFailed: Bool { get }
-  
+  var pdfPage : PDFPage? { get }
   /// ratio between current zoom and next zoom
   var doubleTapNextZoomStep : CGFloat? { get }
+  var pageType : PdfPageType { get }
+  var size : CGSize { get }
+  var fullScreenPageHeight : CGFloat? { get }
   
+//  func resetToSingleScaleIfNeeded()
   func renderImageWithNextScale(finishedCallback: ((Bool) -> ())?)
+//  func renderFullscreenImageIfNeeded(_ sizeToFit: CGSize, finishedCallback: ((Bool) -> ())?)
   func renderFullscreenImageIfNeeded(finishedCallback: ((Bool) -> ())?)
   func renderImageWithScale(scale: CGFloat, finishedCallback: ((Bool) -> ())?)
 }
 
-public class ZoomedPdfImage: OptionalImageItem, ZoomedPdfImageSpec {
+//public enum ContentAlignment { case left, right, fill }
+
+open class ZoomedPdfImage: OptionalImageItem, ZoomedPdfImageSpec {
+  open var pageType : PdfPageType = .left
+  public var size: CGSize = CGSize(width: 100, height: 80)
   public var sectionTitle: String?
-  public var pageTitle: String?
+  open var pageTitle: String?
+  public var fullScreenPageHeight : CGFloat?
   public private(set) var pdfUrl: URL?
   public private(set) var pdfPageIndex: Int?
+  
+  open var pdfPage: PDFPage? {
+    get {
+      guard let url = pdfUrl else { return nil }
+      guard let index = pdfPageIndex else { return nil }
+      return PDFDocument(url: url)?.page(at: index)
+    }
+  }
   
   lazy var zoomScales = ZoomScales()
   
@@ -75,19 +93,12 @@ public class ZoomedPdfImage: OptionalImageItem, ZoomedPdfImageSpec {
   private var rendering = false
   
   public private(set) var pageDescription: String = ""
-    
-  public func renderFullscreenImageIfNeeded(finishedCallback: ((Bool) -> ())?) {
+ /*
+  open func renderFullscreenImageIfNeeded(_ sizeToFit: CGSize, singlePageRatio: CGFloat, finishedCallback: ((Bool) -> ())?){
     //    self.renderImageWithScale(scale:1.0, finishedCallback: finishedCallback)
     if rendering { return }//Prevent double render
     rendering = true
-    let scale : CGFloat = 0.9 // 90% height
-    //Prevent Multiple time max rendering
-    let pageHeight = 3.3/2*UIScreen.main.bounds.width
-    
-    let baseheight = pageHeight*UIScreen.main.scale
-    log("Optional Image, render Image with scale: \(scale) is height: \(baseheight*scale) 1:1 image width should be: \(baseheight)")
-    PdfRenderService.render(item: self,
-                            height: baseheight*scale) { img in
+    let finishedBlock: ((UIImage?)->()) = { img in
       onMain { [weak self] in
         guard let self = self else { return }
         
@@ -99,16 +110,63 @@ public class ZoomedPdfImage: OptionalImageItem, ZoomedPdfImageSpec {
         }
         
         guard let newImage = img else {
-          self.log("Optional Image, render Image with scale: \(scale) FAILED")
           self.zoomScales.setLastRenderSucceed(false)
           finishedCallback?(false)
           return
         }
-        self.log("Optional Image, render Image with scale: \(scale) SUCCEED ImgSize: \(newImage.size), \(newImage.mbSize) MB")
         self.zoomScales.setLastRenderSucceed(true)
         self.image = newImage
         finishedCallback?(true)
       }
+    }
+    let cropBoxSize = self.pdfPage?.bounds(for: .cropBox).size
+    let
+    
+    if let targetHeight = fullScreenPageHeight {
+      PdfRenderService.render(item: self,
+                              height: targetHeight*UIScreen.main.scale,
+                              finishedCallback: finishedBlock)
+    } else {
+      PdfRenderService.render(item: self,
+                              width: UIScreen.main.bounds.width*UIScreen.main.scale,
+                              finishedCallback: finishedBlock)
+    }
+  }*/
+    
+  open func renderFullscreenImageIfNeeded(finishedCallback: ((Bool) -> ())?) {
+    //    self.renderImageWithScale(scale:1.0, finishedCallback: finishedCallback)
+    if rendering { return }//Prevent double render
+    rendering = true
+    let finishedBlock: ((UIImage?)->()) = { img in
+      onMain { [weak self] in
+        guard let self = self else { return }
+        
+        self.rendering = false
+        
+        if self.renderingStoped {
+          /// handle cancelation
+          return
+        }
+        
+        guard let newImage = img else {
+          self.zoomScales.setLastRenderSucceed(false)
+          finishedCallback?(false)
+          return
+        }
+        self.zoomScales.setLastRenderSucceed(true)
+        self.image = newImage
+        finishedCallback?(true)
+      }
+    }
+    
+    if let targetHeight = fullScreenPageHeight {
+      PdfRenderService.render(item: self,
+                              height: targetHeight*UIScreen.main.scale,
+                              finishedCallback: finishedBlock)
+    } else {
+      PdfRenderService.render(item: self,
+                              width: UIScreen.main.bounds.width*UIScreen.main.scale,
+                              finishedCallback: finishedBlock)
     }
   }
   

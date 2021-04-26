@@ -92,9 +92,10 @@ public extension Notification {
   }
   
   /// Receive Notification and remove observer imediately after receival
+  @discardableResult
   static func receiveOnce(_ message: String, from: Any? = nil,
-                          closure: @escaping (Notification)->()) {
-    receive(message) { notif in
+                          closure: @escaping (Notification)->()) -> Observer {
+    return receive(message) { notif in
       notif.withdraw()
       closure(notif)
     }

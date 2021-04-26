@@ -27,7 +27,12 @@ public extension DlFile {
   func exists(inDir: String) -> Bool {
     let f = File(dir: inDir, fname: name)
     return f.exists && (f.mTime == moTime) && (f.size == size)
-  }  
+  }
+  
+  func existsIgnoringTime(inDir: String) -> Bool {
+    let f = File(dir: inDir, fname: name)
+    return f.exists && (f.size == size)
+  }
 }
 
 /// Error(s) that may be encountered during HTTP operations
@@ -682,6 +687,7 @@ open class HttpLoader: ToString, DoesLog {
       guard let self = self else { return }
       self.count(res, size: file.size)
       if let progressClosure = self.progressClosure, file.size > 0 {
+        #warning("For Performance Reasons the closure should not block the main thread, if ui updates needed the ctrl/view itself should update the ui!")
         onMain { progressClosure(self, self.downloadSize, self.totalSize) }
       }
     }
@@ -706,7 +712,7 @@ open class HttpLoader: ToString, DoesLog {
       self.progressClosure?(self, 0, self.totalSize)
       for file in toDownload {
         self.downloadNext(file: file)
-        _ = self.semaphore.wait(timeout: .now() + 15)
+        _ = self.semaphore.wait(timeout: .now() + 5)
       }
       onMain { [weak self] in self?.closure?(self!) }
     }

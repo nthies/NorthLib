@@ -39,6 +39,7 @@ public class CarouselFlowLayout: UICollectionViewFlowLayout, DoesLog {
   }
   
   /// Increase the visible cells up to maxScale
+  /// ToDo: Missing Cache calculation!
   public override func layoutAttributesForElements(in rect: CGRect) -> [UICollectionViewLayoutAttributes]? {
     guard let _ = self.collectionView else { return nil }
     if let attrs = super.layoutAttributesForElements(in: rect) {
@@ -48,6 +49,7 @@ public class CarouselFlowLayout: UICollectionViewFlowLayout, DoesLog {
   }
   
   /// Increase the cell at indexPath up to maxScale
+  /// ToDo: Remove unused!
   public override func layoutAttributesForItem(at indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
     return super.layoutAttributesForItem(at: indexPath)
   }

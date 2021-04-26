@@ -10,8 +10,15 @@ import UIKit
 
 //PagePDFVC array von pages mit Image und page
 /// Provides functionallity to view, zoom in PDF Pages. Swipe on Side Corner shows next/prev Page if available
-public class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
-    
+open class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
+  public var cellScrollIndicatorInsets:UIEdgeInsets?
+  public var cellVerticalScrollIndicatorInsets:UIEdgeInsets?
+  public var cellHorizontalScrollIndicatorInsets:UIEdgeInsets?
+  var whenScrolledHandler : WhenScrolledHandler?
+  let topGradient = VerticalGradientView()
+  public func whenScrolled(minRatio: CGFloat, _ closure: @escaping (CGFloat) -> ()) {
+    whenScrolledHandler = (minRatio, closure)
+  }
   var _menuItems: [(title: String, icon: String, closure: (String)->())] = []
   public var menuItems: [(title: String, icon: String, closure: (String)->())] {
     get{
@@ -19,19 +26,17 @@ public class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
     }
     set{
       var newItems = newValue
-      if newItems.count > 0 {
-        newItems.insert((title: "Zoom 1:1", icon: "1.magnifyingglass", closure: { [weak self] _ in
-          if let ziv = self?.currentView as? ZoomedImageView  {
-            ziv.scrollView.setZoomScale(1.0, animated: true)
-          }
-        }), at: 0)
-      }
+      newItems.insert((title: "Zoom 1:1", icon: "1.magnifyingglass", closure: { [weak self] _ in
+        if let ziv = self?.currentView as? ZoomedImageView  {
+          ziv.scrollView.setZoomScale(1.0, animated: true)
+        }
+      }), at: 0)
       _menuItems = newItems
     }
   }
   
     
-  var pdfModel : PdfModel? {
+  public var pdfModel : PdfModel? {
     didSet{
       updateData()
     }
@@ -44,18 +49,18 @@ public class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
     self.collectionView?.reloadData()
   }
   
-  init(data:PdfModel) {
+  public init(data:PdfModel) {
     self.pdfModel = data
     super.init()
     updateData()
   }
   
-  required init?(coder: NSCoder) {
+  public required init?(coder: NSCoder) {
     fatalError("init(coder:) has not been implemented")
   }
   
   
-  public override func viewDidLoad() {
+  open override func viewDidLoad() {
     super.viewDidLoad()
     self.iosLower14?.pageControlMaxDotsCount = Device.singleton == .iPad ? 25 : 9
     self.iosHigher14?.pageControlMaxDotsCount = self.pdfModel?.count ?? 0
@@ -66,9 +71,18 @@ public class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
     self.pageControl?.pageIndicatorTintColor = UIColor.white
     self.pageControl?.currentPageIndicatorTintColor = UIColor.red//Const.SetColor.CIColor.color
     self.pinBottomToSafeArea = false
+    setupTopGradient()
   }
   
-  public override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+  func setupTopGradient() {
+    topGradient.pinHeight(UIWindow.topInset)
+    self.view.addSubview(topGradient)
+    pin(topGradient.left, to: self.view.left)
+    pin(topGradient.right, to: self.view.right)
+    pin(topGradient.top, to: self.view.top)
+  }
+  
+  open override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
     super.viewWillTransition(to: size, with: coordinator)
     //Fix Issue iPad: rotation page is missalligned
     //simple soloution due rotation animation is much longer
@@ -78,13 +92,23 @@ public class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
         ziv.invalidateLayout()
       }
     }
+    handleTraitsChange(size)    
+  }
+  
+  open override func viewWillAppear(_ animated: Bool) {
+    super.viewWillAppear(animated)
+    handleTraitsChange(self.view.frame.size)
+  }
+  
+  func handleTraitsChange(_ toSize:CGSize) {
+    topGradient.isHidden = UIDevice.current.orientation.isLandscape
   }
   
   public override func didReceiveMemoryWarning() {
     print("☠️☠️☠️\nRECIVE MEMORY WARNING\n☠️☠️☠️☠️\nPdfPagesCollectionVC->didReceiveMemoryWarning\n   ")
   }
 
-  public override func setupViewProvider(){
+  open override func setupViewProvider(){
     viewProvider { [weak self] (index, oview) in
       guard let self = self else { return UIView() }
       let dataItem = self.pdfModel?.item(atIndex: index)
@@ -97,6 +121,18 @@ public class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
       }
       else {
         let ziv = ZoomedImageView(optionalImage: dataItem)
+        ziv.scrollView.insetsLayoutMarginsFromSafeArea = true
+        ziv.scrollView.contentInsetAdjustmentBehavior = .scrollableAxes
+        ziv.whenScrolledHandler = self.whenScrolledHandler
+        if let insets = self.cellScrollIndicatorInsets{
+          ziv.scrollView.scrollIndicatorInsets = insets
+        }
+        if let insets = self.cellVerticalScrollIndicatorInsets{
+          ziv.scrollView.verticalScrollIndicatorInsets = insets
+        }
+        if let insets = self.cellHorizontalScrollIndicatorInsets{
+          ziv.scrollView.horizontalScrollIndicatorInsets = insets
+        }
         ziv.backgroundColor = .clear
         ziv.scrollView.backgroundColor = .clear //.red/black work .clear not WTF
         ziv.onTap { [weak self] (oimg, x, y) in
@@ -113,7 +149,7 @@ public class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
         return ziv
       }
     }
-    
+    /*...ToDo: disable this, disables the black page 
     onEndDisplayCell { (_, optionalView) in
       guard let ziv = optionalView as? ZoomedImageView,
             let _pdfImg = ziv.optionalImage as? ZoomedPdfImageSpec else { return }
@@ -122,12 +158,14 @@ public class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
         pdfImg.image = nil
         ziv.imageView.image = nil
       }
-    }
+    }*/
     
     onDisplay { [weak self] (idx, optionalView) in
       guard let ziv = optionalView as? ZoomedImageView,
             let pdfImg = ziv.optionalImage as? ZoomedPdfImageSpec else { return }
       ziv.menu.menu = self?.menuItems ?? []
+      ///enables scrolling on page, even if page is much smaller, so tolbar can (dis)appear on scroll
+//      ziv.scrollView.contentInset = UIEdgeInsets(top: 1, left: 1, bottom: 1, right: 1)
       if ziv.imageView.image == nil
       {
         ziv.optionalImage = pdfImg
@@ -139,7 +177,7 @@ public class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
     }
   }
   
-  func handleRenderFinished(_ success:Bool, _ ziv:ZoomedImageView){
+  open func handleRenderFinished(_ success:Bool, _ ziv:ZoomedImageView){
     if success == false { return }
     onMain {
       ziv.scrollView.setZoomScale(1.0, animated: false)

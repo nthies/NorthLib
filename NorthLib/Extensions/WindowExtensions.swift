@@ -44,12 +44,40 @@ public extension UIWindow {
     return 0
   }
   
+  /// Returns the max inset for all edges
+  static var maxInset: CGFloat {
+    let inset = safeInsets
+    return max(inset.top, inset.left, inset.bottom, inset.right)
+  }
+  
   /// Returns the bottom inset of the window
   static var verticalInsets: CGFloat {
     if #available(iOS 11.0, *) {
       if let window = keyWindow { return window.safeAreaInsets.top + window.safeAreaInsets.bottom}
     }
     return 0
+  }
+  
+  /// Returns safe area Insets inset of the window
+  static var safeInsets: UIEdgeInsets {
+    if #available(iOS 11.0, *) {
+      if let window = keyWindow { return window.safeAreaInsets }
+    }
+    return .zero
+  }
+  
+  /// Returns size the key window otherwise screen size
+  static var size: CGSize {
+    if let window = keyWindow {
+      return window.frame.size
+    }
+    return UIScreen.main.bounds.size
+  }
+  
+  /// Returns safe area Insets inset of the window
+  static var shortSide: CGFloat {
+    let s = size
+    return min(s.width, s.height)
   }
 
 } // UIWindow

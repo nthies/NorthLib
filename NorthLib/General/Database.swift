@@ -125,7 +125,16 @@ open class Database: DoesLog, ToString {
 
   public func save(_ context: NSManagedObjectContext? = nil) {
     let ctx = (context != nil) ? context : self.context
+    let started = Date()
     if ctx!.hasChanges { try! ctx!.save() }
+    log("Save done execution duration: \(Date().timeIntervalSince(started))")
+    /**
+     RESULTS
+      Longest on debug iPhone 12 Pro in short Test:
+        Save done execution duration: 0.02309596538543701
+     But  ... while use issueCarousel 20 times in 5 seconds WTF!
+
+     */
   }
   
   public func inBackground(_ closure: @escaping (NSManagedObjectContext)->()) {

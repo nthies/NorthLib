@@ -88,6 +88,7 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
   }
   
   var shadeView = UIView()
+  let leftBackground = UIView()//hide previous vc. content if vertical slider on spring open
   public private(set) var sliderView = UIView()
   var contentView = UIView()
   var handleView: RoundedRect?
@@ -135,12 +136,12 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
 
   func setupInvariableConstraints() {
     let view = active.view!
-    pin(shadeView.top, to: view.topGuide())
+    pin(shadeView.top, to: view.top)
     pin(shadeView.bottom, to: view.bottom)
     pin(shadeView.left, to: view.left)
     pin(shadeView.right, to: view.right)
     if isHorizontal {
-      pin(sliderView.top, to: view.topGuide())
+      pin(sliderView.top, to: view.top)
       pin(sliderView.bottom, to: view.bottom)
     }
     else {
@@ -290,6 +291,14 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
     decorateSlider(isDecorate)
     active.view.addSubview(shadeView)
     active.view.addSubview(sliderView)
+    
+    active.view.addSubview(leftBackground)
+    leftBackground.backgroundColor = .black
+    pin(leftBackground.rightGuide(), to: sliderView.leftGuide())
+    pin(leftBackground.topGuide(), to: sliderView.topGuide(), dist: -30)
+    pin(leftBackground.bottomGuide(), to: sliderView.bottomGuide(), dist: -30)
+    leftBackground.pinWidth(12)
+    
     setupInvariableConstraints()
     let ics = slider.view.intrinsicContentSize
     if isHorizontal { if ics.width > 0 { coverage = ics.width } }
@@ -305,6 +314,7 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
   
   public func slide(toOpen: Bool, animated: Bool = true) {
     let view = active.view!
+    leftBackground.isHidden = isHorizontal && !toOpen
     shadeView.isHidden = false
     sliderView.isHidden = false
     if !isOpen {
@@ -347,6 +357,12 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
     slide(toOpen: false, animated: animated)
   }
   
+  /// Hides left Background layer, which hides previoud pushed VC
+  /// use this to fix back block on disappear of current vc
+  public func hideLeftBackground() {
+    leftBackground.isHidden = true
+  }
+  
 } // class Slider
 
 
@@ -356,6 +372,7 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
  *  controller.
  */
 open class ButtonSlider: Slider {
+  private var buttonMovedOut:Bool = false
   
   /// Maximum absolute coverage of the active view controller
   public var maxCoverage: CGFloat? = nil {
@@ -370,7 +387,8 @@ open class ButtonSlider: Slider {
       evaluateCoverage()
     }
   }
-  public var button = UIButton(type: .custom)
+  public var hideButtonOnClose = false
+  public var button = CustomButton(type: .custom)
   public var buttonAlpha: CGFloat = 1.0 {
     didSet { button.alpha = buttonAlpha }
   }
@@ -406,7 +424,7 @@ open class ButtonSlider: Slider {
       heightButtonConstraint.constant = img.size.height
     }
     if fromLeft {
-      leadingButtonConstraint.constant = -shift
+      if buttonMovedOut == false { leadingButtonConstraint.constant = -shift}
       leadingButtonConstraint.isActive = true
       trailingButtonConstraint.isActive = false
     }
@@ -420,9 +438,23 @@ open class ButtonSlider: Slider {
     active.view?.layoutIfNeeded()
   }
   
+  /// Updates the Horizontal Button Slider Width if open
+  /// - Parameter newWidth: new Slider Width otherwise coverage will be used
+  /// keep in mind, if called from: "viewWillTransition(to size:" coverage my returns wrong value
+  public func updateSliderWidthIfNeeded(_ newWidth: CGFloat? = nil){
+    if isOpen == false { return }
+    widthConstraint.constant = newWidth ?? coverage
+  }
+
+  
   @objc public func buttonPressed(sender: UIButton) {
     toggleSlider()
   }
+  
+  override func setupInvariableConstraints() {
+    super.setupInvariableConstraints()
+    pin(sliderView.top, to: active.view!.top, priority: .required)//THats the Point!
+    }
   
   public init(slider: UIViewController, into active: UIViewController) {
     active.view.addSubview(button)
@@ -430,6 +462,25 @@ open class ButtonSlider: Slider {
     super.init(slider: slider, into: active, isHorizontal: true)
     active.view.bringSubviewToFront(button)
     button.addTarget(self, action: #selector(buttonPressed(sender:)), for: .touchUpInside)
+  }
+  
+  public func buttonMoveOut( _ duration: TimeInterval = 0.9, _ delay: TimeInterval = 0.1, atEnd: (()->())? = nil ) {
+    UIView.animate(withDuration: duration/3, delay: delay, options: .curveEaseOut, animations: {
+      self.leadingButtonConstraint.constant = 3
+      self.active.view.layoutIfNeeded()
+    } ) { _ in
+      UIView.animate(withDuration: duration/3, delay: 0, options: .curveEaseOut, animations: {
+        self.leadingButtonConstraint.constant = -self.button.frame.size.width+2
+        self.active.view.layoutIfNeeded()
+      } ) { _ in
+        UIView.animate(withDuration: duration/9, delay: 0, options: .curveEaseOut, animations: {
+          self.leadingButtonConstraint.constant = -self.button.frame.size.width+7
+          self.active.view.layoutIfNeeded()
+        } ) { _ in
+      if let closure = atEnd { closure() }
+        }
+      }
+    }
   }
   
   public func buttonFadeOut( _ duration: TimeInterval, atEnd: (()->())? = nil ) {
@@ -447,6 +498,12 @@ open class ButtonSlider: Slider {
     } ) { _ in
       if let closure = atEnd { closure() }
     }
+  }
+  
+  public override func slide(toOpen: Bool, animated: Bool = true) {
+    buttonMovedOut = !toOpen
+    super.slide(toOpen: toOpen, animated: animated)
+    if hideButtonOnClose, toOpen == false { buttonMoveOut()}
   }
   
   public func blinkButton() {
@@ -628,4 +685,13 @@ open class RoundedRect: UIView {
     backgroundColor = UIColor.clear
   }
   
+}
+
+
+public class CustomButton: UIButton {
+  public var additionalTapOffset:CGFloat = 0
+  
+  public override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
+        return bounds.insetBy(dx: -additionalTapOffset, dy: -additionalTapOffset).contains(point)
+    }
 }

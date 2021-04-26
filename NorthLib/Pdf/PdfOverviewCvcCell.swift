@@ -10,74 +10,51 @@ import UIKit
 
 public class PdfOverviewCvcCell : UICollectionViewCell {
   
-  public let imageView:UIImageView? = UIImageView()
-  public let label:UILabel? = UILabel()
-  public let button:UIButton? = UIButton()
+  public let imageView = UIImageView()
+  public let label = UILabel()
+  public let dateLabel = UILabel()
+  
   var menu:ContextMenu?
+ 
+  public override func prepareForReuse() {
+    self.imageView.image = nil
+    self.label.text = nil
+    self.dateLabel.text = nil
+  }
   
   override init(frame: CGRect) {
     super.init(frame: frame)
-    if let iv = imageView {
-      /**
-        Bugfix after Merge
-        set ImageViews BG Color to same color like Collection Views BG fix white layer on focus
-       UIColor.clear or UIColor(white: 0, alpha: 0) did not work
-       Issue is not in last Build before Merge 0.4.18-2021011501 ...but flickering is there on appearing so its half of the bug
-          - was also build with same xcode version/ios sdk
-       issue did not disappear if deployment target is set back to 11.4
-       */
-      iv.backgroundColor = .black
-      menu = ContextMenu(view: iv)
-    }
-    if let imageView = imageView {
-      imageView.contentMode = .scaleAspectFit
-      self.contentView.addSubview(imageView)
-      pin(imageView, to: contentView, exclude: .bottom)
-      pin(imageView.bottom, to: contentView.bottom, priority: .defaultHigh)
-    }
+    /**
+     Bugfix after Merge
+     set ImageViews BG Color to same color like Collection Views BG fix white layer on focus
+     UIColor.clear or UIColor(white: 0, alpha: 0) did not work
+     Issue is not in last Build before Merge 0.4.18-2021011501 ...but flickering is there on appearing so its half of the bug
+     - was also build with same xcode version/ios sdk
+     issue did not disappear if deployment target is set back to 11.4
+     */
+    imageView.backgroundColor = .black
+    imageView.contentMode = .scaleAspectFit
+    menu = ContextMenu(view: imageView)
     
-    if let label = label {
-      label.numberOfLines = 2
-      self.contentView.addSubview(label)
-      pin(label, to: contentView, exclude: .top)
-      label.pinHeight(30)
-    }
+    contentView.addSubview(imageView)
+    pin(imageView, to: contentView)
     
-    if let button = button {
-      self.contentView.addSubview(button)
-      pin(button, to: contentView, exclude: .top)
-      button.pinHeight(30, priority: .defaultHigh)
-      button.imageEdgeInsets = UIEdgeInsets(top: 2, left: 8, bottom: -2, right: -8)
-      button.semanticContentAttribute = UIApplication.shared
-          .userInterfaceLayoutDirection == .rightToLeft ? .forceLeftToRight : .forceRightToLeft
-      button.imageView?.tintColor = .white
-    }
+    label.numberOfLines = 0
+    contentView.addSubview(label)
+    pin(label.leftGuide(), to: contentView.leftGuide())
+    pin(label.rightGuide(), to: contentView.rightGuide())
+    //Pin the Label outside of the cell simplifies everything!
+    pin(label.topGuide(), to: contentView.bottomGuide(), dist: 2.0)
     
-    if let label = label, let imageView = imageView  {
-      pin(label.top, to: imageView.bottom, dist: 3, priority: .required)
-    }
-    if let button = button, let imageView = imageView  {
-      pin(button.top, to: imageView.bottom, priority: .required)
-    }
-  }
-  
-  public var text : String? {
-    didSet {
-      guard let button = button else { return }
-      button.setTitle(text, for: .normal)
-    }
-  }
-  
-  public var cloudHidden : Bool = false {
-    didSet {
-      guard let button = button else { return }
-      if cloudHidden {
-        button.setImage(nil, for: .normal)
-      }
-      else {
-        button.setImage(UIImage(name: "icloud.and.arrow.down"), for: .normal)
-      }
-    }
+    contentView.addSubview(dateLabel)
+    pin(dateLabel.leftGuide(), to: contentView.rightGuide(), dist: PdfDisplayOptions.Overview.interItemSpacing)
+    pin(dateLabel.bottomGuide(), to: contentView.bottomGuide(), dist: 3.0)
+    dateLabel.numberOfLines = 2
+    
+//    self.addBorder(.green, 0.5)
+//    self.contentView.addBorder(.yellow, 1.0)
+//    self.imageView.addBorder(.blue, 1.5)
+//    self.label.addBorder(.orange, 1.0)
   }
   
   required init?(coder: NSCoder) {
