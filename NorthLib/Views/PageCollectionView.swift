@@ -162,6 +162,13 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
     }
   }
   
+  public func updateLayout(){
+    guard let layout = self.collectionViewLayout as? UICollectionViewFlowLayout
+    else { return }
+    layout.minimumLineSpacing = swidth
+    layout.sectionInset = UIEdgeInsets(top: 0, left: inset, bottom: 0, right: inset)
+  }
+  
   /// Returns the optional view at a given index (if that view is visible)
   open func optionalView(at idx: Int) -> OptionalView? {
     if let cell = cellForItem(at: IndexPath(item: idx, section: 0)) as? PageCell {
