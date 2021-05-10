@@ -390,8 +390,14 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
    to those given in the DlFile, then no download is performed.
    */
   public func downloadDlFile(baseUrl: String, file: DlFile, toDir: String,
-                       closure: @escaping(Result<HttpJob?,Error>)->()) {
+                             cacheDir: String? = nil,
+                             closure: @escaping(Result<HttpJob?,Error>)->()) {
     if file.exists(inDir: toDir) { closure(.success(nil)) }
+    else if let cache = cacheDir, file.exists(inDir: cache) {
+      let src = File(cache + "/" + file.name)
+      src.copy(to: toDir + "/" + file.name)
+      closure(.success(nil))
+    }
     else {
       debug("download: \(file.name) - doesn't exist in \(File.basename(toDir))")
       let url = "\(baseUrl)/\(file.name)"
@@ -630,6 +636,8 @@ open class HttpLoader: ToString, DoesLog {
   var baseUrl: String
   /// Directory to download to
   var toDir: String
+  /// Optional cache directory to try before going online
+  var cacheDir: String?
   /// nb. of files downloaded
   public var downloaded = 0
   /// nb. bytes downloaded
@@ -658,10 +666,12 @@ open class HttpLoader: ToString, DoesLog {
   }
   
   /// Init with base URL and destination directory
-  public init(session: HttpSession, baseUrl: String, toDir: String) {
+  public init(session: HttpSession, baseUrl: String, toDir: String,
+              fromCacheDir: String? = nil) {
     self.session = session
     self.baseUrl = baseUrl
     self.toDir = toDir
+    self.cacheDir = fromCacheDir
   }
   
   // count download
@@ -682,12 +692,11 @@ open class HttpLoader: ToString, DoesLog {
     
   // Download next file in list
   func downloadNext(file: DlFile) {
-    session.downloadDlFile(baseUrl: baseUrl, file: file, toDir: toDir) 
-    { [weak self] res in
+    session.downloadDlFile(baseUrl: baseUrl, file: file, toDir: toDir,
+                           cacheDir: self.cacheDir) { [weak self] res in
       guard let self = self else { return }
       self.count(res, size: file.size)
       if let progressClosure = self.progressClosure, file.size > 0 {
-        #warning("For Performance Reasons the closure should not block the main thread, if ui updates needed the ctrl/view itself should update the ui!")
         onMain { progressClosure(self, self.downloadSize, self.totalSize) }
       }
     }
@@ -709,12 +718,14 @@ open class HttpLoader: ToString, DoesLog {
           self.totalSize += file.size
         }
       }
-      self.progressClosure?(self, 0, self.totalSize)
+      onMain { self.progressClosure?(self, 0, self.totalSize) }
       for file in toDownload {
         self.downloadNext(file: file)
         _ = self.semaphore.wait(timeout: .now() + 5)
       }
-      onMain { [weak self] in self?.closure?(self!) }
+      onMain { [weak self] in
+        self?.closure?(self!)
+      }
     }
   }
   
