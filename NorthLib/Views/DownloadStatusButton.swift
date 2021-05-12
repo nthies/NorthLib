@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-public enum DownloadStatusButtonState { case notStarted, process, done }
+public enum DownloadStatusButtonState { case notStarted, process, justDone, done, waiting }
 
 public class DownloadStatusButton : UIButton {
   private var lastBounds:CGRect?
@@ -21,6 +21,7 @@ public class DownloadStatusButton : UIButton {
   public var stopHandler : (()->())?
   public var downloadState: DownloadStatusButtonState = .notStarted {
     didSet{
+      if oldValue == downloadState { return }
       switch downloadState {
         case .notStarted:
           percent = 0.0
@@ -38,10 +39,11 @@ public class DownloadStatusButton : UIButton {
       if downloadState == .process, oldValue != percent {
         progressCircle.progress = percent
         if percent == 1.0 {
+          downloadState = .justDone; update()
           onMainAfter(2.0) { [weak self] in
             self?.downloadState = .done
-            self?.startHandler = nil
-            self?.stopHandler = nil
+//            self?.startHandler = nil
+//            self?.stopHandler = nil HAVE NO STOP DOWNLOAD OPTION YET!
             self?.update()
           }
         }
@@ -50,6 +52,7 @@ public class DownloadStatusButton : UIButton {
   }
   
   public var cloudImage : UIImage? = UIImage(name: "icloud.and.arrow.down")
+  public var checkmarkImage : UIImage? = UIImage(name: "checkmark")
   
   public var buttonImage : UIImage? {
     didSet{
@@ -77,6 +80,16 @@ public class DownloadStatusButton : UIButton {
         buttonImage = nil
         progressCircle.isHidden = true
         self.titleEdgeInsets = .zero
+      case .justDone:
+        buttonImage = checkmarkImage
+        progressCircle.isHidden = true
+        self.titleEdgeInsets = .zero
+      case .waiting:
+        buttonImage = nil
+        progressCircle.isHidden = false
+        progressCircle.waiting = true
+        self.titleEdgeInsets = UIEdgeInsets(top: 0, left: offset,
+                                            bottom: 0, right: offset)
     }
   }
   
@@ -140,6 +153,7 @@ class ProgressCircle: CALayer {
   
   public var progress: Float = 0.0 {
     didSet{
+      waiting = false
       if let tv = self.animation.toValue as? Float, progress - tv < 0.1 { return }
       self.progressCircle.strokeColor = color.cgColor
       onMain { [weak self] in
@@ -157,6 +171,25 @@ class ProgressCircle: CALayer {
       }
     }
   }
+  
+  public var waiting: Bool = false {
+    didSet{
+      if waiting == oldValue { return }
+      
+      self.progressCircle.strokeColor = color.cgColor
+      self.progressCircle.strokeEnd = 0.3
+      onMain { [weak self] in
+        guard let self = self else { return }
+        if self.waiting == false
+            && self.progressCircle.animation(forKey: "waitingAnimation") != nil{
+          self.progressCircle.removeAnimation(forKey: "waitingAnimation")
+          return
+        }
+        self.progressCircle.add(self.waitingAnimation, forKey: "waitingAnimation")
+      }
+    }
+  }
+  
   
   /// Properties
   public var color:UIColor = UIColor.red {
@@ -203,6 +236,17 @@ class ProgressCircle: CALayer {
     return animation
   }()
   
+  private lazy var waitingAnimation : CABasicAnimation = {
+    let rotation : CABasicAnimation = CABasicAnimation(keyPath: "transform.rotation")
+    rotation.toValue = NSNumber(value: Double.pi * 2)
+    rotation.duration = 1
+    rotation.isCumulative = true
+    rotation.repeatCount = Float.greatestFiniteMagnitude
+    rotation.isRemovedOnCompletion = true
+    return rotation
+  }()
+  
+  
   override var frame: CGRect {
     didSet {
       updateComponentsIfNeeded()
@@ -217,10 +261,13 @@ class ProgressCircle: CALayer {
     lastBounds = self.bounds
     //Layout Circle
     let diam = self.bounds.height
-    let rect = CGRect(origin: .zero, size: CGSize(width: diam, height: diam))
+    let rect = CGRect(origin: CGPoint(x: -diam/2, y: -diam/2), size: CGSize(width: diam, height: diam))
     let circlePath = UIBezierPath(roundedRect: rect, cornerRadius: diam/2)
     progressTrackCircle.path = circlePath.cgPath
+    progressTrackCircle.position = CGPoint(x: diam/2, y: diam/2)
     progressCircle.path = circlePath.cgPath
+    progressCircle.position = CGPoint(x: diam/2, y: diam/2)
+    
     //Layout square in Circle
     let squareSize:CGFloat = self.bounds.height/5
     stopIcon.frame = CGRect(x: self.bounds.width - diam/2 - squareSize/2,
