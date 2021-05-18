@@ -39,8 +39,11 @@ open class Alert {
   }
   
   /// Ask the user for confirmation (as action sheet)
-  public static func confirm(title: String? = nil, message: String, 
-                             okText: String = "OK", isDestructive: Bool = false, 
+  public static func confirm(title: String? = nil,
+                             message: String,
+                             okText: String = "OK",
+                             cancelText: String = "Abbrechen",
+                             isDestructive: Bool = false,
                              closure: ((Bool)->())?) {
     onMain {
       var okStyle: UIAlertAction.Style = .default
@@ -50,7 +53,7 @@ open class Alert {
       let popupMessage = title==nil ? message : "\n\(message)"
       let alert = UIAlertController(title: title, message:popupMessage , preferredStyle: .alert)
       let okButton = UIAlertAction(title: okText, style: okStyle) { _ in closure?(true) }
-      let cancelButton = UIAlertAction(title: "Abbrechen", style: .cancel) { _ in closure?(false) }
+      let cancelButton = UIAlertAction(title: cancelText, style: .cancel) { _ in closure?(false) }
       alert.addAction(okButton)
       alert.addAction(cancelButton)
       //present even if there is still a modal View presented

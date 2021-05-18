@@ -85,8 +85,15 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
           page.activeView.transform = CGAffineTransform(rotationAngle: -CGFloat.pi)
         }
         else { page.activeView.transform = .identity }
-        contentView.addSubview(page.activeView)
-        pin(page.activeView, to: contentView)
+        
+        ///Try to get rid of the Pin Crash:
+        ///... Unable to activate constraint with anchors <Anchor...WebView...top">
+        /// and <Anchor:...UIView.top>
+        /// because they have no common ancestor.
+        /// Problem may have been: activeView (OptionalView) changed its availability
+        let av = page.activeView
+        contentView.addSubview(av)
+        pin(av, to: contentView)
         self.page = page
         if isAvailable { page.loadView() }
         else {
@@ -160,6 +167,13 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
         self.isHidden = false
       }
     }
+  }
+  
+  public func updateLayout(){
+    guard let layout = self.collectionViewLayout as? UICollectionViewFlowLayout
+    else { return }
+    layout.minimumLineSpacing = swidth
+    layout.sectionInset = UIEdgeInsets(top: 0, left: inset, bottom: 0, right: inset)
   }
   
   /// Returns the optional view at a given index (if that view is visible)
