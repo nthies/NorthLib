@@ -89,7 +89,10 @@ open class JSBridgeObject: DoesLog {
   /// calls a native closure
   public func call(_ jscall: JSCall) {
     if let f = functions[jscall.method] {
-      debug( "From JS: '\(jscall.objectName).\(jscall.method)' called" )
+      let method = jscall.method
+      if method != "log" && method != "alert" {
+        debug( "From JS: '\(jscall.objectName).\(jscall.method)' called" )
+      }
       let retval = f(jscall)
       jscall.callback(arg: retval)
     }
