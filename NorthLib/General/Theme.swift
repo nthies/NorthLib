@@ -7,7 +7,7 @@
 
 import UIKit
 
-@_functionBuilder
+@resultBuilder
 struct ThemeBuilder {
   static func buildBlock(_ items: Theme...) -> [Theme] {
     return items
