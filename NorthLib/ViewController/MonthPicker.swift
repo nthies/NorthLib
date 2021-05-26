@@ -98,7 +98,7 @@ open class MonthPickerController: UIViewController, UIPickerViewDelegate, UIPick
   lazy var toolbar : UIToolbar = {
     let toolbar =  UIToolbar()
     toolbar.isTranslucent = false
-    toolbar.iosLower14?.barStyle = .black
+    toolbar.barStyle = .black
     var  doneButton = UIBarButtonItem(barButtonSystemItem: .done,
                                          target: self,
                                          action: #selector(donedatePicker))
