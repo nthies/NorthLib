@@ -58,10 +58,12 @@ public extension UIWindow {
   
   /// Returns the bottom inset of the window
   static var verticalInsets: CGFloat {
-    if #available(iOS 11.0, *) {
-      if let window = keyWindow { return window.safeAreaInsets.top + window.safeAreaInsets.bottom}
-    }
-    return 0
+    return safeInsets.top + safeInsets.bottom
+  }
+  
+  /// Returns the bottom inset of the window
+  static var horizontalInsets: CGFloat {
+    return safeInsets.left + safeInsets.right
   }
   
   /// Returns safe area Insets inset of the window
