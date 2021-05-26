@@ -55,6 +55,8 @@ public class Overlay: NSObject, OverlaySpec, UIGestureRecognizerDelegate {
   public var overlayView: UIView?
   public var contentView: UIView?//either overlayVC.view or its wrapper
   public var overlaySize: CGSize?
+  /// optional bottom offset e.g. for Toolbar
+  public var bottomOffset: CGFloat?
   public var maxAlpha: Double = 0.8
   public var shadeColor: UIColor = .black
   public var enablePinchAndPan: Bool = true
@@ -170,7 +172,13 @@ public class Overlay: NSObject, OverlaySpec, UIGestureRecognizerDelegate {
       contentView?.setNeedsLayout()
       contentView?.layoutIfNeeded()
     }
-    NorthLib.pin(overlayView, toSafe: activeVC.view)
+    
+    let constr = NorthLib.pin(overlayView, toSafe: activeVC.view)
+    if let offset = bottomOffset {
+      constr.bottom.isActive = false
+      NorthLib.pin(overlayView.bottom, to: activeVC.view.bottom, dist: -offset)
+    }
+    
     activeVC.addChild(overlayVC)
     overlayVC.didMove(toParent: activeVC)
     
