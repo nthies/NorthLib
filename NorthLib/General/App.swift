@@ -218,7 +218,7 @@ open class App {
     return _icon
   }
   
-  /// InstallationId: A String uniquly identifying this App's installation on this
+  /// InstallationId: A String uniquely identifying this App's installation on this
   /// unique device (called identifierForVendor by Apple)
   fileprivate static var _installationId: String?
   public static var installationId: String { 
