@@ -382,3 +382,8 @@ public extension NSObject{
     }
   }
 }
+
+public var gt_iOS14 : Bool {
+  if #available(iOS 14, *) { return true }
+  return false
+}

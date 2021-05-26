@@ -50,6 +50,12 @@ public extension UIWindow {
     return max(inset.top, inset.left, inset.bottom, inset.right)
   }
   
+  /// Returns the max inset for all edges
+  static var maxAxisInset: CGFloat {
+    let inset = safeInsets
+    return max(inset.top + inset.bottom, inset.left + inset.right)
+  }
+  
   /// Returns the bottom inset of the window
   static var verticalInsets: CGFloat {
     if #available(iOS 11.0, *) {
@@ -74,10 +80,31 @@ public extension UIWindow {
     return UIScreen.main.bounds.size
   }
   
-  /// Returns safe area Insets inset of the window
+  /// Returns short side's size of the window
   static var shortSide: CGFloat {
     let s = size
     return min(s.width, s.height)
   }
+  
+  /// Returns short side's size of the window
+  static var longSide: CGFloat {
+    let s = size
+    return max(s.width, s.height)
+  }
 
 } // UIWindow
+
+/// A simple UIScreen extension
+public extension UIScreen {
+  /// Returns short side's size of the window
+  static var shortSide: CGFloat {
+    let s = main.bounds.size
+    return min(s.width, s.height)
+  }
+  
+  /// Returns short side's size of the window
+  static var longSide: CGFloat {
+    let s = main.bounds.size
+    return max(s.width, s.height)
+  }
+}
