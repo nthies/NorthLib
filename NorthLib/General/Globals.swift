@@ -9,24 +9,56 @@
 
 import Foundation
 
-/// delays execution of a closure for a number of seconds
-public func delay(seconds: Double, completion:@escaping ()->()) {
-  DispatchQueue.main.asyncAfter(deadline: .now() + seconds) { completion() }
+/**
+ Executes the passed closure on one of the system's global dispatch queues
+ depending on the given quality of service *qos*.
+ 
+ The system maintains a number of threads with different scheduling priorities.
+ Using the argument *qos* you select an appropriate thread with its dispatch queue
+ for the execution of *closure* concurrently to the main thread.
+ If given with the argument *after* the execution is delayed by *after* seonds.
+ 
+ - Parameters:
+   - qos: quality of service (default: .userInitiated)
+   - after: Number of seconds to defer the execution
+   - queue: optional dispatch queue to execute *closure* on
+   - closure: closure to execute
+ */
+public func async(qos: DispatchQoS.QoSClass = .userInitiated, after seconds: Double = 0,
+                  queue q: DispatchQueue? = nil, closure: @escaping ()->()) {
+  let queue: DispatchQueue = q ?? DispatchQueue.global(qos: qos)
+  if seconds =~ 0.0 {
+    let deadline = DispatchTime.now() + seconds
+    queue.asyncAfter(deadline: deadline, execute: closure)
+  }
+  else { queue.async(execute: closure) }
 }
 
-/// Calls a closure every n seconds
+/**
+ Executes the passed closure asynchronously on main thread.
+ 
+ Similar to the global *async* function *onMain* executes a closure asynchronously.
+ Unlike *async* the closure is started on the main thread, ie. that thread which
+ performs all user interaction.
+ 
+ - Parameters:
+   - after: Number of seconds to defer the execution
+   - closure: closure to execute
+ */
+public func onMain(after seconds: Double = 0, closure: @escaping ()->()) {
+  async(after: seconds, queue: DispatchQueue.main, closure: closure)
+}
+
+/// Delays execution of a closure on the main thread for a number of seconds
+public func delay(seconds: Double, closure: @escaping ()->()) {
+  onMain(after: seconds, closure: closure)
+}
+
+/// Calls a closure every n seconds on current thread
 @discardableResult
 public func every(seconds: Double, closure: @escaping (Timer)->()) -> Timer {
   return Timer.scheduledTimer(withTimeInterval: seconds, repeats: true, 
                               block: closure)
-}
-
-/// perform closure on main thread
-public func onMain(closure: @escaping ()->()) {
-  if !Thread.isMainThread {
-    DispatchQueue.main.async(execute: closure)
-  }
-  else { closure() }
 }
 
 /// perform closure on on main thread after given timeout
