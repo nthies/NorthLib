@@ -9,7 +9,7 @@
 #define  strext_h
 
 #include  <stdarg.h>
-#include  "sysdef.h"
+#include  <NorthLib/sysdef.h>
 
 // constants used by various conversion functions:
 #define  cvt_signed_c             1

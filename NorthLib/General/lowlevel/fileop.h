@@ -11,7 +11,7 @@
 #include  <stdarg.h>
 #include  <sys/types.h>
 #include  <sys/stat.h>
-#include  "sysdef.h"
+#include  <NorthLib/sysdef.h>
 
 /// File status
 typedef struct stat stat_t;
