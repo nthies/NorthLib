@@ -326,7 +326,7 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
     let duration = animated ? self.duration : 0
     UIView.animate(withDuration: duration, delay: 0, usingSpringWithDamping: 0.8,
                    initialSpringVelocity: 0.2, options: .curveEaseOut, animations: {
-      if self.isOpen { self.shadeView.alpha = 0.2 }
+      if self.isOpen { self.shadeView.alpha = 0.3 }
       else { self.shadeView.alpha = 0 }
       self.resetConstraints()
     }) { _ in // completion
