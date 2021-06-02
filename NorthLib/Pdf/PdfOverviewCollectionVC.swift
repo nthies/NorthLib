@@ -65,9 +65,10 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
       pin(cv.right, to: cvsv.rightGuide())
       topGradient.pinHeight(UIWindow.topInset)
       cvsv.addSubview(topGradient)
-      
+      /// Insets fix because gradient did not work as expectet
+      /// happen on Rotate in PDF e.g. on Notch iPhones either left gap or right, extend size to fix this
       pin(topGradient.left, to: cvsv.leftGuide(), dist: -UIWindow.maxInset)
-      pin(topGradient.right, to: cvsv.rightGuide())
+      pin(topGradient.right, to: cvsv.rightGuide(), dist: UIWindow.maxInset)
       pin(topGradient.top, to: cvsv.top)
     }
   }
