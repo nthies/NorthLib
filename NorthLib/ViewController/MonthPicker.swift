@@ -34,10 +34,9 @@ open class MonthPickerController: UIViewController, UIPickerViewDelegate, UIPick
     }
   }
   
-  public init(minimumDate:Date, maximumDate:Date, selectedDate:Date, tollbarItemColor: UIColor = .white) {
+  public init(minimumDate:Date, maximumDate:Date, selectedDate:Date) {
     data = DatePickerData(minimumDate: minimumDate, maximumDate: maximumDate)
     initialSelectedDate = selectedDate
-    self.tollbarItemColor = tollbarItemColor
     super.init(nibName: nil, bundle: nil)
   }
   
@@ -46,7 +45,6 @@ open class MonthPickerController: UIViewController, UIPickerViewDelegate, UIPick
   }
   
   let data : DatePickerData
-  let tollbarItemColor : UIColor
   
   let picker = UIPickerView()
   public let content = UIView()
@@ -77,7 +75,7 @@ open class MonthPickerController: UIViewController, UIPickerViewDelegate, UIPick
     self.view.addSubview(content)
     pin(content.topGuide(), to: self.view.topGuide(), priority: .fittingSizeLevel)
     content.pinHeight(181, priority:.required)
-    pin(content.bottom, to: self.view.bottom)
+    pin(content.bottom, to: self.view.bottomGuide(), dist: -Toolbar.ContentToolbarHeight)
     pin(content.leftGuide(), to: self.view.leftGuide())
     pin(content.rightGuide(), to: self.view.rightGuide())
     
@@ -85,46 +83,7 @@ open class MonthPickerController: UIViewController, UIPickerViewDelegate, UIPick
       self.setDate(dateToSet, animated: false)
       self.initialSelectedDate = nil //disable on re-use
     }
-    
-    toolbar.backgroundColor = .black
-    content.backgroundColor = .black
-
-    self.view.addSubview(toolbar)
-    pin(toolbar.left, to: self.view.left)
-    pin(toolbar.right, to: self.view.right)
-    pin(toolbar.bottom, to: content.top)
   }
-  
-  lazy var toolbar : UIToolbar = {
-    let toolbar =  UIToolbar()
-    toolbar.isTranslucent = false
-    toolbar.barStyle = .black
-    var  doneButton = UIBarButtonItem(barButtonSystemItem: .done,
-                                         target: self,
-                                         action: #selector(donedatePicker))
-    
-    let prevButton  = UIBarButtonItem(image: UIImage(name: "chevron.up")?.withRenderingMode(.alwaysTemplate),
-                                      style: .plain,
-                                      target: self,
-                                      action: #selector(toolbarPrev))
-    
-    
-    let nextButton  = UIBarButtonItem(image: UIImage(name: "chevron.down")?.withRenderingMode(.alwaysTemplate),
-                                      style: .plain,
-                                      target: self,
-                                      action: #selector(toolbarNext))
-    prevButton.tintColor = tollbarItemColor
-    nextButton.tintColor = tollbarItemColor
-    doneButton.tintColor = tollbarItemColor
-    
-    let flexibleSpaceButton = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
-    
-    toolbar.setItems([prevButton, nextButton, flexibleSpaceButton, doneButton], animated: false)
-    toolbar.isUserInteractionEnabled = true
-    
-    return toolbar
-  }()
-  
   
   /// The currently selected index
   open var index: Int {
@@ -143,24 +102,6 @@ open class MonthPickerController: UIViewController, UIPickerViewDelegate, UIPick
   
   @objc func donedatePicker(){
     doneHandler?()
-  }
-  
-  @objc func toolbarNext(){
-    let idx = self.picker.selectedRow(inComponent: 0) + 1
-    self.picker.selectRow(idx > 11 ? 0 : idx, inComponent: 0, animated: true)
-    if idx > 11 {
-      let idx2 = self.picker.selectedRow(inComponent: 1) + 1
-      self.picker.selectRow(idx2, inComponent: 1, animated: true)
-    }
-  }
-  
-  @objc func toolbarPrev(){
-    let idx = self.picker.selectedRow(inComponent: 0) - 1
-    self.picker.selectRow(idx < 0 ? 11 : idx, inComponent: 0, animated: true)
-    if idx < 0 {
-      let idx2 = self.picker.selectedRow(inComponent: 1) - 1
-      self.picker.selectRow(idx2, inComponent: 1, animated: true)
-    }
   }
 }
 

@@ -31,7 +31,7 @@ import UIKit
 
 @IBDesignable
 open class Toolbar: UIToolbar {
-
+  public static let ContentToolbarHeight: CGFloat = 52
   class TButtons {
   
     var left:   Array<ButtonControl> = []
