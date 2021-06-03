@@ -280,6 +280,13 @@ open class PushNotification: NSObject, UNUserNotificationCenterDelegate, DoesLog
   
 } // PushNotification
 
+extension PushNotification {
+  public func handleTestRemoteNotification(_ payload: [AnyHashable:Any]) {
+    debug("handleTestRemoteNotification!")
+    self.receive(payload)
+  }
+}
+
 /// This is not the real status bar, it's a scrollview that resides beneath 
 /// the status bar of the same dimensions. It is used to detect status bar
 /// touches.

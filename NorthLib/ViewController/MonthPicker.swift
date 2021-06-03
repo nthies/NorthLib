@@ -73,12 +73,14 @@ open class MonthPickerController: UIViewController, UIPickerViewDelegate, UIPick
     pin(picker.centerY, to: applyButton.centerY)
     
     self.view.addSubview(content)
-    
     pin(content.topGuide(), to: self.view.topGuide(), priority: .fittingSizeLevel)
     content.pinHeight(181, priority:.required)
-    pin(content.bottomGuide(), to: self.view.bottomGuide())
-    pin(content.leftGuide(), to: self.view.leftGuide())
-    pin(content.rightGuide(), to: self.view.rightGuide())
+    pin(content.bottom, to: self.view.bottomGuide(), dist: -Toolbar.ContentToolbarHeight)
+    
+    pin(content.width, to: self.view.width).priority = .defaultHigh
+    content.pinWidth(500.0, relation: .lessThanOrEqual, priority: .required)
+    content.centerX()
+    
     
     if let dateToSet = self.initialSelectedDate {
       self.setDate(dateToSet, animated: false)

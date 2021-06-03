@@ -62,6 +62,35 @@ public extension UIView {
   }
 }
 
+/// A UIView extension to show/hide views animated
+public extension UIView {
+  func showAnimated(completion: (()->())? = nil){
+    if isHidden == false { return }
+    onMain { [weak self] in
+      self?.alpha = 0.0
+      self?.isHidden = false
+      UIView.animate(withDuration: 0.6) {[weak self] in
+        self?.alpha = 1.0
+      } completion: {_ in
+        completion?()
+      }
+    }
+  }
+  
+  func hideAnimated(completion: (()->())? = nil){
+    if isHidden == true { return }
+    onMain { [weak self] in
+      UIView.animate(withDuration: 0.6) {[weak self] in
+        self?.alpha = 0.0
+      } completion: { [weak self] _ in
+        self?.isHidden = true
+        self?.alpha = 1.0
+        completion?()
+      }
+    }
+  }
+}
+
 
 // Layout anchors and corresponding views:
 public struct LayoutAnchorX {
@@ -128,9 +157,20 @@ public extension UIView {
   
   /// Pin width of view
   @discardableResult
-  func pinWidth(_ width: CGFloat, priority: UILayoutPriority? = nil) -> NSLayoutConstraint {
+  func pinWidth(_ width: CGFloat,
+                relation: NSLayoutConstraint.Relation? = .equal,
+                priority: UILayoutPriority? = nil) -> NSLayoutConstraint {
     translatesAutoresizingMaskIntoConstraints = false
-    let constraint = widthAnchor.constraint(equalToConstant: width)
+    
+    var constraint:NSLayoutConstraint
+    switch relation {
+      case .lessThanOrEqual:
+        constraint = widthAnchor.constraint(lessThanOrEqualToConstant: width)
+      case .greaterThanOrEqual:
+        constraint = widthAnchor.constraint(greaterThanOrEqualToConstant: width)
+      default:
+        constraint = widthAnchor.constraint(equalToConstant: width)
+    }
     if let prio = priority { constraint.priority = prio }
     constraint.isActive = true
     return constraint
@@ -381,4 +421,9 @@ public extension NSObject{
       }
     }
   }
+}
+
+public var gt_iOS14 : Bool {
+  if #available(iOS 14, *) { return true }
+  return false
 }
