@@ -13,6 +13,7 @@ open class MonthPickerController: UIViewController, UIPickerViewDelegate, UIPick
   
   public var doneHandler: (() -> ())?
   var initialSelectedDate : Date?
+  public var pickerFont : UIFont?
   
   public var selectedDate : Date {
     get {
@@ -121,7 +122,7 @@ extension MonthPickerController {
     if label == nil {
       label = UILabel()
       label?.textAlignment = .center
-      label?.font = UIFont.preferredFont(forTextStyle: .headline)
+      label?.font = pickerFont ?? UIFont.preferredFont(forTextStyle: .headline)
     }
     label!.textColor = textColor
     if component == 0 {
