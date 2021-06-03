@@ -43,7 +43,7 @@ public class Overlay: NSObject, OverlaySpec, UIGestureRecognizerDelegate {
   //usually 0.4-0.5
   private var openDuration: Double { get { return debug ? 3.0 : 0.4 } }
   private var closeDuration: Double { get { return debug ? 3.0 : 0.25 } }
-  private var debug = false
+  public var debug = false
   private var closeAction : (() -> ())?
   private var updatedCloseFrame : (() -> (CGRect?))?
   private var onCloseHandler: (() -> ())?
