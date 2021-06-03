@@ -235,7 +235,9 @@ public class Overlay: NSObject, OverlaySpec, UIGestureRecognizerDelegate {
   public func openAnimated(fromView: UIView, toView: UIView) {
     addToActiveVC()
     
-    var fromFrame = fromView.frame
+    let convSourceFrame = activeVC.view.getConvertedFrame(fromView)
+    
+    var fromFrame = convSourceFrame ?? fromView.frame
     
     guard let fromSnapshot = activeVC.view.resizableSnapshotView(from: fromFrame, afterScreenUpdates: false, withCapInsets: .zero) else {
       showWithoutAnimation()
