@@ -75,7 +75,8 @@ open class MonthPickerController: UIViewController, UIPickerViewDelegate, UIPick
     
     self.view.addSubview(content)
     pin(content.topGuide(), to: self.view.topGuide(), priority: .fittingSizeLevel)
-    content.pinHeight(181, priority:.required)
+    content.pinHeight(130, priority:.required)
+    
     pin(content.bottom, to: self.view.bottomGuide(), dist: -Toolbar.ContentToolbarHeight)
     
     pin(content.width, to: self.view.width).priority = .defaultHigh
