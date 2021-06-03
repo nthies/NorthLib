@@ -66,6 +66,35 @@ extension UIView {
   }
 }
 
+// MARK: - frame Helper
+extension UIView {
+  public func getConvertedFrame(_ childView: UIView) -> CGRect? {
+    //check if child is subview of self
+    guard childView.isDescendant(of: self) else { return nil }
+    guard var curr = childView.superview else { return nil }
+    var fr = childView.frame
+    while true {
+      guard let sv = curr.superview else { return nil }
+      fr = curr.convert(fr, to: sv)
+      if sv == self { return fr }
+      curr = sv
+    }
+  }
+  
+  public func getConvertedCenter(_ childView: UIView) -> CGPoint? {
+    //check if child is subview of self
+    guard childView.isDescendant(of: self) else { return nil }
+    guard var curr = childView.superview else { return nil }
+    var pt = childView.center
+    while true {
+      guard let sv = curr.superview else { return nil }
+      pt = curr.convert(pt, to: sv)
+      if sv == self { return pt }
+      curr = sv
+    }
+  }
+}
+
 // MARK: - borders Helper
 ///borders Helper
 extension UIView {
