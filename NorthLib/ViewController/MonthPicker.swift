@@ -79,7 +79,7 @@ open class MonthPickerController: UIViewController, UIPickerViewDelegate, UIPick
     
     pin(content.bottom, to: self.view.bottomGuide(), dist: -Toolbar.ContentToolbarHeight)
     
-    pin(content.width, to: self.view.width).priority = .defaultHigh
+    pin(content.width, to: self.view.width, priority: .defaultHigh)
     content.pinWidth(500.0, relation: .lessThanOrEqual, priority: .required)
     content.centerX()
     

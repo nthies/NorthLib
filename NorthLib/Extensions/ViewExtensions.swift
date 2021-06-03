@@ -283,9 +283,10 @@ public func pin(_ la: LayoutAnchorX,
 /// Pin width/height to width/height of another view
 @discardableResult
 public func pin(_ la: LayoutDimension, to: LayoutDimension, 
-  dist: CGFloat = 0) -> NSLayoutConstraint {
+  dist: CGFloat = 0, priority: UILayoutPriority? = nil) -> NSLayoutConstraint {
   la.view.translatesAutoresizingMaskIntoConstraints = false
   let constraint = la.anchor.constraint(equalTo: to.anchor, constant: dist)
+  if let prio = priority { constraint.priority = prio }
   constraint.isActive = true
   return constraint
 }
