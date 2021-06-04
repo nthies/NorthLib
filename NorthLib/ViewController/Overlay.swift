@@ -43,7 +43,7 @@ public class Overlay: NSObject, OverlaySpec, UIGestureRecognizerDelegate {
   //usually 0.4-0.5
   private var openDuration: Double { get { return debug ? 3.0 : 0.4 } }
   private var closeDuration: Double { get { return debug ? 3.0 : 0.25 } }
-  private var debug = false
+  public var debug = false
   private var closeAction : (() -> ())?
   private var updatedCloseFrame : (() -> (CGRect?))?
   private var onCloseHandler: (() -> ())?
@@ -235,7 +235,9 @@ public class Overlay: NSObject, OverlaySpec, UIGestureRecognizerDelegate {
   public func openAnimated(fromView: UIView, toView: UIView) {
     addToActiveVC()
     
-    var fromFrame = fromView.frame
+    let convSourceFrame = activeVC.view.getConvertedFrame(fromView)
+    
+    var fromFrame = convSourceFrame ?? fromView.frame
     
     guard let fromSnapshot = activeVC.view.resizableSnapshotView(from: fromFrame, afterScreenUpdates: false, withCapInsets: .zero) else {
       showWithoutAnimation()
