@@ -13,6 +13,7 @@ open class MonthPickerController: UIViewController, UIPickerViewDelegate, UIPick
   
   public var doneHandler: (() -> ())?
   var initialSelectedDate : Date?
+  public var pickerFont : UIFont?
   
   public var selectedDate : Date {
     get {
@@ -73,12 +74,15 @@ open class MonthPickerController: UIViewController, UIPickerViewDelegate, UIPick
     pin(picker.centerY, to: applyButton.centerY)
     
     self.view.addSubview(content)
-    
     pin(content.topGuide(), to: self.view.topGuide(), priority: .fittingSizeLevel)
-    content.pinHeight(181, priority:.required)
-    pin(content.bottomGuide(), to: self.view.bottomGuide())
-    pin(content.leftGuide(), to: self.view.leftGuide())
-    pin(content.rightGuide(), to: self.view.rightGuide())
+    content.pinHeight(130, priority:.required)
+    
+    pin(content.bottom, to: self.view.bottomGuide(), dist: -Toolbar.ContentToolbarHeight)
+    
+    pin(content.width, to: self.view.width, priority: .defaultHigh)
+    content.pinWidth(500.0, relation: .lessThanOrEqual, priority: .required)
+    content.centerX()
+    
     
     if let dateToSet = self.initialSelectedDate {
       self.setDate(dateToSet, animated: false)
@@ -119,7 +123,7 @@ extension MonthPickerController {
     if label == nil {
       label = UILabel()
       label?.textAlignment = .center
-      label?.font = UIFont.preferredFont(forTextStyle: .headline)
+      label?.font = pickerFont ?? UIFont.preferredFont(forTextStyle: .headline)
     }
     label!.textColor = textColor
     if component == 0 {
