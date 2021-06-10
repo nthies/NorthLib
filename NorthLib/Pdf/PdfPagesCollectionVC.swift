@@ -92,16 +92,6 @@ open class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
         ziv.invalidateLayout()
       }
     }
-    handleTraitsChange(size)    
-  }
-  
-  open override func viewWillAppear(_ animated: Bool) {
-    super.viewWillAppear(animated)
-    handleTraitsChange(self.view.frame.size)
-  }
-  
-  func handleTraitsChange(_ toSize:CGSize) {
-    topGradient.isHidden = UIDevice.current.orientation.isLandscape
   }
   
   public override func didReceiveMemoryWarning() {
