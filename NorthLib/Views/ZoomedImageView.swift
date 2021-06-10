@@ -60,6 +60,8 @@ open class ZoomedImageView: UIView, ZoomedImageViewSpec {
   var imageViewTrailingConstraint: NSLayoutConstraint?
   var layoutInitialized = false
   
+  public var useExtendedLayoutAdjustments = false
+  
   open override func willMove(toSuperview newSuperview: UIView?) {
     if newSuperview == nil {
       orientationClosure = nil
@@ -356,13 +358,19 @@ extension ZoomedImageView{
   // MARK: updateMinimumZoomScale
   fileprivate func updateMinimumZoomScale(){
     let widthScale = self.bounds.size.width / (imageView.image?.size.width ?? 1)
-    let heightScale = self.bounds.size.height / (imageView.image?.size.height ?? 1)
+    let adjustment = useExtendedLayoutAdjustments
+                     ? Toolbar.ContentToolbarHeight + UIApplication.shared.statusBarFrame.height
+                     : 0
+    let heightScale = (self.bounds.size.height - adjustment) / (imageView.image?.size.height ?? 1)
     let minScale = min(widthScale, heightScale, 1)
     scrollView.minimumZoomScale = minScale
   }
   // MARK: updateConstraintsForSize
   fileprivate func updateConstraintsForSize(_ size: CGSize) {
-    let yOffset = max(0, (size.height - imageView.frame.height) / 2)
+    let adjustment = useExtendedLayoutAdjustments
+                     ? Toolbar.ContentToolbarHeight - UIApplication.shared.statusBarFrame.height
+                     : 0
+    let yOffset = max(0, (size.height - imageView.frame.height - adjustment) / 2)
     imageViewTopConstraint?.constant = yOffset
     imageViewBottomConstraint?.constant = yOffset
     

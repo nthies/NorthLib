@@ -121,6 +121,7 @@ open class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
       }
       else {
         let ziv = ZoomedImageView(optionalImage: dataItem)
+        ziv.useExtendedLayoutAdjustments = true
         ziv.scrollView.insetsLayoutMarginsFromSafeArea = true
         ziv.scrollView.contentInsetAdjustmentBehavior = .scrollableAxes
         ziv.whenScrolledHandler = self.whenScrolledHandler
