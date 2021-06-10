@@ -359,7 +359,7 @@ extension ZoomedImageView{
   fileprivate func updateMinimumZoomScale(){
     let widthScale = self.bounds.size.width / (imageView.image?.size.width ?? 1)
     let adjustment = useExtendedLayoutAdjustments
-                     ? Toolbar.ContentToolbarHeight + UIApplication.shared.statusBarFrame.height
+                     ? Toolbar.ContentToolbarHeight + UIWindow.verticalInsets
                      : 0
     let heightScale = (self.bounds.size.height - adjustment) / (imageView.image?.size.height ?? 1)
     let minScale = min(widthScale, heightScale, 1)
@@ -368,7 +368,7 @@ extension ZoomedImageView{
   // MARK: updateConstraintsForSize
   fileprivate func updateConstraintsForSize(_ size: CGSize) {
     let adjustment = useExtendedLayoutAdjustments
-                     ? Toolbar.ContentToolbarHeight - UIApplication.shared.statusBarFrame.height
+                     ? Toolbar.ContentToolbarHeight + UIWindow.safeInsets.bottom - UIWindow.safeInsets.top
                      : 0
     let yOffset = max(0, (size.height - imageView.frame.height - adjustment) / 2)
     imageViewTopConstraint?.constant = yOffset
