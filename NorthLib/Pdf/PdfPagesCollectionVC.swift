@@ -92,6 +92,17 @@ open class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
         ziv.invalidateLayout()
       }
     }
+    handleTraitsChange(size)    
+  }
+  
+  open override func viewWillAppear(_ animated: Bool) {
+    super.viewWillAppear(animated)
+    handleTraitsChange(self.view.frame.size)
+  }
+  
+  func handleTraitsChange(_ toSize:CGSize) {
+    //on iPhone in Landscape, there is no status Bar
+    topGradient.isHidden = UIDevice.current.orientation.isLandscape && Device.isIphone
   }
   
   public override func didReceiveMemoryWarning() {
