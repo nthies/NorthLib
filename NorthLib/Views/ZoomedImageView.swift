@@ -355,6 +355,41 @@ extension ZoomedImageView{
     updateMinimumZoomScale()
   }
   
+  // MARK: scrollToTopLeft
+  public func scrollToTopLeft(animated:Bool = false){
+    self.scrollView.scrollRectToVisible(CGRect(x: 0, y: 0, width: 1, height: 1), animated: animated)
+  }
+  
+  // MARK: zoomToFitHeight
+  public func zoomToFitHeight(animated:Bool = false){
+    let adjustment = useExtendedLayoutAdjustments
+                     ? Toolbar.ContentToolbarHeight + UIWindow.verticalInsets
+                     : 0
+    let heightScale = (self.bounds.size.height - adjustment) / (imageView.image?.size.height ?? 1)
+    let minScale = min(heightScale, 1)
+    if self.scrollView.zoomScale != minScale {
+      self.scrollView.setZoomScale(minScale, animated: animated)
+    }
+  }
+  
+  // MARK: zoomToFitWidth
+  public func zoomToFitWidth(animated:Bool = false){
+    let widthScale = self.bounds.size.width / (imageView.image?.size.width ?? 1)
+    let minScale = min(widthScale, 1)
+    if self.scrollView.zoomScale != minScale {
+      self.scrollView.setZoomScale(minScale, animated: animated)
+    }
+  }
+  
+  // MARK: zoomToFitHalfWidth
+  public func zoomToFitHalfWidth(animated:Bool = false){
+    let widthScale = 2*self.bounds.size.width / (imageView.image?.size.width ?? 2)
+    let minScale = min(widthScale, 1)
+    if self.scrollView.zoomScale != minScale {
+      self.scrollView.setZoomScale(minScale, animated: animated)
+    }
+  }
+  
   // MARK: updateMinimumZoomScale
   fileprivate func updateMinimumZoomScale(){
     let widthScale = self.bounds.size.width / (imageView.image?.size.width ?? 1)
