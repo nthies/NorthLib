@@ -54,11 +54,22 @@ public class CarouselFlowLayout: UICollectionViewFlowLayout, DoesLog {
     return super.layoutAttributesForItem(at: indexPath)
   }
   
+  public func onLayoutChanged(closure: ((CGSize)->())?) {
+    layoutChangedHandler = closure
+  }
+  var layoutChangedHandler: ((CGSize)->())?
+  var oldBounds:CGRect = .zero
+  
   /// Recalculate layout when scrolling
   public override func shouldInvalidateLayout(forBoundsChange newBounds: CGRect) -> Bool {
+    if let handler = layoutChangedHandler,
+       abs(oldBounds.width - newBounds.width) > 1 ||
+       abs(oldBounds.height - newBounds.height) > 1 {
+      oldBounds = newBounds
+      handler(newBounds.size)
+    }
     return true
   }
-  
 } // CarouselFlowLayout
 
 /**
