@@ -7,7 +7,14 @@
 
 import UIKit
 
-/// An undefined View - ie. a placeholder view
+/**
+ A placeholder view
+ 
+ An *UndefinedView* may be used as placeholder for a view that is currently not
+ available. It consists of a label showing a question mark which is resized to fit
+ the view's dimensions. The view's background color is *clear* and the question mark
+ is written in *yellow*.
+ */
 open class UndefinedView: UIView {
   public var label = UILabel()
   
@@ -36,24 +43,38 @@ open class UndefinedView: UIView {
   }
 }
 
-/// A view consisting of a main view that is intended to be shown and a so called
-/// waiting view that is presented until the main view is available (eg. loaded
-/// from the internet)
+/**
+ A view that may currently not be available
+ 
+ Sometimes a view that should be displayed is not immediately available or
+ its contents is in an undefined state.
+ In such situations it may be pratical to display another view as placeholder
+ until the *real* view's contents becomes available.
+ The OptionalView addresses this situation. It consists of two optional views,
+ the *mainView* being the view that should be displayed and a *waitingView* which
+ is displayed when *mainView* is not available.
+ */
 public protocol OptionalView {
-  var mainView: UIView { get }
+  /// The *real* view to display
+  var mainView: UIView? { get }
+  /// The placeholder view
   var waitingView: UIView? { get }
+  /// Returns true if the *real* view (mainView) is available
   var isAvailable: Bool { get }
+  /// Defines a closure to call when *mainView* becomes available
   func whenAvailable(closure: @escaping ()->())
+  /// Load the *mainView's* contents
   func loadView()
 }
 
 public extension OptionalView {
-  var activeView: UIView { return isAvailable ? mainView : (waitingView ?? UndefinedView()) }
+  /// Returns the view that should currently be displayed
+  var activeView: UIView { return isAvailable ? mainView! : (waitingView ?? UndefinedView()) }
 }
 
 /// Common Views can be optional
 extension UIView: OptionalView {
-  public var mainView: UIView { return self }
+  public var mainView: UIView? { return self }
   public var waitingView: UIView? { return nil }
   public var isAvailable: Bool { return true }
   public func whenAvailable(closure: @escaping () -> ()) {}
