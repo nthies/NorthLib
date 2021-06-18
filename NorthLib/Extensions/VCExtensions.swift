@@ -10,7 +10,6 @@ import UIKit
 
 public extension UIViewController {
   
-  
   /// Returns the topmost modaly presented ViewController or self if no modal VC is there
   var topmostModalVc : UIViewController {
     get {
