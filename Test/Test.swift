@@ -242,6 +242,17 @@ class ZipTests: XCTestCase {
 
 class DefaultsTests: XCTestCase {
   
+  @Default(key: "testBool")
+  var testBool: Bool
+  @Default(key: "testString")
+  var testString: String
+  @Default(key: "testCGFloat")
+  var testCGFloat: CGFloat
+  @Default(key: "testDouble")
+  var testDouble: Double
+  @Default(key: "testInt")
+  var testInt: Int
+  
   override func setUp() {
     super.setUp()
     Log.minLogLevel = .Debug
@@ -283,6 +294,31 @@ class DefaultsTests: XCTestCase {
       XCTAssertEqual(dfl["key2"], "iPad-value2")
     }
   }
+  
+  func testWrappers() {
+    testBool = false
+    $testBool.onChange { val in print(val) }
+    testBool = true
+    XCTAssertEqual(testBool, true)
+    testBool = true
+    testBool = false
+    testString = ""
+    $testString.onChange { val in print(val) }
+    testString = "test"
+    XCTAssertEqual(testString, "test")
+    testInt = 0
+    $testInt.onChange { val in print(val) }
+    testInt = 14
+    XCTAssertEqual(testInt, 14)
+    testCGFloat = 0
+    $testCGFloat.onChange { val in print(val) }
+    testCGFloat = 15
+    XCTAssertEqual(testCGFloat, 15)
+    testDouble = 0
+    $testDouble.onChange { val in print(val) }
+    testDouble = 16
+    XCTAssertEqual(testDouble, 16)
+  }
 
 } // class DefaultsTest
 
@@ -307,7 +343,8 @@ class KeychainTests: XCTestCase {
     kc["geheim"] = "fiffi"
   }
 
-} // class DefaultsTest
+} // class KeychainTests
+
 class FileTests: XCTestCase {
   
   override func setUp() {
@@ -366,3 +403,71 @@ class FileTests: XCTestCase {
   }
   
 } // FileTests
+
+class CallbackTests: XCTestCase {
+  
+  class Test1 {
+    @Callback(notification: "test")
+    var whenReady: Callback.Store
+  }
+
+  // Visualize concurrent access to local var
+  func testConcurrentVar() {
+    let semaphore = DispatchSemaphore(value: 0)
+    var result = 0
+    async {
+      async(after: 0.1) {
+        result = 1
+        semaphore.signal()
+      }
+    }
+    semaphore.wait()
+    XCTAssertEqual(result, 1)
+  }
+  
+  private var count = 0
+  // Make sure that *onMain* doesn't call the closure itself
+  func testMainStack() {
+    guard count < 10 else { count = 0; return }
+    let tmp = count
+    onMain { self.count += 1; self.testMainStack() }
+    XCTAssertEqual(count, tmp)
+    print(count)
+  }
+ 
+  override func setUp() {
+    super.setUp()
+  }
+  
+  func testClosures() {    
+    let t1 = Test1()
+    var str = ""
+    Notification.receive("dog") { _ in print("dog received") }
+    Notification.receive("test") { notif in
+      let sender = notif.sender as? Self
+      XCTAssertNotNil(sender)
+      XCTAssertEqual(sender, self)
+      print(notif.content ?? "nil")
+      print("test received")
+    }
+    t1.whenReady { _ in str += "1" }
+    t1.whenReady { _ in str += "2" }
+    let idx = t1.$whenReady.store { _ in str += "." }
+    XCTAssertEqual(idx, 2)
+    t1.whenReady { _ in str += "3" }
+    t1.whenReady { _ in str += "4" }
+    t1.whenReady { msg in
+      if let (content, sender) = msg as? Callback.Arg, let s = sender as? Self {
+        XCTAssertEqual(s, self)
+        print(content ?? "nil")
+      }
+    }
+    t1.$whenReady.remove(idx)
+    t1.$whenReady.notify(sender: self, wait: true)
+    XCTAssertEqual(str, "1234")
+    t1.$whenReady.notification = "dog"
+    t1.$whenReady.notify(sender: self, wait: true)
+    XCTAssertEqual(str, "12341234")
+  }
+  
+} // CallbackTests
