@@ -140,7 +140,8 @@ open class Defaults: NSObject {
   /// Receive Defaults change notification of a specific key
   public static func receive(key: String, closure: @escaping(String)->()) {
     self.receive { dnfc in
-      if dnfc.key == key, let val = dnfc.val { closure(val) }
+      let (k,_,_) = Defaults.singleton.find(key)
+      if dnfc.key == k, let val = dnfc.val { closure(val) }
     }
   }
   
@@ -204,17 +205,20 @@ open class Defaults: NSObject {
   }
   
   /// Find value for key in list of scopes
-  public func find( _ key: String ) -> (val: String?, scope: String?) {
+  public func find(_ key: String) -> (key: String, val: String?, scope: String?) {
+    var k: String
     for ctx in scopes {
       let pref = prefix(ctx)
-      if let val = userDefaults.string(forKey: pref + key) {
-        return (val, ctx)
+      k = pref + key
+      if let val = userDefaults.string(forKey: k) {
+        return (k, val, ctx)
       }
     }
-    if let val = userDefaults.string(forKey: prefix() + key) { return (val, nil) }
-    return (nil, nil)
+    k = prefix() + key
+    if let val = userDefaults.string(forKey: k) { return (k, val, nil) }
+    return (k, nil, nil)
   }
-    
+  
   /// defaults[key] - returns the value associated with key in any defined scope
   /// defaults[key] = value - sets the associated value in that scope where key
   /// is defined or in the global scope if key isn't defined in any scope
@@ -222,16 +226,14 @@ open class Defaults: NSObject {
   public subscript( _ key: String ) -> String? {
     get { return find(key).val }
     set(val) {
-      var k = key
       let old = find(key)
-      if old.scope != nil { k = prefix(old.scope!) + key }
-      else { k = prefix() + key }
+      let k = old.key
       if old.val != val {
         if let v = val { userDefaults.set(v, forKey: k) }
         else if old.val != nil { userDefaults.removeObject(forKey: k) }
         else { return }
         userDefaults.synchronize()
-        Notification.send( k, val, old.scope )
+        Notification.send(k, val, old.scope)
       }
     }
   }
@@ -321,47 +323,85 @@ open class Defaults: NSObject {
   
 } // class Defaults
 
+/// Protocol for types converting a String to itself and vice versa
+public protocol StringConvertible {
+  static func fromString(_ str: String?) -> Self
+  static func toString(_ val: Self) -> String
+}
+
+extension String: StringConvertible {
+  public static func fromString(_ str: String?) -> String { str ?? "" }
+  public static func toString(_ val: String) -> String { val }
+}
+
+extension Bool: StringConvertible {
+  public static func fromString(_ str: String?) -> Bool {
+    if let str = str { return str.bool }
+    return false
+  }
+  public static func toString(_ val: Bool) -> String {
+    return val ? "true" : "false"
+  }
+}
+
+extension Int: StringConvertible {
+  public static func fromString(_ str: String?) -> Int {
+    if let str = str { return Int(str) ?? 0 }
+    return 0
+  }
+  public static func toString(_ val: Int) -> String { "\(val)" }
+}
+
+extension Double: StringConvertible {
+  public static func fromString(_ str: String?) -> Self {
+    if let str = str { return Self(str) ?? 0 }
+    return 0
+  }
+  public static func toString(_ val: Self) -> String { "\(val)" }
+}
+
+extension CGFloat: StringConvertible {
+  public static func fromString(_ str: String?) -> Self {
+    if let str = str, let d = Double(str) { return Self(d) }
+    return 0
+  }
+  public static func toString(_ val: Self) -> String { "\(val)" }
+}
+
 /// A property wrapper for String Defaults
-@propertyWrapper public struct Default {
+@propertyWrapper public class Default<T: StringConvertible> {
+  
+  /// Type of closure to call when the value has been changed from outside
+  public typealias ChangeClosure = (T)->()
+  
   /// The String to use as Defaults key
   public var key: String
+  
+  /// The optional associated closure to call if the Default value has been changed
+  private var onChangeClosure: ThreadClosure<T>?
+  
   /// The wrapped value is in essence Defaults.singleton[key]
-  public var wrappedValue: String? {
-    get { Defaults.singleton[key] }
-    set { Defaults.singleton[key] = newValue}
+  public var wrappedValue: T {
+    get { T.fromString(Defaults.singleton[key]) }
+    set { Defaults.singleton[key] = T.toString(newValue) }
   }
-  public init(key: String) { self.key = key }
-}
-
-/// A property wrapper for Bool Defaults (represented as String)
-/// If key is undefined, false is returned
-@propertyWrapper public struct DefaultBool {
-  /// The String to use as Defaults key
-  public var key: String
-  /// The wrapped value is in essence Defaults.singleton[key]
-  public var wrappedValue: Bool {
-    get { 
-      if let dfl = Defaults.singleton[key] { return dfl.bool }
-      else { return false }
+  
+  /// The projected value is the wrapper itself
+  public var projectedValue: Default<T> { self }
+  
+  private func setupNotifications() {
+    guard onChangeClosure == nil else { return }
+    Defaults.receive(key: key) { [weak self] (val: String) in
+      self?.onChangeClosure?.call(arg: T.fromString(val))
     }
-    set { Defaults.singleton[key] = newValue ? "true" : "false" }
   }
+  
+  /// Use onChange to define a closure that is called when the Default value has
+  /// been changed
+  public func onChange(closure: @escaping ChangeClosure) {
+    setupNotifications()
+    onChangeClosure = ThreadClosure(closure)
+  }
+  
   public init(key: String) { self.key = key }
 }
-
-/// A property wrapper for Int Defaults (represented as String)
-/// If key is undefined, 0 is returned
-@propertyWrapper public struct DefaultInt {
-  /// The String to use as Defaults key
-  public var key: String
-  /// The wrapped value is in essence Defaults.singleton[key]
-  public var wrappedValue: Int {
-    get {
-      if let dfl = Defaults.singleton[key] { return Int(dfl) ?? 0 }
-      else { return 0 }
-    }
-    set { Defaults.singleton[key] = "\(newValue)" }
-  }
-  public init(key: String) { self.key = key }
-}
-
