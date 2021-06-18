@@ -211,7 +211,7 @@ extension WKNavigationAction: ToString {
 }
 
 open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
-                    WKNavigationDelegate {
+                    WKNavigationDelegate, WKUIDelegate {
 
   /// JS NativeBridge objects
   public var bridgeObjects: [String:JSBridgeObject] = [:]
@@ -225,14 +225,26 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
   /// The original URL to load
   public var originalUrl: URL?
   
-  // The closure to call when link is pressed
-  private var _whenLinkPressed: ((URL?,URL?)->())?
+  /// Number of load errors
+  private var errorCount: Int = 0
+  /// Max. number of ongoing errors
+  private let maxErrorCount = 5
   
-  /// Define closure to call when link is pressed
-  public func whenLinkPressed( _ closure: @escaping (URL?,URL?)->() ) {
-    _whenLinkPressed = closure
-  }
+  /// The closures to call when content has been loaded
+  @Callback
+  public var whenLoaded: Callback.Store
   
+  /// The closures to call when a link has been pressed
+  /// The content part of the argument passed to the closures
+  /// will be (from: URL?, to: URL?)
+  @Callback
+  public var whenLinkPressed: Callback.Store
+  
+  /// The closures to call when a load error has been detected
+  /// The content passed will be err: Error
+  @Callback
+  public var whenLoadError: Callback.Store
+    
   // Default LinkPressed closure
   private func linkPressed(from: URL?, to: URL?) {
     guard let to = to else { return }
@@ -266,36 +278,28 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
     self.jsexec("log2bridge(\(bridge.name))")
   }
 
-  // The closure to call when content scrolled more than scrollRatio
-  private var whenScrolledClosure: ((CGFloat)->())?
-  private var scrollRatio: CGFloat = 0
+  /// The closures to call when content scrolled more than scrollRatio
+  /// The closures get the content arg scrollRatio: CGFloat
+  @Callback
+  public var whenScrolled: Callback.Store
+  public var scrollRatio: CGFloat = 0
   
   /// Define closure to call when web content has been scrolled
-  public func whenScrolled( minRatio: CGFloat, _ closure: @escaping (CGFloat)->() ) {
+  public func whenScrolled(minRatio: CGFloat, closure: @escaping Callback.Closure) {
     scrollRatio = minRatio
-    whenScrolledClosure = closure
+    whenScrolled(closure)
   }
   
-  // The closure to call when some dragging (scrolling) has been done
-  private var whenDraggedClosure: ((CGFloat)->())?
-
-  /// Define closure to call when web content has been dragged, the value passed
-  /// is the number of points scrolled down divided by the content's height
-  public func whenDragged(closure: @escaping (CGFloat)->()) {
-    whenDraggedClosure = closure
-  }
+  /// The closure to call when some dragging (scrolling with finger down) has been done
+  /// The closures get the content arg scrollRatio: CGFloat which is the number of
+  /// points scrolled down divided by the content's height
+  @Callback
+  public var whenDragged: Callback.Store
   
-  // content y offset at start of dragging
-  private var startDragging: CGFloat?
-  
-  /// Define closure to call when the end of the web content will become 
-  /// visible
-  public func atEndOfContent(closure: @escaping (Bool)->()) {
-    atEndOfContentClosure = closure
-  }
-  
-  // end of content closure
-  private var atEndOfContentClosure: ((Bool)->())?
+  /// Define closures to call when the end of the web content will become
+  /// visible, the content arg is atEnd: Bool.
+  @Callback
+  public var atEndOfContent: Callback.Store
   
   /// Returns true if the end of the content is visible
   /// (in vertical direction)
@@ -338,9 +342,11 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
   }
   
   @discardableResult
-  public func load(url: URL) -> WKNavigation? {
+  public func load(url: URL, whenFinished: (()->())? = nil) -> WKNavigation? {
+    if let closure = whenFinished { whenLoaded { _ in closure() } }
     if isLoading { stopLoading() }
     self.originalUrl = url
+    self.errorCount = 0
     if url.isFileURL {
       debug("load: \(url.lastPathComponent)")
       var base = self.baseUrl
@@ -354,21 +360,28 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
   }
   
   @discardableResult
-  public func load(_ string: String) -> WKNavigation? {
+  public func load(_ string: String, whenFinished: (()->())? = nil) -> WKNavigation? {
     if let url = URL(string: string) {
-      return load(url: url)
+      return load(url: url, whenFinished: whenFinished)
     }
     else { return nil }
   }
   
   @discardableResult
-  public func load(html: String) -> WKNavigation? {
+  public func load(html: String, whenFinished: (()->())? = nil) -> WKNavigation? {
+    if let closure = whenFinished { whenLoaded { _ in closure() } }
+    self.errorCount = 0
     return loadHTMLString(html, baseURL: baseUrl)
   }
   
   public func setup() {
     self.navigationDelegate = self
-    whenLinkPressed { (from, to) in self.linkPressed(from: from, to: to) }
+    self.uiDelegate = self
+    whenLinkPressed { [weak self] arg in
+      if let (from,to): (URL?,URL?) = Callback.content(arg) {
+        self?.linkPressed(from: from, to: to)
+      }
+    }
   }
   
   override public init(frame: CGRect, configuration: WKWebViewConfiguration? = nil) {
@@ -396,6 +409,10 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
   }
 
   // MARK: - UIScrollViewDelegate protocol
+    
+  // content y offset at start of dragging
+  private var startDragging: CGFloat?
+
 //    func scrollViewDidScroll(_ scrollView: UIScrollView) {
 //      if let sd = startDragging {
 //        if scrollView.isDragging {
@@ -411,17 +428,15 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
   }
 
   public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
-    if let sd = startDragging {
-      let scrolled = sd-scrollView.contentOffset.y
+    if let sd = startDragging, $whenScrolled.needsNotification {
+      let scrolled = sd - scrollView.contentOffset.y
       let ratio = scrolled / scrollView.bounds.size.height
-      if let closure = whenScrolledClosure, abs(ratio) >= scrollRatio {
-        closure(ratio)
-      }
+      if abs(ratio) >= scrollRatio { $whenScrolled.notify(sender: self, content: ratio) }
     }
     startDragging = nil
-    if let closure = whenDraggedClosure {
+    if $whenDragged.needsNotification {
       let ratio = scrollView.contentOffset.y / scrollView.contentSize.height
-      closure(ratio)
+      $whenDragged.notify(sender: self, content: ratio)
     }
   }
   
@@ -429,9 +444,9 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
   public func scrollViewWillEndDragging(_ scrollView: UIScrollView, 
     withVelocity velocity: CGPoint, 
     targetContentOffset: UnsafeMutablePointer<CGPoint>) {
-    if let closure = atEndOfContentClosure {
+    if $atEndOfContent.needsNotification {
       let offset = targetContentOffset.pointee.y
-      closure(isAtEndOfContent(offset: offset))
+      $atEndOfContent.notify(sender: self, content: isAtEndOfContent(offset: offset))
     }
   }
 
@@ -442,15 +457,57 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
       let from = wv.originalUrl?.absoluteString
       let to = nav.request.description
       if from != to, to != "about:blank" {
-        if let closure = _whenLinkPressed {
-          closure(wv.originalUrl, URL(string: to)) 
-        }
+        let content = (wv.originalUrl, URL(string: to))
+        $whenLinkPressed.notify(sender: self, content: content)
         decisionHandler(.cancel)
       }
       else { decisionHandler(.allow) }
     }
   }
   
+  public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+    self.errorCount = 0
+    $whenLoaded.notify(sender: self)
+  }
+  
+  private func handleLoadError(err: Error) {
+    stopLoading()
+    if self.errorCount >= self.maxErrorCount {
+      error(err)
+      error("Load failed after \(maxErrorCount) retries")
+      $whenLoadError.notify(sender: self, content: err)
+      errorCount = 0
+    }
+    else {
+      // debug("Load error after \(errorCount) retries:\n  \(err)")
+      onMain(after: 0.1 * 2**errorCount) { [weak self] in
+        self?.reloadFromOrigin()
+      }
+      errorCount += 1
+    }
+  }
+  
+  public func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!,
+                      withError err: Error) {
+    handleLoadError(err: err)
+  }
+  
+  public func webView(_ webView: WKWebView, didFail navigation: WKNavigation!,
+                      withError err: Error) {
+    handleLoadError(err: err)
+  }
+  
+  // MARK: - WKUIDelegate protocol
+  
+  public func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String,
+               initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
+    let ac = UIAlertController(title: "JavaScript", message: message,
+               preferredStyle: UIAlertController.Style.alert)
+    ac.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.cancel) { _ in
+      completionHandler() })
+    UIViewController.top()?.present(ac, animated: true)
+  }
+
 } // class WebView
 
 /**
@@ -504,19 +561,13 @@ open class ButtonedWebView: UIView {
   private var buttonBottomConstraint: NSLayoutConstraint?
   private var webViewBottomConstraint: NSLayoutConstraint?
   
-  private var tapClosure: ((String)->())?
-  private var xClosure: (()->())?
+  /// These closures are called when the buttonLabel has been pressed
+  @Callback
+  public var onTap: Callback.Store
   
-  /// This closure is called when the buttonLabel has been pressed
-  public func onTap(closure: @escaping (String)->()) { tapClosure = closure }
-  /// This closure is called when the X-Button has been pressed
-  public func onX(closure: @escaping ()->()) {
-    xClosure = closure
-    xButton.isHidden = false
-    xButton.onPress {_ in
-      self.xClosure?()
-    }
-  }
+  /// These closures are called when the X-Button has been pressed
+  @Callback
+  public var onX: Callback.Store
   
   private func adaptLayoutConstraints() {
     let willShow = buttonLabel.hasContent && isButtonVisible
@@ -557,14 +608,22 @@ open class ButtonedWebView: UIView {
     xButton.buttonView.color = UIColor.rgb(0x707070)
     xButton.buttonView.innerCircleFactor = 0.5
     xButton.isHidden = true
-    webView.atEndOfContent { [weak self] isAtEnd in
-      guard let self = self else { return }
+    xButton.onPress { [weak self] _ in self?.$onX.notify(sender: self) }
+    $onX.whenActivated { [weak self] isActive in
+      self?.xButton.isHidden = !isActive
+    }
+    webView.atEndOfContent { [weak self] arg in
+      guard let self = self,
+            let isAtEnd: Bool = Callback.content(arg)
+      else { return }
       if self.isButtonVisible != isAtEnd {
         self.isButtonVisible = isAtEnd
         self.adaptLayout(animated: true)
       }
     }
-    buttonLabel.onTap { recog in self.tapClosure?(self.buttonLabel.text!) }
+    buttonLabel.onTap { [weak self] _ in
+      self?.$onTap.notify(sender: self, content: self?.buttonLabel.text)
+    }
   }
   
   public override init(frame: CGRect) {
