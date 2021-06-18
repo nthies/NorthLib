@@ -25,27 +25,29 @@ struct OptionalWebView: OptionalView, DoesLog {
   
   var isAvailable: Bool { return url.isAvailable }
   func whenAvailable(closure: @escaping () -> ()) { url.whenAvailable(closure: closure) }
-  var mainView: UIView { return webView! }
+  var mainView: UIView? { return webView }
   func loadView() { if isAvailable { webView?.load(url: url.url) } }
   
   fileprivate mutating func createWebView(vc: WebViewCollectionVC) {
-    let webConfiguration = WKWebViewConfiguration()
-    self.webView = WebView(frame: .zero, configuration: webConfiguration)
+    self.webView = WebView(frame: .zero)
     guard let webView = self.webView else { return }
     webView.isOpaque = false
     webView.backgroundColor = UIColor.clear
     webView.scrollView.backgroundColor = UIColor.clear
-    webView.uiDelegate = vc
-    webView.navigationDelegate = vc
+    vc.addWebViewClosures(webView: webView)
     webView.allowsBackForwardNavigationGestures = false
     webView.scrollView.isDirectionalLockEnabled = true
     webView.scrollView.showsHorizontalScrollIndicator = false
     webView.baseDir = vc.baseDir
-    webView.whenScrolled(minRatio: 0.01) { [weak vc] ratio in
-      vc?.didScroll(ratio: ratio)
+    webView.whenScrolled(minRatio: 0.01) { [weak vc] arg in
+      if let ratio: CGFloat = Callback.content(arg) {
+        vc?.didScroll(ratio: ratio)
+      }
     }  
     if let closure = vc.atEndOfContentClosure {
-      webView.atEndOfContent(closure: closure)
+      webView.atEndOfContent { arg in
+        if let isAtEnd: Bool = Callback.content(arg) { closure(isAtEnd) }
+      }
     }
   }
 
@@ -78,8 +80,7 @@ public struct FileUrl: WebViewUrl {
 }
 
 /// A WebViewCollectionVC manages a hoizontal collection of web views
-open class WebViewCollectionVC: PageCollectionVC, WKUIDelegate,
-  WKNavigationDelegate {
+open class WebViewCollectionVC: PageCollectionVC {
     
   /// The list of URLs to display in WebViews
   public var urls: [WebViewUrl] = []
@@ -97,7 +98,15 @@ open class WebViewCollectionVC: PageCollectionVC, WKUIDelegate,
   
   public var currentWebView: WebView? { return currentView?.activeView as? WebView }
   public var indicatorStyle:  UIScrollView.IndicatorStyle = .default
+
+  // The closure to call when loading completed
+  private var _whenLoaded: (()->())?
   
+  /// Define closure to call when content is loaded
+  public func whenLoaded(_ closure: @escaping ()->()) {
+    _whenLoaded = closure
+  }
+
   // The closure to call when link is pressed
   private var _whenLinkPressed: ((URL?,URL?)->())?
   
@@ -142,19 +151,6 @@ open class WebViewCollectionVC: PageCollectionVC, WKUIDelegate,
       gotoUrl(url: iurl)
     }
   }
-  
-//  public func displayFiles(path: String, files: [String]) {
-//    urls = []
-//    for f in files {
-//      let url = FileUrl(path: path + "/" + f)
-//      urls.append(url)
-//    }
-//    self.count = urls.count
-//  }
-//  
-//  public func displayFiles( path: String, files: String... ) {
-//    displayFiles(path: path, files: files)
-//  }
   
   public func gotoUrl(url: URL) {
     if urls.count == 0 { self.initialUrl = url; return }
@@ -213,70 +209,27 @@ open class WebViewCollectionVC: PageCollectionVC, WKUIDelegate,
     }
   }
   
-  open func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-//    if let wview = webView as? WebView {
-//      debug("Webview loaded: \(wview.url?.lastPathComponent ?? "[undefined URL]")")
-//    }
-  }
-  
-   public func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
-//     if let wview = webView as? WebView {
-//       debug("Webview loading: \(wview.url?.lastPathComponent ?? "[undefined URL]")")
-//     }
-   }
-  
-  public func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, 
-                      withError err: Error) {
-    if let wview = webView as? WebView {
-      error("WebView Error on \"\(wview.originalUrl?.lastPathComponent ?? "[undefined URL]")\": \(err.description)")
-      wview.stopLoading()
-      wview.reloadFromOrigin()
+  public func addWebViewClosures(webView: WebView) {
+    webView.whenLoadError { [weak self] arg in
+      guard let self = self,
+            let err: Error = Callback.content(arg)
+        else { return }
+      self.error("WebView Load Error on \"\(webView.originalUrl?.lastPathComponent ?? "[undefined URL]")\":\n  \(err.description)")
+    }
+    webView.whenLinkPressed { [weak self] arg in
+      guard let self = self,
+            let (from,to): (URL?,URL?) = Callback.content(arg)
+        else { return }
+      self._whenLinkPressed?(from, to)
+      self.onPageChange()
+    }
+    webView.whenLoaded { [weak self] _ in
+      guard let self = self else { return }
+      self._whenLoaded?()
     }
   }
-  
-  public func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, 
-                      withError err: Error) {
-    if let wview = webView as? WebView {
-      error("WebView Error on \"\(wview.originalUrl?.lastPathComponent ?? "[undefined URL]")\": \(err.description)")
-      wview.stopLoading()
-      wview.reloadFromOrigin()
-    }
-  }
-  
-  public func webView(_ webView: WKWebView, decidePolicyFor nav: WKNavigationAction,
-                      decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-    if let wv = webView as? WebView {
-      let from = wv.originalUrl?.absoluteString
-      let to = nav.request.description
-      if from != to {
-        if let closure = _whenLinkPressed {
-          closure(wv.originalUrl, URL(string: to)) 
-        }
-        decisionHandler(.cancel)
-      }
-      else {
-        decisionHandler(.allow)
-        onPageChange()
-      }
-    }
-  }
-  
+    
   ///Overrideable
   open func onPageChange(){}
   
-//  override public func scrollViewDidScroll(_ scrollView: UIScrollView) {
-//    debug(scrollView.contentOffset.toString())
-//    if scrollView.contentOffset.x > 0
-//      { scrollView.contentOffset = CGPoint(x: 0, y: scrollView.contentOffset.y) }
-//  }
-  
-  public func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String,
-               initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
-    let ac = UIAlertController(title: "JavaScript", message: message,
-               preferredStyle: UIAlertController.Style.alert)
-    ac.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.cancel) { _ in
-      completionHandler() })
-    self.present(ac, animated: true)
-  }
-
 }
