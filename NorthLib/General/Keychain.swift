@@ -52,6 +52,7 @@ open class Keychain: DoesLog {
   
   // put value into keychain
   private func set(key: String, value: String) {
+    if let old = get(key: key), old == value { return }
     let data = value.data(using: .utf8)!
     let query = [
       kSecClass as String              : kSecClassGenericPassword as String,
@@ -66,6 +67,7 @@ open class Keychain: DoesLog {
         error("Can't store value into keychain")
       }
     }
+    else { Notification.send("Keychain", content: (key: key, val: value)) }
   }
   
   /// obj[key] - returns the value associated with key
@@ -81,31 +83,52 @@ open class Keychain: DoesLog {
 
 } // Keychain
 
-/// A property wrapper for Keychain String values
-@propertyWrapper public struct Key {
-  /// The String to use as Defaults key
-  public var key: String
-  /// The wrapped value is in essence Keychain.singleton[key]
-  public var wrappedValue: String? {
-    get { Keychain.singleton[key] }
-    set { Keychain.singleton[key] = newValue}
-  }
-  public init(key: String) { self.key = key }
-}
-
-/// A property wrapper for Bool Keychains (represented as String)
-/// If key is undefined, false is returned
-@propertyWrapper public struct KeyBool {
+/// A property wrapper for Keychain values
+@propertyWrapper public class Key<T: StringConvertible> {
+  
+  /// Type of closure to call when the value has been changed from outside
+  public typealias ChangeClosure = (T)->()
+  
   /// The String to use as Keychain key
   public var key: String
+  
+  /// The optional associated closure to call if the Keychain value has been changed
+  private var onChangeClosure: ThreadClosure<T>?
+  
   /// The wrapped value is in essence Keychain.singleton[key]
-  public var wrappedValue: Bool {
-    get { 
-      if let k = Keychain.singleton[key] { return k.bool }
-      else { return false }
+  public var wrappedValue: T {
+    get { T.fromString(Keychain.singleton[key]) }
+    set {
+      let old = Keychain.singleton[key]
+      let new = T.toString(newValue)
+      if new != old {
+        Keychain.singleton[key] = new
+        Notification.send("Keychain", content: (key: key, val: newValue))
+      }
     }
-    set { Keychain.singleton[key] = newValue ? "true" : "false" }
   }
-  public init(key: String) { self.key = key }
+  
+  /// The projected value is the wrapper itself
+  public var projectedValue: Key<T> { self }
+  
+  private func setupNotifications() {
+    guard onChangeClosure == nil else { return }
+    Notification.receive("Keychain") { [weak self] notif in
+      if let (_,val) = notif.content as? (String, String) {
+        self?.onChangeClosure?.call(arg: T.fromString(val))
+      }
+    }
+  }
+  
+  /// Use onChange to define a closure that is called when the Keychain value has
+  /// been changed
+  public func onChange(closure: @escaping ChangeClosure) {
+    setupNotifications()
+    onChangeClosure = ThreadClosure(closure)
+  }
+  
+  /// Delete Keychain entry
+  public func delete() { Keychain.singleton[key] = nil }
+  
+  public init(_ key: String) { self.key = key }
 }
-
