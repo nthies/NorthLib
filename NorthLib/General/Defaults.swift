@@ -368,7 +368,7 @@ extension CGFloat: StringConvertible {
   public static func toString(_ val: Self) -> String { "\(val)" }
 }
 
-/// A property wrapper for String Defaults
+/// A property wrapper for Defaults
 @propertyWrapper public class Default<T: StringConvertible> {
   
   /// Type of closure to call when the value has been changed from outside
@@ -403,5 +403,8 @@ extension CGFloat: StringConvertible {
     onChangeClosure = ThreadClosure(closure)
   }
   
-  public init(key: String) { self.key = key }
+  /// Delete Defaults entry
+  public func delete() { Defaults.singleton[key] = nil }
+
+  public init(_ key: String) { self.key = key }
 }
