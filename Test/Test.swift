@@ -322,8 +322,20 @@ class DefaultsTests: XCTestCase {
 
 } // class DefaultsTest
 
+// This unit test won't work without app with keychain entitlements added
 class KeychainTests: XCTestCase {
   
+  @Key("testBool")
+  var testBool: Bool
+  @Key("testString")
+  var testString: String
+  @Key("testCGFloat")
+  var testCGFloat: CGFloat
+  @Key("testDouble")
+  var testDouble: Double
+  @Key("testInt")
+  var testInt: Int
+
   override func setUp() {
     super.setUp()
     Log.minLogLevel = .Debug
@@ -341,6 +353,31 @@ class KeychainTests: XCTestCase {
     kc["geheim"] = nil
     XCTAssertNil(kc["geheim"])
     kc["geheim"] = "fiffi"
+  }
+  
+  func testWrappers() {
+    testBool = false
+    $testBool.onChange { val in print(val) }
+    testBool = true
+    XCTAssertEqual(testBool, true)
+    testBool = true
+    testBool = false
+    testString = ""
+    $testString.onChange { val in print(val) }
+    testString = "test"
+    XCTAssertEqual(testString, "test")
+    testInt = 0
+    $testInt.onChange { val in print(val) }
+    testInt = 14
+    XCTAssertEqual(testInt, 14)
+    testCGFloat = 0
+    $testCGFloat.onChange { val in print(val) }
+    testCGFloat = 15
+    XCTAssertEqual(testCGFloat, 15)
+    testDouble = 0
+    $testDouble.onChange { val in print(val) }
+    testDouble = 16
+    XCTAssertEqual(testDouble, 16)
   }
 
 } // class KeychainTests
