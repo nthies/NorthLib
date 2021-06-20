@@ -23,51 +23,73 @@ import Foundation
 */
 open class Keychain: DoesLog {
   
+  /// Set accessGroup to your keychain group prefixed by your team ID
+  public static var accessGroup: String?
   public static var singleton: Keychain = Keychain()
   private init() {}
   
-  // delete key/value from keychain
-  private func delete(key: String) {
-    let query = [
-      kSecClass as String              : kSecClassGenericPassword as String,
-      kSecAttrSynchronizable as String : kCFBooleanTrue!,
-      kSecAttrAccount as String        : key ] as [String : Any]
-    SecItemDelete(query as CFDictionary)
+  private func query(key: String) -> [String:Any] {
+    var ret: [String:Any] = [
+      kSecAttrService as String : App.bundleIdentifier,
+      kSecClass as String : kSecClassGenericPassword as String,
+      kSecAttrAccount as String : key,
+      kSecAttrSynchronizable as String : kCFBooleanTrue!
+    ]
+    if let group = Keychain.accessGroup {
+      ret[kSecAttrAccessGroup as String] = group
+    }
+    return ret
+  }
+  
+  private func handleError(_ status: OSStatus) {
+    if status != errSecSuccess {
+      if #available(iOS 11.3, *) {
+        if let str = SecCopyErrorMessageString(status, nil) { error("\(str)") }
+      } else {
+        error("Can't access keychain: Error \(status)")
+      }
+    }
+  }
+  
+  /// delete key/value from keychain
+  public func delete(key: String) {
+    let query = query(key: key)
+    let status: OSStatus = SecItemDelete(query as CFDictionary)
+    if status != errSecSuccess && status != errSecItemNotFound {
+      handleError(status)
+    }
   }
   
   // get value from keychain
   private func get(key: String) -> String? {
-    let query = [
-      kSecClass as String              : kSecClassGenericPassword,
-      kSecAttrSynchronizable as String : kCFBooleanTrue!,
-      kSecAttrAccount as String        : key,
-      kSecReturnData as String         : kCFBooleanTrue!,
-      kSecMatchLimit as String         : kSecMatchLimitOne ] as [String : Any]    
+    var query = query(key: key)
+    query[kSecReturnData as String] = kCFBooleanTrue!
+    query[kSecMatchLimit as String] = kSecMatchLimitOne
     var ret: AnyObject?
     let status: OSStatus = SecItemCopyMatching(query as CFDictionary, &ret)
-    guard status == errSecSuccess else { return nil }
+    guard status == errSecSuccess || status == errSecItemNotFound else {
+      handleError(status)
+      return nil
+    }
     if let data = ret as? Data { return String(data: data, encoding: .utf8) }
     return nil
   }
   
   // put value into keychain
   private func set(key: String, value: String) {
-    if let old = get(key: key), old == value { return }
-    let data = value.data(using: .utf8)!
-    let query = [
-      kSecClass as String              : kSecClassGenericPassword as String,
-      kSecAttrSynchronizable as String : kCFBooleanTrue!,
-      kSecAttrAccount as String        : key,
-      kSecValueData as String          : data ] as [String : Any]
-    let status = SecItemAdd(query as CFDictionary, nil)
-    if status != errSecSuccess { 
-      if #available(iOS 11.3, *) {
-        if let str = SecCopyErrorMessageString(status, nil) { error("\(str)") }
-      } else {
-        error("Can't store value into keychain")
-      }
+    if let old = get(key: key) {
+      if old == value { return }
+      delete(key: key)
     }
-    else { Notification.send("Keychain", content: (key: key, val: value)) }
+    let data = value.data(using: .utf8)!
+    var query = query(key: key)
+    query[kSecValueData as String] = data
+    let status = SecItemAdd(query as CFDictionary, nil)
+    guard status == errSecSuccess else {
+      handleError(status)
+      return
+    }
+    Notification.send("Keychain", content: (key: key, val: value))
   }
   
   /// obj[key] - returns the value associated with key
@@ -76,8 +98,8 @@ open class Keychain: DoesLog {
   open subscript(_ key: String) -> String? {
     get { return get(key: key) }
     set(val) {
-      delete(key: key)
       if let v = val { set(key: key, value: v) }
+      else { delete(key: key) }
     }
   }
 
@@ -95,17 +117,31 @@ open class Keychain: DoesLog {
   /// The optional associated closure to call if the Keychain value has been changed
   private var onChangeClosure: ThreadClosure<T>?
   
-  /// The wrapped value is in essence Keychain.singleton[key]
-  public var wrappedValue: T {
-    get { T.fromString(Keychain.singleton[key]) }
-    set {
-      let old = Keychain.singleton[key]
-      let new = T.toString(newValue)
-      if new != old {
-        Keychain.singleton[key] = new
-        Notification.send("Keychain", content: (key: key, val: newValue))
+  /// Shall we sync this key/value pait to user defaults?
+  private var isSync = false
+ 
+  /// The raw String? value (in essence Keychain.singleton[key])
+  public var value: String? {
+    get {
+      if let kval = Keychain.singleton[key] { return kval }
+      else if isSync {
+        if let dval = Defaults.singleton[key] {
+          Keychain.singleton[key] = dval
+          return dval
+        }
       }
+      return nil
     }
+    set {
+      Keychain.singleton[key] = newValue
+      if isSync { Defaults.singleton[key] = newValue }
+    }
+  }
+
+  /// The wrapped value is the interpreted value as type T
+  public var wrappedValue: T {
+    get { T.fromString(value) }
+    set { value = T.toString(newValue) }
   }
   
   /// The projected value is the wrapper itself
@@ -114,7 +150,7 @@ open class Keychain: DoesLog {
   private func setupNotifications() {
     guard onChangeClosure == nil else { return }
     Notification.receive("Keychain") { [weak self] notif in
-      if let (_,val) = notif.content as? (String, String) {
+      if let (key,val) = notif.content as? (String, String), self?.key == key {
         self?.onChangeClosure?.call(arg: T.fromString(val))
       }
     }
@@ -130,5 +166,8 @@ open class Keychain: DoesLog {
   /// Delete Keychain entry
   public func delete() { Keychain.singleton[key] = nil }
   
-  public init(_ key: String) { self.key = key }
+  public init(_ key: String, sync: Bool = false) {
+    self.key = key
+    isSync = sync
+  }
 }
