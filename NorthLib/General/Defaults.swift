@@ -380,12 +380,18 @@ extension CGFloat: StringConvertible {
   /// The optional associated closure to call if the Default value has been changed
   private var onChangeClosure: ThreadClosure<T>?
   
-  /// The wrapped value is in essence Defaults.singleton[key]
-  public var wrappedValue: T {
-    get { T.fromString(Defaults.singleton[key]) }
-    set { Defaults.singleton[key] = T.toString(newValue) }
+  /// The raw String? value (in essence Defaults.singleton[key])
+  public var value: String? {
+    get { Defaults.singleton[key] }
+    set { Defaults.singleton[key] = newValue }
   }
   
+  /// The wrapped value is the interpreted value as type T
+  public var wrappedValue: T {
+    get { T.fromString(value) }
+    set { value = T.toString(newValue) }
+  }
+
   /// The projected value is the wrapper itself
   public var projectedValue: Default<T> { self }
   
