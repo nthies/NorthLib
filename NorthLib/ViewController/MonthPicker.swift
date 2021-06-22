@@ -50,6 +50,7 @@ open class MonthPickerController: UIViewController, UIPickerViewDelegate, UIPick
   let picker = UIPickerView()
   public let content = UIView()
   let applyButton = UIButton()
+  public var bottomOffset:CGFloat = -Toolbar.ContentToolbarHeight
   
   open override func viewDidLoad() {
     picker.delegate = self
@@ -77,8 +78,7 @@ open class MonthPickerController: UIViewController, UIPickerViewDelegate, UIPick
     pin(content.topGuide(), to: self.view.topGuide(), priority: .fittingSizeLevel)
     content.pinHeight(130, priority:.required)
     
-    pin(content.bottom, to: self.view.bottomGuide(), dist: -Toolbar.ContentToolbarHeight)
-    
+    pin(content.bottom, to: self.view.bottomGuide(), dist: bottomOffset)
     pin(content.width, to: self.view.width, priority: .defaultHigh)
     content.pinWidth(500.0, relation: .lessThanOrEqual, priority: .required)
     content.centerX()
