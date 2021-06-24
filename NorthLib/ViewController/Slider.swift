@@ -119,6 +119,7 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
     sliderView.bottomAnchor.constraint(equalTo:active.view.bottomAnchor)
   lazy var heightConstraint =
     sliderView.heightAnchor.constraint(equalToConstant: 0)
+  var horizontalnvariableConstraints:[NSLayoutConstraint]?
   
   var currentCoverage: CGFloat {
     let coverage = self.coverage
@@ -145,8 +146,9 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
       pin(sliderView.bottom, to: view.bottom)
     }
     else {
-      pin(sliderView.left, to: view.left)
-      pin(sliderView.right, to: view.right)
+      horizontalnvariableConstraints = [
+      pin(sliderView.left, to: view.left),
+      pin(sliderView.right, to: view.right)]
     }
   }
 
@@ -453,8 +455,8 @@ open class ButtonSlider: Slider {
   
   override func setupInvariableConstraints() {
     super.setupInvariableConstraints()
-    pin(sliderView.top, to: active.view!.top, priority: .required)//THats the Point!
-    }
+    pin(sliderView.top, to: active.view!.top, priority: .required)
+  }
   
   public init(slider: UIViewController, into active: UIViewController) {
     active.view.addSubview(button)
@@ -610,8 +612,21 @@ open class VerticalSheet: Slider {
 
 /// A BottomSheet is a vertical Slider growing from the bottom
 open class BottomSheet: VerticalSheet {
-  public init(slider: UIViewController, into active: UIViewController) {
+  public init(slider: UIViewController, into active: UIViewController, maxWidth:CGFloat?=nil) {
     super.init(slider: slider, into: active, fromBottom: true)
+    if let maxWidth = maxWidth, let view = active.view {
+      for constraint in horizontalnvariableConstraints ?? [] {
+        constraint.isActive = false
+      }
+      //iOS 12 dislike change of Priority even in init
+      horizontalnvariableConstraints = [
+        pin(sliderView.left, to: view.left, priority: .defaultHigh),
+        pin(sliderView.right, to: view.right, priority: .defaultHigh)]
+      
+      sliderView.pinWidth(maxWidth, relation: .lessThanOrEqual, priority: .required)
+      sliderView.centerX()
+      leftBackground.alpha = 0.0
+    }
   }
 }
 
