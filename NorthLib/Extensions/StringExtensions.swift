@@ -263,6 +263,13 @@ public extension String {
   
   /// Returns an Int if possible
   var int: Int? { return Int(self) }
+
+  /// Returns an Date if possible
+  var date: Date? {
+    guard let ti = Double(self) else { return nil }
+    return Date(timeIntervalSince1970:ti)
+  }
+
   
 } // extension String
 
