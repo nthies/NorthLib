@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		00442ADB24CAF771009933FF /* Toast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00442ADA24CAF771009933FF /* Toast.swift */; };
-		0058DE40251B30CB000FBD9D /* MonthPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0058DE3F251B30CB000FBD9D /* MonthPicker.swift */; };
+		0058DE40251B30CB000FBD9D /* DatePickerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0058DE3F251B30CB000FBD9D /* DatePickerController.swift */; };
 		006A0FDE255EBA25001CBB0B /* OptionalImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 006A0FDD255EBA25001CBB0B /* OptionalImage.swift */; };
 		006A0FEA255EC42E001CBB0B /* PdfRenderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 006A0FE9255EC42E001CBB0B /* PdfRenderService.swift */; };
 		006A0FF4255EECF4001CBB0B /* PdfPagesCollectionVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 006A0FF3255EECF4001CBB0B /* PdfPagesCollectionVC.swift */; };
@@ -111,7 +111,7 @@
 
 /* Begin PBXFileReference section */
 		00442ADA24CAF771009933FF /* Toast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Toast.swift; sourceTree = "<group>"; };
-		0058DE3F251B30CB000FBD9D /* MonthPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthPicker.swift; sourceTree = "<group>"; };
+		0058DE3F251B30CB000FBD9D /* DatePickerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatePickerController.swift; sourceTree = "<group>"; };
 		006A0FDD255EBA25001CBB0B /* OptionalImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionalImage.swift; sourceTree = "<group>"; };
 		006A0FE9255EC42E001CBB0B /* PdfRenderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PdfRenderService.swift; sourceTree = "<group>"; };
 		006A0FF3255EECF4001CBB0B /* PdfPagesCollectionVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PdfPagesCollectionVC.swift; sourceTree = "<group>"; };
@@ -421,7 +421,7 @@
 				AEEB1A08245DB5EC0083CB55 /* ExportDialogue.swift */,
 				008F9A1F24864F9400EF5EA5 /* ImageCollectionVC.swift */,
 				08DDCFF524A20EA1000CB1DA /* Overlay.swift */,
-				0058DE3F251B30CB000FBD9D /* MonthPicker.swift */,
+				0058DE3F251B30CB000FBD9D /* DatePickerController.swift */,
 			);
 			path = ViewController;
 			sourceTree = "<group>";
@@ -633,7 +633,7 @@
 				AE7122F423197B4000B715A8 /* ColorExtensions.swift in Sources */,
 				AE480F5B24094D720014F9D9 /* Alert.swift in Sources */,
 				AE1DA66223C09B06003DFE92 /* argv.cpp in Sources */,
-				0058DE40251B30CB000FBD9D /* MonthPicker.swift in Sources */,
+				0058DE40251B30CB000FBD9D /* DatePickerController.swift in Sources */,
 				AE9851462320FE4C00EAC9D8 /* VCExtensions.swift in Sources */,
 				AE1DA65B23BE08F0003DFE92 /* strext.cpp in Sources */,
 				AE9851352320FC7500EAC9D8 /* WebView.swift in Sources */,
