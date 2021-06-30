@@ -628,6 +628,12 @@ open class BottomSheet: VerticalSheet {
       leftBackground.alpha = 0.0
     }
   }
+  
+  public func setCoverage(_ coverage: CGFloat, for activeViewHeight:CGFloat?){
+    let aH = activeViewHeight ?? active.view.bounds.height
+    let cov =  min(coverage, aH)
+    coverageRatio = cov/aH
+  }
 }
 
 public class FullscreenBottomSheet : BottomSheet{
