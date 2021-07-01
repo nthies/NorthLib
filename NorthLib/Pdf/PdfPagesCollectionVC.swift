@@ -101,7 +101,8 @@ open class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
   }
   
   func handleTraitsChange(_ toSize:CGSize) {
-    topGradient.isHidden = UIDevice.current.orientation.isLandscape
+    //on iPhone in Landscape, there is no status Bar
+    topGradient.isHidden = UIDevice.current.orientation.isLandscape && Device.isIphone
   }
   
   public override func didReceiveMemoryWarning() {
@@ -121,6 +122,7 @@ open class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
       }
       else {
         let ziv = ZoomedImageView(optionalImage: dataItem)
+        ziv.useExtendedLayoutAdjustments = true
         ziv.scrollView.insetsLayoutMarginsFromSafeArea = true
         ziv.scrollView.contentInsetAdjustmentBehavior = .scrollableAxes
         ziv.whenScrolledHandler = self.whenScrolledHandler
