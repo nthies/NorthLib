@@ -19,4 +19,5 @@ FOUNDATION_EXPORT const unsigned char NorthLibVersionString[];
 #include <NorthLib/hashes.h>
 #include <NorthLib/strext.h>
 #include <NorthLib/fileop.h>
+#include <NorthLib/thread.h>
 
