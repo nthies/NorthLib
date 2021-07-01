@@ -24,6 +24,8 @@ open class PageCollectionVC: UIViewController {
   /// inset from top/bottom/left/right as factor to min(width,height)
   open var inset = 0.025
   
+  public var invalidateLayoutNeededOnViewWillAppear:Bool = false
+  
   // The raw cell size (without bounds)
   private var rawCellsize: CGSize { return self.collectionView?.bounds.size ?? CGSize.zero }
   
@@ -126,6 +128,32 @@ open class PageCollectionVC: UIViewController {
     if count != 0 { collectionView?.reloadData() }
   }
   
+  open override func viewDidAppear(_ animated: Bool) {
+    super.viewDidAppear(animated)
+    if invalidateLayoutNeededOnViewWillAppear {
+      invalidateLayoutNeededOnViewWillAppear = false
+      self.collectionView?.collectionViewLayout.invalidateLayout()
+      self.collectionView?.updateLayout()
+      if let idx = self.index {
+        self.collectionView?.scrollToItem(at: IndexPath(item: idx,
+                                                         section: 0),
+                                           at: .centeredHorizontally,
+                                           animated: false)
+      }
+    }
+  }
+  
+  open override func willMove(toParent parent: UIViewController?) {
+    super.willMove(toParent: parent)
+    for vc in self.navigationController?.viewControllers ?? [] {
+      if vc != self,
+         vc.view.bounds != self.view.bounds,
+         let pvc = vc as? PageCollectionVC {
+        pvc.invalidateLayoutNeededOnViewWillAppear = true
+      }
+    }
+  }
+  
   // TODO: transition/rotation better with collectionViewLayout subclass as described in:
   // https://www.matrixprojects.net/p/uicollectionviewcell-dynamic-width/
   open override func willTransition(to newCollection: UITraitCollection, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -135,4 +163,19 @@ open class PageCollectionVC: UIViewController {
     }
   }
   
+  open override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+    
+    super.viewWillTransition(to: size, with: coordinator)
+    
+    coordinator.animate(alongsideTransition: nil) { [weak self] ctx in
+      self?.collectionView?.collectionViewLayout.invalidateLayout()
+      self?.collectionView?.updateLayout()
+      if let idx = self?.index {
+        self?.collectionView?.scrollToItem(at: IndexPath(item: idx,
+                                                         section: 0),
+                                           at: .centeredHorizontally,
+                                           animated: false)
+      }
+    }
+  }
 } // PageCollectionVC
