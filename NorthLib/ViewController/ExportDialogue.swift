@@ -10,7 +10,9 @@ import UIKit
 open class ExportDialogue<T>: NSObject, UIActivityItemSource {
 
   /// The item to export
-  var item: T?  
+  var item: T?
+  /// The alternate text for Twitter etc.
+  var altText: String?
   /// A String describing the item (ie used as Subject in eMails
   var subject: String?
   
@@ -20,7 +22,18 @@ open class ExportDialogue<T>: NSObject, UIActivityItemSource {
   }
   
   public func activityViewController(_ activityViewController: UIActivityViewController, itemForActivityType activityType: UIActivity.ActivityType?) -> Any? {
-    if let item = item { return item }
+    if let item = item {
+      if let activityType = activityType,
+         let altText = altText {
+        switch activityType {
+          case .addToReadingList, .postToFacebook, .postToWeibo,
+               .postToVimeo, .postToFlickr, .postToTwitter,
+               .postToTencentWeibo: return altText
+          default: return item
+        }
+      }
+      else { return item }
+    }
     else { return "Error" }
   }
   
@@ -30,13 +43,20 @@ open class ExportDialogue<T>: NSObject, UIActivityItemSource {
   }
   
   /// Create export dialogue
-  public func present(item: T, view: UIView? = nil, subject: String? = nil) {
+  public func present(item: T, altText: String?, view: UIView? = nil,
+                      subject: String? = nil) {
     self.item = item
+    self.altText = altText
     self.subject = subject
-    let aController = UIActivityViewController( activityItems: [self],
+    let aController = UIActivityViewController(activityItems: [self],
       applicationActivities: nil)
     aController.presentAt(view)
-  } 
+  }
   
+  /// Create export dialogue
+  public func present(item: T, view: UIView? = nil, subject: String? = nil) {
+    present(item: item, altText: nil, view: view, subject: subject)
+  }
+
 } // ExportDialogue
 
