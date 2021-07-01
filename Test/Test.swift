@@ -242,23 +242,27 @@ class ZipTests: XCTestCase {
 
 class DefaultsTests: XCTestCase {
   
-  @Default(key: "testBool")
+  var defaults = Defaults.singleton
+  @Default("testBool")
   var testBool: Bool
-  @Default(key: "testString")
+  @Default("testString")
   var testString: String
-  @Default(key: "testCGFloat")
+  @Default("testCGFloat")
   var testCGFloat: CGFloat
-  @Default(key: "testDouble")
+  @Default("testDouble")
   var testDouble: Double
-  @Default(key: "testInt")
+  @Default("testInt")
   var testInt: Int
   
   override func setUp() {
     super.setUp()
     Log.minLogLevel = .Debug
-    Defaults.suiteName = "taz"
-    Defaults.Notification.addObserver { (key, val, scope) in
-      print("Notification: \(key)=\"\(val ?? "nil")\" in scope \"\(scope ?? "nil")\"")
+    defaults.suite = "taz"
+    defaults.onChange { arg in
+      print("Notification: \(arg.0)=" +
+              "\"\(arg.1 ?? "nil")\" in scope " +
+              "\"\(arg.2 ?? "nil")\"")
+      
     }
     let iPhoneDefaults: [String:String] = [
       "key1" : "iPhone-value1",
@@ -268,8 +272,8 @@ class DefaultsTests: XCTestCase {
       "key1" : "iPad-value1",
       "key2" : "iPad-value2"
     ]
-    Defaults.singleton.setDefaults(values: Defaults.Values(scope: "iPhone", values: iPhoneDefaults))
-    Defaults.singleton.setDefaults(values: Defaults.Values(scope: "iPad", values: iPadDefaults))
+    defaults.setDefaults(values: Defaults.Values(scope: "iPhone", values: iPhoneDefaults), isNotify: true)
+    defaults.setDefaults(values: Defaults.Values(scope: "iPad", values: iPadDefaults), isNotify: true)
   }
   
   override func tearDown() {
@@ -282,7 +286,6 @@ class DefaultsTests: XCTestCase {
     dfl["iPhone","test"] = "iPhone"
     dfl["iPad","test"]   = "iPad"
     XCTAssertEqual(dfl[nil,"test"], "non scoped")
-    Defaults.print()
     if Device.isIphone {
       XCTAssertEqual(dfl["test"], "iPhone")
       XCTAssertEqual(dfl["key1"], "iPhone-value1")
@@ -321,66 +324,6 @@ class DefaultsTests: XCTestCase {
   }
 
 } // class DefaultsTest
-
-// This unit test won't work without app with keychain entitlements added
-class KeychainTests: XCTestCase {
-  
-  @Key("testBool")
-  var testBool: Bool
-  @Key("testString")
-  var testString: String
-  @Key("testCGFloat")
-  var testCGFloat: CGFloat
-  @Key("testDouble")
-  var testDouble: Double
-  @Key("testInt")
-  var testInt: Int
-
-  override func setUp() {
-    super.setUp()
-    Log.minLogLevel = .Debug
-  }
-  
-  override func tearDown() {
-    super.tearDown()
-  }
-  
-  func testKeychain() {
-    let kc = Keychain.singleton
-    if let pw = kc["geheim"] { print("geheim = \"\(pw)\"") }
-    kc["geheim"] = "huhu"
-    XCTAssertEqual(kc["geheim"], "huhu")      
-    kc["geheim"] = nil
-    XCTAssertNil(kc["geheim"])
-    kc["geheim"] = "fiffi"
-  }
-  
-  func testWrappers() {
-    testBool = false
-    $testBool.onChange { val in print(val) }
-    testBool = true
-    XCTAssertEqual(testBool, true)
-    testBool = true
-    testBool = false
-    testString = ""
-    $testString.onChange { val in print(val) }
-    testString = "test"
-    XCTAssertEqual(testString, "test")
-    testInt = 0
-    $testInt.onChange { val in print(val) }
-    testInt = 14
-    XCTAssertEqual(testInt, 14)
-    testCGFloat = 0
-    $testCGFloat.onChange { val in print(val) }
-    testCGFloat = 15
-    XCTAssertEqual(testCGFloat, 15)
-    testDouble = 0
-    $testDouble.onChange { val in print(val) }
-    testDouble = 16
-    XCTAssertEqual(testDouble, 16)
-  }
-
-} // class KeychainTests
 
 class FileTests: XCTestCase {
   
@@ -441,11 +384,42 @@ class FileTests: XCTestCase {
   
 } // FileTests
 
+class ThreadClosureTests: XCTestCase {
+  
+  var mainTid: Int64 = 0
+  var asyncTid: Int64 = 0
+  var mainClosure: ThreadClosure<Void>!
+  var asyncClosure: ThreadClosure<Void>!
+  
+  
+  func testClosure() {
+    mainClosure = ThreadClosure { [weak self] in
+      guard let self = self else { return }
+      self.mainTid = Thread.id
+      print("mainClosure: ID = \(self.mainTid)")
+    }
+    async { [weak self] in
+      guard let self = self else { return }
+      self.asyncClosure = ThreadClosure { [weak self] in
+        guard let self = self else { return }
+        self.asyncTid = Thread.id
+        print("asyncClosure: ID = \(self.asyncTid)")
+        self.mainClosure(wait: true)
+      }
+      self.asyncClosure(wait: true)
+      XCTAssertNotEqual(self.asyncTid, 0)
+      XCTAssertNotEqual(self.mainTid, 0)
+      XCTAssertNotEqual(self.asyncTid, self.mainTid)
+    }
+  }
+  
+}
+
 class CallbackTests: XCTestCase {
   
   class Test1 {
     @Callback(notification: "test")
-    var whenReady: Callback.Store
+    var whenReady: Callback<Void>.Store
   }
 
   // Visualize concurrent access to local var
@@ -487,24 +461,25 @@ class CallbackTests: XCTestCase {
       print(notif.content ?? "nil")
       print("test received")
     }
-    t1.whenReady { _ in str += "1" }
-    t1.whenReady { _ in str += "2" }
-    let idx = t1.$whenReady.store { _ in str += "." }
+    let i1 = t1.$whenReady { str += "1" }
+    XCTAssertEqual(i1, 0)
+    let i2 = t1.$whenReady { str += "2" }
+    XCTAssertEqual(i2, 1)
+    let idx = t1.$whenReady.store { str += "." }
     XCTAssertEqual(idx, 2)
-    t1.whenReady { _ in str += "3" }
-    t1.whenReady { _ in str += "4" }
-    t1.whenReady { msg in
-      if let (content, sender) = msg as? Callback.Arg, let s = sender as? Self {
-        XCTAssertEqual(s, self)
-        print(content ?? "nil")
-      }
-    }
+    let i3 = t1.$whenReady { str += "3" }
+    XCTAssertEqual(i3, 3)
+    let i4 = t1.$whenReady { str += "4" }
+    XCTAssertEqual(i4, 4)
+    let i5 = t1.$whenReady { print("i5") }
+    XCTAssertEqual(i5, 5)
     t1.$whenReady.remove(idx)
     t1.$whenReady.notify(sender: self, wait: true)
     XCTAssertEqual(str, "1234")
+    t1.$whenReady.remove(i1)
     t1.$whenReady.notification = "dog"
     t1.$whenReady.notify(sender: self, wait: true)
-    XCTAssertEqual(str, "12341234")
+    XCTAssertEqual(str, "1234234")
   }
   
 } // CallbackTests
