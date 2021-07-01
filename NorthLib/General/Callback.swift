@@ -13,10 +13,12 @@ import Foundation
  
  Assume you create a ThreadClosure object on Thread *A* like this:
  ````
- let tclosure = ThreadClosure { _ in print("test") }
+ let tclosure = ThreadClosure { print("test") }
  ````
  and later on a different (or the same) Thread *B* do:
  ````
+ tclosure()
+ or
  tclosure.call()
  ````
  then the closure stored in *tclosure* will be performed on Thread *A* and "test"
@@ -39,7 +41,19 @@ open class ThreadClosure<T>: NSObject {
     self.perform(#selector(callClosure), on: thread, with: arg,
                  waitUntilDone: wait)
   }
+  public func callAsFunction(arg: T, wait: Bool = false)
+    { call(arg: arg, wait: wait) }
+  
   @objc private func callClosure(arg: Any) { closure(arg as! T) }
+}
+
+/// Let ThreadClosure default to Void
+extension ThreadClosure where T == Void {
+  public func call(wait: Bool = false) {
+    call(arg: (), wait: wait)
+  }
+  public func callAsFunction(wait: Bool = false)
+    { call(arg: (), wait: wait) }
 }
 
 /**
@@ -51,7 +65,7 @@ open class ThreadClosure<T>: NSObject {
  class A {
    ...
    @Callback
-   var whenReady: Callback.Store
+   var whenReady: Callback<Void>.Store
    ...
  }
  ````
@@ -98,6 +112,26 @@ open class ThreadClosure<T>: NSObject {
  }
  ````
  
+ # How to remove a closure
+ 
+ Sometimes you may want to remove a previously defined closure from the
+ list of closures:
+ ````
+ let index = a.$whenReady { arg in
+   if let ...
+ }
+ ````
+ using the projected value *$whenReady* instead of the wrapped
+ value *whenReady* the closure is stored as well but its index
+ into the closure array is returned.
+ Using this index you may later:
+ ````
+ a.$whenReady.remove(index)
+ ````
+ remove the closure from the list. In fact the array is not shortened
+ but the element is set to nil. Therefore the reference to the closure is
+ removed and it will no longer be called.
+ 
  # Callbacks to different threads
  
  Along with each closure beeing stored in the wrapper's closure array the thread
@@ -118,7 +152,7 @@ open class ThreadClosure<T>: NSObject {
  class A {
    ...
    @Callback("test")
-   var whenReady: Callback.Store
+   var whenReady: Callback<Void>.Store
    ...
  }
  ````
@@ -173,31 +207,17 @@ open class ThreadClosure<T>: NSObject {
  ````
  */
 @propertyWrapper
-open class Callback {
+open class Callback<T> {
   
   // Syntactic sugar
-  public typealias Closure = (Any?)->()
+  public typealias Closure = (T)->()
   public typealias Store = (@escaping Closure)->()
-  public typealias Arg = (content: Any?, sender: Any?)
-  
-  /// Returns content of closure argument
-  public static func content<T>(_ arg: Any?) -> T? {
-    if let (c,_) = arg as? Arg, let v = c as? T {
-      return v
-    }
-    else { return nil }
-  }
-  
-  /// Returns sender of closure argument
-  public static func sender<T>(_ arg: Any?) -> T? {
-    if let (_,s) = arg as? Arg, let v = s as? T {
-      return v
-    }
-    else { return nil }
-  }
+  public typealias Arg = (content: T, sender: Any?)
   
   // Array of closures
-  private var closures: [ThreadClosure<Any?>] = []
+  private var closures: [ThreadClosure<T>?] = []
+  /// nb. of closures stored
+  public var count: Int { return closures.count }
   // Semaphore protecting access to *closures*
   private var semaphore = DispatchSemaphore(value: 1)
   // Activation closure
@@ -219,15 +239,20 @@ open class Callback {
   public var needsNotification: Bool { notification != nil || closures.count > 0 }
   
   /// The wrapped value is a function storing closures in the closure arry.
-  public lazy var wrappedValue: Store = { closure in self.store(closure: closure) }
+  public lazy var wrappedValue: Callback<T>.Store = { c in self.store(closure: c) }
+  
+  /// Object called as function
+  public func callAsFunction(closure: @escaping Closure) -> Int {
+    store(closure: closure)
+  }
   
   /// Store a closure in the closure array and return its index which
   /// can be used to remove the closure from the array at a later time.
   @discardableResult
   public func store(closure: @escaping Closure) -> Int {
     self.semaphore.wait()
-    self.closures.append(ThreadClosure(closure))
-    let ret = self.closures.count - 1
+    let ret = self.closures.count
+    self.closures += ThreadClosure(closure)
     self.semaphore.signal()
     activated?(needsNotification)
     return ret
@@ -237,11 +262,15 @@ open class Callback {
   public var projectedValue: Callback { self }
   
   /// Notify all closures and send an optional Notification
-  public func notify(sender: Any?, content: Any? = nil, wait: Bool = false) {
+  public func notify(sender: Any?, content: T, wait: Bool = false) {
     self.semaphore.wait()
     let list = self.closures
     self.semaphore.signal()
-    for closure in list { closure.call(arg: (content, sender), wait: wait) }
+    for closure in list {
+      if let closure = closure {
+        closure.call(arg: content, wait: wait)
+      }
+    }
     if let notification = self.notification {
       Notification.send(notification, content: content, sender: sender)
     }
@@ -249,18 +278,22 @@ open class Callback {
   
   /// Removes a single closure from the array
   @discardableResult
-  public func remove(_ index: Int) -> ThreadClosure<Any?>? {
-    guard index >= 0 && index < closures.count else { return nil }
+  public func remove(_ index: Int) -> ThreadClosure<T>? {
     self.semaphore.wait()
-    let ret = closures.remove(at: index)
+    let closure = closures[index]
+    if closure != nil {
+      closures[index] = nil
+    }
     self.semaphore.signal()
     activated?(needsNotification)
-    return ret
+    return closure
   }
   
   /// Removes all closures from the array
   public func removeAll() {
+    self.semaphore.wait()
     closures = []
+    self.semaphore.signal()
     activated?(needsNotification)
   }
   
@@ -273,3 +306,9 @@ open class Callback {
   public init() {}
 }
 
+/// Let @Callback default to Void and provide a more concise notify method
+extension Callback where T == Void {
+  public func notify(sender: Any?, wait: Bool = false) {
+    notify(sender: sender, content: (), wait: wait)
+  }
+}
