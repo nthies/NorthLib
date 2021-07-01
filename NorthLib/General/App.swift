@@ -28,6 +28,70 @@ open class Utsname {
 
 } // Utsname
 
+/// The type of device currently in use
+public enum Device: CustomStringConvertible {
+  
+  case iPad, iPhone, mac, tv, unknown
+  
+  public var description: String { return self.toString() }
+  public func toString() -> String {
+    switch self {
+      case .iPad:    return "iPad"
+      case .iPhone:  return "iPhone"
+      case .mac:     return "Mac"
+      case .tv:      return "TV"
+      case .unknown: return "unknown"
+    }
+  }
+  
+  /// Is true if the current device is an iPad
+  public static var isIpad: Bool { return Device.singleton == .iPad }
+  /// Is true if the current device is an iPhone
+  public static var isIphone: Bool { return Device.singleton == .iPhone }
+  /// Is true if the current device is a Mac
+  public static var isMac: Bool { return Device.singleton == .mac }
+  /// Is true if the current device is an Apple TV
+  public static var isTv: Bool { return Device.singleton == .tv }
+
+  // Use Device.singleton
+  fileprivate init() {
+    let io = UIDevice.current.userInterfaceIdiom
+    switch io {
+      case .phone: self = .iPhone
+      case .pad:   self = .iPad
+      case .mac:   self = .mac
+      case .tv:    self = .tv
+      default:     self = .unknown
+    }
+  }
+  
+  public static var deviceType = "apple"
+  
+  public static var deviceFormat : String {
+    switch Device.singleton {
+      case .iPad :  return "tablet"
+      case .iPhone: return "mobile"
+      case .tv:     return "tv"
+      default:      return "desktop"
+    }
+  }
+  
+  /// The Device singleton specifying the current device type
+  static public let singleton = Device()
+  
+}
+
+extension Utsname {
+  /// Returns mashine id on real device e.g. iPhone 10,6 or Simulator (iPhone X) on Simulator
+  static public var machineModel: String {
+    #if targetEnvironment(simulator)
+      return "Simulator (\(UIDevice().name))"
+    #else
+      return Self.machine
+    #endif
+  }
+}
+
 /// App description from Apple's App Store
 open class StoreApp {
   
