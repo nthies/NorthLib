@@ -7,6 +7,7 @@
 
 import UIKit
 import WebKit
+import SafariServices
 
 /// A JSCall-Object describes a native call from JavaScript to Swift
 open class JSCall: DoesLog, ToString {
@@ -231,32 +232,20 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
   private let maxErrorCount = 5
   
   /// The closures to call when content has been loaded
-  @Callback
-  public var whenLoaded: Callback.Store
+  @Callback<WebView>
+  public var whenLoaded: Callback<WebView>.Store
   
   /// The closures to call when a link has been pressed
   /// The content part of the argument passed to the closures
   /// will be (from: URL?, to: URL?)
-  @Callback
-  public var whenLinkPressed: Callback.Store
+  @Callback<(from: URL?, to: URL?)>
+  public var whenLinkPressed: Callback<(from: URL?, to: URL?)>.Store
   
   /// The closures to call when a load error has been detected
   /// The content passed will be err: Error
-  @Callback
-  public var whenLoadError: Callback.Store
-    
-  // Default LinkPressed closure
-  private func linkPressed(from: URL?, to: URL?) {
-    guard let to = to else { return }
-    self.debug("Calling application for: \(to.absoluteString)")
-    if UIApplication.shared.canOpenURL(to) {
-      UIApplication.shared.open(to, options: [:], completionHandler: nil)
-    }
-    else {         
-      error("No application or no permission for: \(to.absoluteString)")         
-    }
-  }
-  
+  @Callback<Error>
+  public var whenLoadError: Callback<Error>.Store
+      
   /// Define Bridge Object
   public func addBridge(_ object: JSBridgeObject, isExec: Bool = false) {
     if isExec {
@@ -280,26 +269,22 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
 
   /// The closures to call when content scrolled more than scrollRatio
   /// The closures get the content arg scrollRatio: CGFloat
-  @Callback
-  public var whenScrolled: Callback.Store
-  public var scrollRatio: CGFloat = 0
+  @Callback<CGFloat>
+  public var whenScrolled: Callback<CGFloat>.Store
   
-  /// Define closure to call when web content has been scrolled
-  public func whenScrolled(minRatio: CGFloat, closure: @escaping Callback.Closure) {
-    scrollRatio = minRatio
-    whenScrolled(closure)
-  }
+  /// The minimum scroll ratio
+  public var minScrollRatio: CGFloat = 0
   
   /// The closure to call when some dragging (scrolling with finger down) has been done
   /// The closures get the content arg scrollRatio: CGFloat which is the number of
   /// points scrolled down divided by the content's height
-  @Callback
-  public var whenDragged: Callback.Store
+  @Callback<CGFloat>
+  public var whenDragged: Callback<CGFloat>.Store
   
   /// Define closures to call when the end of the web content will become
   /// visible, the content arg is atEnd: Bool.
-  @Callback
-  public var atEndOfContent: Callback.Store
+  @Callback<Bool>
+  public var atEndOfContent: Callback<Bool>.Store
   
   /// Returns true if the end of the content is visible
   /// (in vertical direction)
@@ -377,11 +362,6 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
   public func setup() {
     self.navigationDelegate = self
     self.uiDelegate = self
-    whenLinkPressed { [weak self] arg in
-      if let (from,to): (URL?,URL?) = Callback.content(arg) {
-        self?.linkPressed(from: from, to: to)
-      }
-    }
   }
   
   override public init(frame: CGRect, configuration: WKWebViewConfiguration? = nil) {
@@ -398,6 +378,12 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
   
   public func scrollToTop() {
     scrollView.setContentOffset(CGPoint(x:0, y:0), animated: false)
+  }
+  
+  /// Passes the WebView's content as PDF to the given closure
+  @available(iOS 14.0, *)
+  public func pdf(closure: @escaping (Data?)->()) {
+    createPDF { res in closure(res.value()) }
   }
   
   // MARK: - WKScriptMessageHandler protocol
@@ -431,7 +417,9 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
     if let sd = startDragging, $whenScrolled.needsNotification {
       let scrolled = sd - scrollView.contentOffset.y
       let ratio = scrolled / scrollView.bounds.size.height
-      if abs(ratio) >= scrollRatio { $whenScrolled.notify(sender: self, content: ratio) }
+      if abs(ratio) >= minScrollRatio {
+        $whenScrolled.notify(sender: self, content: ratio)
+      }
     }
     startDragging = nil
     if $whenDragged.needsNotification {
@@ -467,7 +455,7 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
   
   public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
     self.errorCount = 0
-    $whenLoaded.notify(sender: self)
+    $whenLoaded.notify(sender: self, content: self)
   }
   
   private func handleLoadError(err: Error) {
@@ -499,15 +487,18 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
   
   // MARK: - WKUIDelegate protocol
   
-  public func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String,
-               initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
+  public func webView(_ webView: WKWebView,
+                      runJavaScriptAlertPanelWithMessage message: String,
+                      initiatedByFrame frame: WKFrameInfo,
+                      completionHandler: @escaping () -> Void) {
     let ac = UIAlertController(title: "JavaScript", message: message,
                preferredStyle: UIAlertController.Style.alert)
-    ac.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.cancel) { _ in
+    ac.addAction(UIAlertAction(title: "OK",
+                               style: UIAlertAction.Style.cancel) { _ in
       completionHandler() })
     UIViewController.top()?.present(ac, animated: true)
   }
-
+  
 } // class WebView
 
 /**
@@ -562,12 +553,12 @@ open class ButtonedWebView: UIView {
   private var webViewBottomConstraint: NSLayoutConstraint?
   
   /// These closures are called when the buttonLabel has been pressed
-  @Callback
-  public var onTap: Callback.Store
+  @Callback<String?>
+  public var onTap: Callback<String?>.Store
   
   /// These closures are called when the X-Button has been pressed
   @Callback
-  public var onX: Callback.Store
+  public var onX: Callback<Void>.Store
   
   private func adaptLayoutConstraints() {
     let willShow = buttonLabel.hasContent && isButtonVisible
@@ -608,21 +599,23 @@ open class ButtonedWebView: UIView {
     xButton.buttonView.color = UIColor.rgb(0x707070)
     xButton.buttonView.innerCircleFactor = 0.5
     xButton.isHidden = true
-    xButton.onPress { [weak self] _ in self?.$onX.notify(sender: self) }
+    xButton.onPress { [weak self] _ in
+      guard let self = self else { return }
+      self.$onX.notify(sender: self)
+    }
     $onX.whenActivated { [weak self] isActive in
       self?.xButton.isHidden = !isActive
     }
-    webView.atEndOfContent { [weak self] arg in
-      guard let self = self,
-            let isAtEnd: Bool = Callback.content(arg)
-      else { return }
+    webView.atEndOfContent { [weak self] isAtEnd in
+      guard let self = self else { return }
       if self.isButtonVisible != isAtEnd {
         self.isButtonVisible = isAtEnd
         self.adaptLayout(animated: true)
       }
     }
     buttonLabel.onTap { [weak self] _ in
-      self?.$onTap.notify(sender: self, content: self?.buttonLabel.text)
+      guard let self = self else { return }
+      self.$onTap.notify(sender: self, content: self.buttonLabel.text)
     }
   }
   
