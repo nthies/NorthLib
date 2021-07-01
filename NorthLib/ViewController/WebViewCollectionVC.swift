@@ -39,15 +39,10 @@ struct OptionalWebView: OptionalView, DoesLog {
     webView.scrollView.isDirectionalLockEnabled = true
     webView.scrollView.showsHorizontalScrollIndicator = false
     webView.baseDir = vc.baseDir
-    webView.whenScrolled(minRatio: 0.01) { [weak vc] arg in
-      if let ratio: CGFloat = Callback.content(arg) {
-        vc?.didScroll(ratio: ratio)
-      }
-    }  
+    webView.minScrollRatio = 0.01
+    webView.whenScrolled { [weak vc] ratio in vc?.didScroll(ratio: ratio) }
     if let closure = vc.atEndOfContentClosure {
-      webView.atEndOfContent { arg in
-        if let isAtEnd: Bool = Callback.content(arg) { closure(isAtEnd) }
-      }
+      webView.atEndOfContent { isAtEnd in closure(isAtEnd) }
     }
   }
 
@@ -210,17 +205,13 @@ open class WebViewCollectionVC: PageCollectionVC {
   }
   
   public func addWebViewClosures(webView: WebView) {
-    webView.whenLoadError { [weak self] arg in
-      guard let self = self,
-            let err: Error = Callback.content(arg)
-        else { return }
+    webView.whenLoadError { [weak self] err in
+      guard let self = self else { return }
       self.error("WebView Load Error on \"\(webView.originalUrl?.lastPathComponent ?? "[undefined URL]")\":\n  \(err.description)")
     }
     webView.whenLinkPressed { [weak self] arg in
-      guard let self = self,
-            let (from,to): (URL?,URL?) = Callback.content(arg)
-        else { return }
-      self._whenLinkPressed?(from, to)
+      guard let self = self else { return }
+      self._whenLinkPressed?(arg.from, arg.to)
       self.onPageChange()
     }
     webView.whenLoaded { [weak self] _ in
