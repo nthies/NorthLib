@@ -75,30 +75,46 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
     /// The view to display
     var pageView: UIView? { return page?.activeView }
     
+    // Rotate view if necessary
+    private func rotateView(_ view: UIView, doRotate: Bool) {
+      if doRotate {
+        view.transform = CGAffineTransform(rotationAngle: -CGFloat.pi)
+      }
+      else { view.transform = .identity }
+    }
+    
+    // Add view to page cell
+    private func addView(_ view: UIView, doRotate: Bool) {
+      rotateView(view, doRotate: doRotate)
+      let nSubViews = contentView.subviews.count
+      contentView.subviews.forEach { $0.removeFromSuperview() }
+      contentView.addSubview(view)
+      pin(view, to: contentView)
+      if nSubViews == 0 {
+        view.isHidden = true
+        view.showAnimated()
+      }
+    }
+    
     /// Request view from provider and put it into a PageCell
     func update(pcv: PageCollectionView, idx: Int) {
       if let provider = pcv.provider {
-        contentView.subviews.forEach { $0.removeFromSuperview() }
         let page = provider(idx, self.page)
-        let isAvailable = page.isAvailable
-        if pcv.scrollFromLeftToRight {
-          page.activeView.transform = CGAffineTransform(rotationAngle: -CGFloat.pi)
-        }
-        else { page.activeView.transform = .identity }
-        
-        ///Try to get rid of the Pin Crash:
-        ///... Unable to activate constraint with anchors <Anchor...WebView...top">
-        /// and <Anchor:...UIView.top>
-        /// because they have no common ancestor.
-        /// Problem may have been: activeView (OptionalView) changed its availability
-        let av = page.activeView
-        contentView.addSubview(av)
-        pin(av, to: contentView)
         self.page = page
-        if isAvailable { page.loadView() }
+        if page.isAvailable {
+          if let view = page.mainView {
+            addView(view, doRotate: pcv.scrollFromLeftToRight)
+          }
+        }
         else {
-          let iPath = IndexPath(item: idx, section: 0)
-          page.whenAvailable { pcv.reloadItems(at: [iPath]) }
+          if !page.willBeAvailable, let view = page.waitingView {
+            addView(view, doRotate: pcv.scrollFromLeftToRight)
+          }
+          page.whenAvailable { [weak self] in
+            if let view = page.mainView {
+              self?.addView(view, doRotate: pcv.scrollFromLeftToRight)
+            }
+          }
         }
       }
     }
