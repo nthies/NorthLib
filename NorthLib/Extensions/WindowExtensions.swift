@@ -93,6 +93,15 @@ public extension UIWindow {
     let s = size
     return max(s.width, s.height)
   }
+  
+  /// check if current window's width is smaller than its height
+  static var isPortrait: Bool {
+    let s = size
+    return s.height > s.width
+  }
+  
+  /// check if current window's width is larger than its height
+  static var isLandscape: Bool { !UIWindow.isPortrait }
 
 } // UIWindow
 

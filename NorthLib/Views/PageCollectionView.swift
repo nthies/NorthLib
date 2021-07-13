@@ -92,7 +92,7 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
       pin(view, to: contentView)
       if nSubViews == 0 {
         view.isHidden = true
-        view.showAnimated()
+        view.showAnimated(duration: 0.2)
       }
     }
     

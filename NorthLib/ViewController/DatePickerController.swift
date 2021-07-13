@@ -1,5 +1,5 @@
 //
-//  MonthPicker.swift
+//  DatePickerController.swift
 //  NorthLib
 //
 //  Created by Ringo on 23.09.20.
@@ -9,7 +9,11 @@
 import Foundation
 import UIKit
 
-open class MonthPickerController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSource {
+
+/// A component to select a date between min and maximum with 3 wheels (day, month, year),
+/// wich also fixes wond dates e.g. 31.2. which never exists
+/// @see: note also the git history to see changes made for selection with day or not
+open class DatePickerController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSource {
   
   public var doneHandler: (() -> ())?
   var initialSelectedDate : Date?
@@ -24,14 +28,29 @@ open class MonthPickerController: UIViewController, UIPickerViewDelegate, UIPick
     }
   }
   
+  /// generates Date from picker selected rows/columns and fix if Date is invalid
+  /// e.g. user selects 31.4 will be fixed to 30.4.
   var _selectedDate : Date {
     get {
-      return DateComponents(calendar: Calendar.current,
-                                    year: self.picker.selectedRow(inComponent: 1) + data.minimumYear,
-                                    month: self.picker.selectedRow(inComponent: 0) + 1,
-                                    day: 1,
-                                    hour: 12).date
-        ?? Date()
+      var dc = DateComponents(calendar: Calendar.current,
+                                    year: self.picker.selectedRow(inComponent: 2) + data.minimumYear,
+                                    month: self.picker.selectedRow(inComponent: 1) + 1,
+                                    day: self.picker.selectedRow(inComponent: 0) + 1,
+                                    hour: 12)
+      var changed = false
+      
+      while !dc.isValidDate {
+        guard let day = dc.day else { break }
+        if day == 1 { break }
+        dc.day = day - 1
+        changed = true
+      }
+      
+      if changed, let newDate = dc.date {
+        self.setDate(newDate, animated: true)
+      }
+     
+      return dc.date ?? data.maximumDate
     }
   }
   
@@ -50,6 +69,7 @@ open class MonthPickerController: UIViewController, UIPickerViewDelegate, UIPick
   let picker = UIPickerView()
   public let content = UIView()
   let applyButton = UIButton()
+  public var bottomOffset:CGFloat = -Toolbar.ContentToolbarHeight
   
   open override func viewDidLoad() {
     picker.delegate = self
@@ -77,8 +97,7 @@ open class MonthPickerController: UIViewController, UIPickerViewDelegate, UIPick
     pin(content.topGuide(), to: self.view.topGuide(), priority: .fittingSizeLevel)
     content.pinHeight(130, priority:.required)
     
-    pin(content.bottom, to: self.view.bottomGuide(), dist: -Toolbar.ContentToolbarHeight)
-    
+    pin(content.bottom, to: self.view.bottomGuide(), dist: bottomOffset)
     pin(content.width, to: self.view.width, priority: .defaultHigh)
     content.pinWidth(500.0, relation: .lessThanOrEqual, priority: .required)
     content.centerX()
@@ -111,12 +130,7 @@ open class MonthPickerController: UIViewController, UIPickerViewDelegate, UIPick
 }
 
 // MARK: - UIPickerViewDelegate protocol
-extension MonthPickerController {
-  
-  public func selectedVal()->String{
-    
-    return "\(data.monthLabel(idx: self.picker.selectedRow(inComponent: 0))) - \(data.yearLabel(idx: self.picker.selectedRow(inComponent: 1)))"
-  }
+extension DatePickerController {
   
   public func pickerView(_ pickerView: UIPickerView, viewForRow row: Int, forComponent component: Int, reusing view: UIView?) -> UIView {
     var label = view as? UILabel
@@ -127,9 +141,13 @@ extension MonthPickerController {
     }
     label!.textColor = textColor
     if component == 0 {
-      label!.text = data.monthLabel(idx: row)
+      label!.text = data.dayLabel(idx: row)
     }
     else if component == 1 {
+      label!.text = data.monthLabel(idx: row)
+      
+    }
+    else if component == 2 {
       label!.text = data.yearLabel(idx: row)
       
     } else {
@@ -151,10 +169,13 @@ extension MonthPickerController {
       self.applyButton.imageView?.layer.add(rotationAnimation, forKey: kRotationAnimationKey)
     }
     
-    if self._selectedDate < self.data.minimumDate {
+    let date = self._selectedDate
+
+    if date < self.data.minimumDate {
       self.setDate(self.data.minimumDate, animated : true)
       return;
-    } else if self._selectedDate > self.data.maximumDate {
+    }
+    else if date > self.data.maximumDate {
       self.setDate(self.data.maximumDate, animated : true)
       return;
     }
@@ -163,21 +184,25 @@ extension MonthPickerController {
   }
   
   func setDate(_ date:Date, animated:Bool){
-    self.picker.selectRow((date.components().month ?? 1) - 1, inComponent: 0, animated: animated)
-    self.picker.selectRow((date.components().year ?? 0) - data.minimumYear, inComponent: 1, animated: animated)
+    self.picker.selectRow((date.components().day ?? 1) - 1, inComponent: 0, animated: animated)
+    self.picker.selectRow((date.components().month ?? 1) - 1, inComponent: 1, animated: animated)
+    self.picker.selectRow((date.components().year ?? 0) - data.minimumYear, inComponent: 2, animated: animated)
   }
 }
 
 // MARK: - UIPickerViewDataSource protocol
-extension MonthPickerController{
+extension DatePickerController{
   
-  public func numberOfComponents(in pickerView: UIPickerView) -> Int { 2 }
+  public func numberOfComponents(in pickerView: UIPickerView) -> Int { 3 }
   
   public func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
     if component == 0 {
-      return data.monthIniciesCount
+      return data.dayIniciesCount
     }
     else if component == 1 {
+      return data.monthIniciesCount
+    }
+    else if component == 2 {
       return data.yearIniciesCount
     }
     return 0
@@ -186,13 +211,14 @@ extension MonthPickerController{
 
 // MARK: - ext:MPC DatePickerData
 /// Data Helper as inner class
-extension MonthPickerController {
+extension DatePickerController {
   class DatePickerData {
     
     var germanMonthNames : [String] = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]
     let minimumDate : Date
     let maximumDate : Date
     let minimumYear : Int
+    let dayIniciesCount : Int
     let monthIniciesCount : Int
     let yearIniciesCount : Int
     
@@ -206,6 +232,7 @@ extension MonthPickerController {
       
       yearIniciesCount = 1 + (intervall.year ?? 0)
       monthIniciesCount = 12
+      dayIniciesCount = 31
     }
     
     func monthLabel(idx:Int) -> String {
@@ -214,6 +241,10 @@ extension MonthPickerController {
     
     func yearLabel(idx:Int) -> String {
       return "\(minimumYear + idx)"
+    }
+    
+    func dayLabel(idx:Int) -> String {
+      return "\(1 + idx)"
     }
   }
 }

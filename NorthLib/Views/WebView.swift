@@ -446,6 +446,7 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
       let to = nav.request.description
       if from != to, to != "about:blank" {
         let content = (wv.originalUrl, URL(string: to))
+        debug("link detected")
         $whenLinkPressed.notify(sender: self, content: content)
         decisionHandler(.cancel)
       }

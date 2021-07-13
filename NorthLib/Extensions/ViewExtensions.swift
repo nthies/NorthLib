@@ -64,12 +64,12 @@ public extension UIView {
 
 /// A UIView extension to show/hide views animated
 public extension UIView {
-  func showAnimated(completion: (()->())? = nil){
+  func showAnimated(duration:CGFloat=0.6, completion: (()->())? = nil){
     if isHidden == false { return }
     onMain { [weak self] in
       self?.alpha = 0.0
       self?.isHidden = false
-      UIView.animate(withDuration: 0.6) {[weak self] in
+      UIView.animate(withDuration: TimeInterval(duration)) {[weak self] in
         self?.alpha = 1.0
       } completion: {_ in
         completion?()
@@ -77,10 +77,10 @@ public extension UIView {
     }
   }
   
-  func hideAnimated(completion: (()->())? = nil){
+  func hideAnimated(duration:CGFloat=0.6, completion: (()->())? = nil){
     if isHidden == true { return }
     onMain { [weak self] in
-      UIView.animate(withDuration: 0.6) {[weak self] in
+      UIView.animate(withDuration: TimeInterval(duration)) {[weak self] in
         self?.alpha = 0.0
       } completion: { [weak self] _ in
         self?.isHidden = true
@@ -426,5 +426,10 @@ public extension NSObject{
 
 public var gt_iOS14 : Bool {
   if #available(iOS 14, *) { return true }
+  return false
+}
+
+public var gt_iOS13 : Bool {
+  if #available(iOS 13, *) { return true }
   return false
 }

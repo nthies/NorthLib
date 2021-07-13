@@ -277,6 +277,11 @@ extension CGFloat: StringConvertible {
   public static func toString(_ val: Self) -> String { "\(val)" }
 }
 
+extension Date: StringConvertible {
+  public static func fromString(_ str: String?) -> Date { (str ?? "0").usTime.date }
+  public static func toString(_ val: Self) -> String { "\(UsTime(val).sec)" }
+}
+
 /// A protocol for data structures supporting a singleton instance
 public protocol Singleton {
   static var singleton: Self { get }
