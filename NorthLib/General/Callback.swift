@@ -239,7 +239,7 @@ open class Callback<T> {
   public var needsNotification: Bool { notification != nil || closures.count > 0 }
   
   /// The wrapped value is a function storing closures in the closure arry.
-  public lazy var wrappedValue: Callback<T>.Store = { c in self.store(closure: c) }
+  public var wrappedValue: Callback<T>.Store { { c in self.store(closure: c) } }
   
   /// Object called as function
   public func callAsFunction(closure: @escaping Closure) -> Int {
@@ -311,4 +311,19 @@ extension Callback where T == Void {
   public func notify(sender: Any?, wait: Bool = false) {
     notify(sender: sender, content: (), wait: wait)
   }
+}
+
+/// A SingleCallback allows only one closure to be stored. The last closure
+/// overrides the previous ones.
+@propertyWrapper
+open class SingleCallback<T>: Callback<T> {
+  
+  public override var wrappedValue: Callback<T>.Store { { c in
+    self.removeAll()
+    self.store(closure: c)
+  } }
+  
+  /// The projected value is the wrapper itself
+  public override var projectedValue: SingleCallback { self }
+  
 }
