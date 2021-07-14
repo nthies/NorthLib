@@ -32,6 +32,7 @@
 		AE1DA66223C09B06003DFE92 /* argv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AE1DA66123C09B06003DFE92 /* argv.cpp */; };
 		AE25228824A90735003E72D4 /* CodableEnum.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE25228724A90735003E72D4 /* CodableEnum.swift */; };
 		AE2A0EA1245B31B500E91595 /* NavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE2A0EA0245B31B500E91595 /* NavigationController.swift */; };
+		AE32CC8E269EC65900A1291A /* ZipFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE32CC8D269EC65900A1291A /* ZipFile.swift */; };
 		AE3A3EFA268C5B650091642A /* thread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AE3A3EF8268C5B650091642A /* thread.cpp */; };
 		AE3A3EFB268C5B650091642A /* thread.h in Headers */ = {isa = PBXBuildFile; fileRef = AE3A3EF9268C5B650091642A /* thread.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AE3A3EFD268C848D0091642A /* ThreadExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE3A3EFC268C848D0091642A /* ThreadExtensions.swift */; };
@@ -144,6 +145,7 @@
 		AE25228724A90735003E72D4 /* CodableEnum.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CodableEnum.swift; sourceTree = "<group>"; };
 		AE2A0EA0245B31B500E91595 /* NavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationController.swift; sourceTree = "<group>"; };
 		AE2FEDEC267F85BD00945FDE /* KVStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KVStore.swift; sourceTree = "<group>"; };
+		AE32CC8D269EC65900A1291A /* ZipFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZipFile.swift; sourceTree = "<group>"; };
 		AE3A3EF8268C5B650091642A /* thread.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = thread.cpp; sourceTree = "<group>"; };
 		AE3A3EF9268C5B650091642A /* thread.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = thread.h; sourceTree = "<group>"; };
 		AE3A3EFC268C848D0091642A /* ThreadExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadExtensions.swift; sourceTree = "<group>"; };
@@ -371,6 +373,7 @@
 				AE86486D248E0EC0007096B4 /* PdfDoc.swift */,
 				C74ED03E25012A22007EB881 /* UIStyleChangeDelegate.swift */,
 				AE831430265CDF40004DBF9E /* Callback.swift */,
+				AE32CC8D269EC65900A1291A /* ZipFile.swift */,
 			);
 			path = General;
 			sourceTree = "<group>";
@@ -622,6 +625,7 @@
 				AE98513C2320FCB400EAC9D8 /* PageCollectionVC.swift in Sources */,
 				AE9851402320FDAF00EAC9D8 /* ArrayExtensions.swift in Sources */,
 				AE4E50F9243B45870024609A /* CarouselView.swift in Sources */,
+				AE32CC8E269EC65900A1291A /* ZipFile.swift in Sources */,
 				008F9A2024864F9400EF5EA5 /* ImageCollectionVC.swift in Sources */,
 				08DDCFF624A20EA1000CB1DA /* Overlay.swift in Sources */,
 				AED852A723C22241002F07E8 /* fileop.cpp in Sources */,
