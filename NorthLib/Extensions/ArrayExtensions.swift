@@ -59,3 +59,18 @@ public extension Array {
   }
   
 } // Array
+
+extension Array where Element == String {
+  /// Type of C char**
+  typealias Argv = UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>
+  
+  /// Convert C char** into [String]
+  static func fromArgv(argv: Argv) -> Self {
+    let n = Int(av_length(argv))
+    var ret = Array<String>(unsafeUninitializedCapacity: n) {_,_  in}
+    for i in 0..<n {
+      ret[i] = String(cString: av_index(argv, Int32(i)))
+    }
+    return ret
+  }
+} // Array<String>
