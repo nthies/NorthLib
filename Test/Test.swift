@@ -190,52 +190,74 @@ class UsTimeTests: XCTestCase {
 
 class ZipTests: XCTestCase {
   
-  var zipStream: ZipStream = ZipStream()
+  var testPath: String!
+  var testDir: String!
   var nerrors: Int = 0
-  
+  var md5: [String:String] = [:]
+    
   override func setUp() {
     super.setUp()
     Log.minLogLevel = .Debug
-    self.zipStream.onFile { (name, data) in
-      print( "file \(name!) with \(data!.count) bytes content found" )
-      switch name! {
-      case "a.txt": 
-        if data!.md5 != "3740129b68388b4f41404d93ae27a79c" {
-          print( "error: md5 sum doesn't match" )
-          self.nerrors += 1
-        }
-      case "b.txt": 
-        if data!.md5 != "abeecdc0f0a02c2cd90a1555622a84a4" {
-          print( "error: md5 sum doesn't match" )
-          self.nerrors += 1
-        }
-      default:
-        print( "error: unexpected file" )
-        self.nerrors += 1
-      }
-    }    
+    self.testPath = Bundle(for: type(of: self)).path(forResource: "test", ofType: "zip")!
+    self.testDir = File.dirname(testPath)
+    self.md5 = [
+      "a.txt": "3740129b68388b4f41404d93ae27a79c",
+      "b.txt": "abeecdc0f0a02c2cd90a1555622a84a4"
+    ]
   }
   
   override func tearDown() {
     super.tearDown()
   }
+  
+  func checkContent(name: String?, data: Data?) {
+    guard let name = name, let data = data else { return }
+    if let checksum = md5[name] {
+      let computed = data.md5
+      XCTAssertEqual(checksum, computed)
+      if checksum != computed {
+        print( "error(\(name): md5 sum doesn't match" )
+        self.nerrors += 1
+      }
+    }
+    else {
+      print( "error: unexpected file" )
+      self.nerrors += 1
+    }
+  }
     
   func testZipStream() {
-    let bundle = Bundle( for: type(of: self) )
-    guard let testPath = bundle.path(forResource: "test", ofType: "zip")
-      else { return }
     guard let fd = FileHandle(forReadingAtPath: testPath)
-      else { return }
+    else { return }
+    self.nerrors = 0
+    let zipStream = ZipStream()
+    zipStream.onFile { (name, data) in
+      print( "file \(name!) with \(data!.count) bytes content found" )
+      self.checkContent(name: name, data: data)
+    }
     var data: Data
     repeat {
       data = fd.readData(ofLength: 10)
       if data.count > 0 {
-        self.zipStream.scanData(data)
+        zipStream.scanData(data)
       }
     } while data.count > 0
     XCTAssertEqual(self.nerrors, 0)
-    self.zipStream = ZipStream()
-    nerrors = 0
+  }
+  
+  func testZipFile() {
+    let zfile = ZipFile(path: testPath)
+    let destTop = "\(testDir!)/unpacked"
+    let dest = "\(destTop)/zipfile"
+    zfile.unpack(toDir: dest)
+    for fn in ["a.txt", "b.txt"] {
+      let data = File("\(dest)/\(fn)").data
+      print( "file \(fn) with \(data.count) bytes content unpacked")
+      checkContent(name: fn, data: data)
+    }
+    XCTAssertEqual(self.nerrors, 0)
+    for f in Dir(dest).contents() { print(f) }
+    Dir(dest).remove()
   }
   
 } // class ZipTests
