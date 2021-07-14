@@ -122,7 +122,7 @@ open class File: DoesLog {
     if fp != nil { fclose(fp) }
   }
   
-  /// open opens a File as C file pointer, executes to passed closure and closes
+  /// open opens a File as C file pointer, executes the passed closure and closes
   /// the file pointer
   public static func open(path: String, mode: String = "a", closure: (File)->()) {
     let file = File(path)
@@ -135,8 +135,12 @@ open class File: DoesLog {
   /// Reads one line of characters from the file
   public func readline() -> String? {
     guard fp != nil else { return nil }
-    let str = file_readline(fp)
-    if let str = str { return String(cString: str, encoding: .utf8) }
+    var str = file_readline(fp)
+    if let s = str {
+      let ret = String(cString: s, encoding: .utf8)
+      str_release(&str)
+      return ret
+    }
     return nil
   }
     
@@ -145,6 +149,27 @@ open class File: DoesLog {
   public func writeline(_ str: String) -> Int {
     guard fp != nil else { return -1 }
     let ret = file_writeline(fp, str.cString(using: .utf8))
+    return Int(ret)
+  }
+  
+  /// Reads one data chunk from the file's current position
+  public func read() -> Data? {
+    guard fp != nil,
+          let buff = mem_heap(nil, 100 * 1024)
+    else { return nil }
+    let count = file_read(fp, buff, 100 * 1024)
+    if count > 0 {
+      return Data(bytesNoCopy: buff, count: Int(count), deallocator: .free)
+    }
+    else { return nil }
+  }
+  
+  /// Writes the passed data to the file's current position
+  @discardableResult
+  public func write(data: Data) -> Int {
+    let ret =  data.withUnsafeBytes { ptr in
+      file_write(fp, ptr, Int32(data.count))
+    }
     return Int(ret)
   }
 
@@ -271,7 +296,8 @@ open class File: DoesLog {
   /// Removes the file (and all subdirs if self is a directory)
   public func remove() {
     guard exists else { return }
-    file_unlink(cpath)
+    if isDir { dir_remove(cpath) }
+    else { file_unlink(cpath) }
   }
 
   /// Returns the basename of a given pathname
