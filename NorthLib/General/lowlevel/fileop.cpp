@@ -892,7 +892,7 @@ int file_link(const char *from, const char *to) {
  */
 int file_unlink(const char *path) {
   stat_t tmp;
-  if ( stat_read(&tmp, path) != 0 ) return -1;
+  if ( stat_readlink(&tmp, path) != 0 ) return -1;
   if ( stat_isdir(&tmp) ) return rmdir(path);
   else return unlink(path);
 }
@@ -986,7 +986,10 @@ int dir_remove(const char *dir) {
         stat_t tmp;
         char path[1025];
         fn_mkpathname(path, 1024, dir, de->d_name);
-        if ( stat_read(&tmp, path) ) return -1;
+        if ( stat_readlink(&tmp, path) ) {
+          perror(path);
+          continue;
+        }
         if ( stat_isdir(&tmp) ) dir_remove(path);
         else file_unlink(path);
       }
