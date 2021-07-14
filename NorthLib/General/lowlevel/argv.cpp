@@ -29,6 +29,17 @@ int av_release(char **argv) {
   else return -1;
 }
 
+/**
+ *  av_index returns the i'th array element.
+ *
+ *  @param argv pointer to array of allocated strings
+ *  @param i index into array
+ *  @return i'th element of array
+ */
+char *av_index(char **argv, int i) {
+  return argv[i];
+}
+
 /// av_length returns the number of strings in 'argv'.
 int av_length(char **argv) {
   if (!argv) return 0;

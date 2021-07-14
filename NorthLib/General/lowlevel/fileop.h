@@ -78,7 +78,12 @@ int file_open(fileptr_t *rfp, const char *path, const char *mode);
 int file_close(fileptr_t *rfp);
 char *file_readline(fileptr_t fp);
 int file_writeline(fileptr_t fp, const char *str);
+int file_read(fileptr_t fp, void *buff, int nbytes);
+int file_write(fileptr_t fp, const void *buff, int nbytes);
 int file_flush(fileptr_t fp);
+
+char **dir_content(const char *dir);
+int dir_remove(const char *dir);
 
 EndCLinkage
 

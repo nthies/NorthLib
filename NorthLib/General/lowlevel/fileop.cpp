@@ -887,10 +887,15 @@ int file_link(const char *from, const char *to) {
 /**
  * file_unlink simply uses unlink(2) to remove a file
  * 
- * @param path pathname of file to remove
+ * @param path pathname of file/directory to remove, the directory must be empty
  * @return 0 => OK, -1 => Error 
  */
-int file_unlink(const char *path) { return unlink(path); }
+int file_unlink(const char *path) {
+  stat_t tmp;
+  if ( stat_read(&tmp, path) != 0 ) return -1;
+  if ( stat_isdir(&tmp) ) return rmdir(path);
+  else return unlink(path);
+}
 
 /// Open a file pointer and write it to *fp
 int file_open(fileptr_t *rfp, const char *path, const char *mode) {
@@ -923,5 +928,71 @@ int file_writeline(fileptr_t fp, const char *str) {
   return -1;
 }
 
+/// file_read reads a buffer full of data from the passed file pointer
+int file_read(fileptr_t fp, void *buff, int nbytes) {
+  size_t ret = fread(buff, 1, (size_t) nbytes, fp);
+  return (int) ret;
+}
+
+/// file_write writes a given buffer to the passed file pointer
+int file_write(fileptr_t fp, const void *buff, int nbytes) {
+  size_t ret = fwrite(buff, 1, (size_t) nbytes, fp);
+  return (int) ret;
+}
+
 /// Flushes input/output buffers
 int file_flush(fileptr_t fp) { return fflush(fp); }
+
+/**
+ * dir_content returns an array of file names
+ *
+ * @param dir pathname of directory
+ * @return array of file names, 0 if error
+ */
+char **dir_content(const char *dir) {
+  DIR *d = opendir(dir);
+  if (d) {
+    int n = 0;
+    struct dirent *de;
+    while ((de = readdir(d))) {
+      if (str_cmp(de->d_name, ".") != 0 && str_cmp(de->d_name, "..") != 0) n++;
+    }
+    char **ret = av_heap(0, n + 1);
+    char **ap = ret;
+    rewinddir(d);
+    while ((de = readdir(d))) {
+      if (str_cmp(de->d_name, ".") != 0 && str_cmp(de->d_name, "..") != 0) {
+        *(ap++) = str_heap(de->d_name, 0);
+      }
+    }
+    *ap = 0;
+    return ret;
+  }
+  else return 0;
+}
+
+/**
+ * dir_remove removes a directory and all contents below
+ *
+ * @param dir pathname of directory
+ * @return 0 => OK, Error else
+ */
+int dir_remove(const char *dir) {
+  DIR *d = opendir(dir);
+  if (d) {
+    struct dirent *de;
+    while ((de = readdir(d))) {
+      if (str_cmp(de->d_name, ".") != 0 && str_cmp(de->d_name, "..") != 0) {
+        stat_t tmp;
+        char path[1025];
+        fn_mkpathname(path, 1024, dir, de->d_name);
+        if ( stat_read(&tmp, path) ) return -1;
+        if ( stat_isdir(&tmp) ) dir_remove(path);
+        else file_unlink(path);
+      }
+    }
+    return file_unlink(dir);
+  }
+  else return -1;
+}
+

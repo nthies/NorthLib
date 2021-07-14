@@ -229,6 +229,7 @@ int str_bin2fhex ( char *dest, int dlen, const void *src, int len, long unsigned
 
 /* Exports of argv.c: */
 int av_release ( char **ptr );
+char *av_index(char **argv, int i);
 int av_length ( char ** );
 int av_size ( char **argv );
 char **av_heap ( char **argv, int len );
