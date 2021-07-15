@@ -346,7 +346,9 @@ open class TapRecognizer: UITapGestureRecognizer {
   public var onTapClosure: ((UITapGestureRecognizer)->())?  
   @objc private func handleTap(sender: UITapGestureRecognizer) { onTapClosure?(sender) }
   /// Define closure to call upon Tap
-  open func onTap(view: UIView, closure: @escaping (UITapGestureRecognizer)->()) { 
+  open func onTap(view: UIView, nTaps: Int = 1,
+                  closure: @escaping (UITapGestureRecognizer)->()) {
+    self.numberOfTapsRequired = nTaps
     view.isUserInteractionEnabled = true
     view.addGestureRecognizer(self)
     onTapClosure = closure 
@@ -366,6 +368,9 @@ extension Touchable {
   /// Define closure to call upon tap
   public func onTap(closure: @escaping (UITapGestureRecognizer)->()) {
     self.tapRecognizer.onTap(view: self, closure: closure)
+  }
+  public func onTaps(nTaps: Int, closure: @escaping (UITapGestureRecognizer)->()) {
+    self.tapRecognizer.onTap(view: self, nTaps: nTaps, closure: closure)
   }
 }
 
