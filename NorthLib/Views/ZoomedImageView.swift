@@ -54,6 +54,10 @@ extension OptionalImageItem{
 // MARK: -
 // MARK: - ZoomedImageView
 open class ZoomedImageView: UIView, ZoomedImageViewSpec {
+  
+  public static var isDebug = true
+  var isDebugLogging: Bool { Self.isDebug }
+  
   var imageViewBottomConstraint: NSLayoutConstraint?
   var imageViewLeadingConstraint: NSLayoutConstraint?
   var imageViewTopConstraint: NSLayoutConstraint?

@@ -75,6 +75,8 @@ extension PdfModel {
 // MARK: PdfDocModel
 class PdfModelItem : PdfModel, DoesLog/*, PDFOutlineStructure*/ {
   
+  var isDebugLogging: Bool { PdfRenderService.isDebug }
+  
   func size(forItem atIndex: Int) -> CGSize {
     return CGSize(width: 200, height: 260)
   }

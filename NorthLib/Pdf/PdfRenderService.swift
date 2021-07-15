@@ -13,7 +13,10 @@ import PDFKit
 /// Service that renders PDF's on limited count of Threads,
 /// each parallel render open its own file handle
 /// to avoid memory leaks within unclosed UIGraphicsContext PDF File handles
-public class PdfRenderService : DoesLog{
+public class PdfRenderService : DoesLog {
+  
+  public static var isDebug = true
+  public var isDebugLogging: Bool { Self.isDebug }
 
   private static let sharedInstance = PdfRenderService()
   private init(){}
@@ -129,6 +132,9 @@ public class PdfRenderService : DoesLog{
 }
 
 extension PDFPage : DoesLog {
+
+  public var isDebugLogging: Bool { PdfRenderService.isDebug }
+
   fileprivate func image(scale: CGFloat = 1.0) -> UIImage? {
     var img: UIImage?
     guard let ref = self.pageRef else { return nil}
