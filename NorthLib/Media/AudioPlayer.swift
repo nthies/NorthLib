@@ -57,42 +57,30 @@ open class AudioPlayer: NSObject, DoesLog {
   private func open() {
     guard player == nil else { return }
     guard let file = self.file else { return }
-    do {
-      try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
-      try AVAudioSession.sharedInstance().setActive(true)
-      openRemoteCommands()
-      var url = URL(string: file)
-      if url == nil { 
-        url = URL(fileURLWithPath: file)
-        isStream = false
-      }
-      else { isStream = true }
-      let item = AVPlayerItem(url: url!)
-      observation = item.observe(\.status) { [weak self] (item, change) in 
-        if item.status == .failed {
-          if let closure = self?._onError { closure(item.error!.localizedDescription, item.error!) }
-          else { self?.error(item.error!.localizedDescription) }
-          self?.close()
-        }
-        else if item.status == .readyToPlay { self?.playerIsReady() } 
-      }
-      self.player = AVPlayer(playerItem: item)
-      NotificationCenter.default.addObserver(self, selector: #selector(playerHasFinished), 
-        name: .AVPlayerItemDidPlayToEndTime, object: item)
-      NotificationCenter.default.addObserver(self, selector: #selector(playerIsInterrupted), 
-        name: AVAudioSession.interruptionNotification, object: nil)
+    openRemoteCommands()
+    var url = URL(string: file)
+    if url == nil {
+      url = URL(fileURLWithPath: file)
+      isStream = false
     }
-    catch let error {
-      print(error)
-      close()
-    }      
-  }
-  
-  // player is ready to play medium
-  private func playerIsReady() {
+    else { isStream = true }
+    let item = AVPlayerItem(url: url!)
+    observation = item.observe(\.status) { [weak self] (item, change) in
+      if item.status == .failed {
+        if let closure = self?._onError { closure(item.error!.localizedDescription, item.error!) }
+        else { self?.error(item.error!.localizedDescription) }
+        self?.close()
+      }
+      else if item.status == .readyToPlay {}
+    }
+    self.player = AVPlayer(playerItem: item)
     updatePlayingInfo()
+    NotificationCenter.default.addObserver(self, selector: #selector(playerHasFinished),
+                                           name: .AVPlayerItemDidPlayToEndTime, object: item)
+    NotificationCenter.default.addObserver(self, selector: #selector(playerIsInterrupted),
+                                           name: AVAudioSession.interruptionNotification, object: nil)
   }
-  
+    
   // player has finished playing medium
   @objc private func playerHasFinished() {
     close()
@@ -105,21 +93,21 @@ open class AudioPlayer: NSObject, DoesLog {
           let type = AVAudioSession.InterruptionType(rawValue: typeInt) 
     else { return }
     switch type {
-    case .began:
-      print("Interrupt received")
-      if isPlaying { 
-        stop() 
-        wasPlaying = true
-      }
-    case .ended:
-      if let optionInt = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt {
-         let options = AVAudioSession.InterruptionOptions(rawValue: optionInt)
-        if options.contains(.shouldResume) {
-          print("Resume after interrupt")
-          if wasPlaying { play() }
+      case .began:
+        print("Interrupt received")
+        if isPlaying {
+          stop()
+          wasPlaying = true
         }
-      }
-    default: print("unknown AV interrupt notification")
+      case .ended:
+        if let optionInt = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt {
+          let options = AVAudioSession.InterruptionOptions(rawValue: optionInt)
+          if options.contains(.shouldResume) {
+            print("Resume after interrupt")
+            if wasPlaying { play() }
+          }
+        }
+      default: print("unknown AV interrupt notification")
     }
   }
   
@@ -173,8 +161,8 @@ open class AudioPlayer: NSObject, DoesLog {
       NotificationCenter.default.removeObserver(self)
       try AVAudioSession.sharedInstance().setActive(false)
     }
-    catch let error {
-      print(error)
+    catch let err {
+      error(err)
     }      
   }
 
@@ -215,7 +203,16 @@ open class AudioPlayer: NSObject, DoesLog {
   } 
   
   public override init() {
-    super.init()
+    do {
+      super.init()
+      try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default,
+            options: [.mixWithOthers, .allowAirPlay])
+      try AVAudioSession.sharedInstance().setActive(true)
+    }
+    catch let err {
+      error(err)
+      close()
+    }
   }
   
 }  // AudioPlayer
