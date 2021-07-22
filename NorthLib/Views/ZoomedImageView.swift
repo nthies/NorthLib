@@ -209,7 +209,8 @@ extension ZoomedImageView{
         imageView.image = nil
       }
       spinner.startAnimating()
-      optionalImage?.whenAvailable {
+      optionalImage?.whenAvailable { [weak self] in
+        guard let self = self else { return }
         if let img = self.optionalImage?.image {
           self.setImage(img)
           self.layoutIfNeeded()
