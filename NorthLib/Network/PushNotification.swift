@@ -242,14 +242,14 @@ open class PushNotification: NSObject, UNUserNotificationCenterDelegate, DoesLog
                      closure: @escaping (PushNotification)->()) {
     permissionClosure = closure
     UNUserNotificationCenter.current().requestAuthorization(
-    options: opt) { (granted, error) in 
-      if let err = error { Log.fatal(err) }
-      else { 
-        if granted {
-          onMain { UIApplication.shared.registerForRemoteNotifications() }
-        }
-        else { self.register(token: nil) }
+      options: opt) { (granted, error) in
+      var ok: Bool
+      if let err = error { ok = false; Log.error(err) }
+      else { ok = granted }
+      if ok {
+        onMain { UIApplication.shared.registerForRemoteNotifications() }
       }
+      else { self.register(token: nil) }
     } 
   }
   
