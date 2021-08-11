@@ -333,7 +333,7 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
     self.originalUrl = url
     self.errorCount = 0
     if url.isFileURL {
-      debug("load: \(url.lastPathComponent)")
+      debug("load: \(url.lastPathComponent), base: \(self.baseUrl?.absoluteString ?? "nil")")
       var base = self.baseUrl
       if base == nil { base = url.deletingLastPathComponent() }
       return loadFileURL(url, allowingReadAccessTo: base!)

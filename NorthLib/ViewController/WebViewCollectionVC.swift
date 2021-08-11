@@ -23,6 +23,7 @@ class OptionalWebView: OptionalView, DoesLog {
   var webView: WebView?
   var mainView: UIView? { return webView }
   var waitingView: UIView? { url.waitingView() }
+  var baseDir: String?
 
   @SingleCallback
   public var whenAvailable: Callback<Void>.Store
@@ -53,14 +54,16 @@ class OptionalWebView: OptionalView, DoesLog {
     webView.scrollView.isDirectionalLockEnabled = true
     webView.scrollView.showsHorizontalScrollIndicator = false
     webView.minScrollRatio = 0.01
+    webView.baseDir = baseDir
     webView.whenLoaded { [weak self] _ in
       self?.isAvailable = true
       self?.$whenAvailable.notify(sender: self)
     }
   }
 
-  init(url: WebViewUrl) {
+  init(url: WebViewUrl, baseDir: String?) {
     self.url = url
+    self.baseDir = baseDir
     urlChanged()
   }
       
@@ -171,7 +174,7 @@ open class WebViewCollectionVC: PageCollectionVC {
         return ov
       }
       else { 
-        let owv = OptionalWebView(url: self.urls[index])
+        let owv = OptionalWebView(url: self.urls[index], baseDir: self.baseDir)
         self.initWebView(oView: owv)
         self.optionalWebViews.append(owv)
         if let bridge = self.bridge {
@@ -186,7 +189,6 @@ open class WebViewCollectionVC: PageCollectionVC {
   
   func initWebView(oView: OptionalWebView) {
     guard let webView = oView.webView else { return }
-    webView.baseDir = baseDir
     webView.whenLoadError { [weak self] err in
       guard let self = self else { return }
       self.error("WebView Load Error on \"\(webView.originalUrl?.lastPathComponent ?? "[undefined URL]")\":\n  \(err.description)")
