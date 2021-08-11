@@ -885,6 +885,18 @@ int file_link(const char *from, const char *to) {
 }
 
 /**
+ * file_readlink returns the file a given 'path' links to symbollically.
+ * If the given path is not a symbolic link, 0 is returned.
+ */
+char *file_readlink(const char *path) {
+  char buff[1001];
+  int ret = (int)readlink(path, buff, 1000);
+  if ( ret < 0 ) return 0;
+  buff[ret] = 0;
+  return str_heap(buff, 0);
+}
+
+/**
  * file_unlink simply uses unlink(2) to remove a file
  * 
  * @param path pathname of file/directory to remove, the directory must be empty

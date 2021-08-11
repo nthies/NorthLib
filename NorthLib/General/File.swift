@@ -324,6 +324,14 @@ open class File: DoesLog {
   public static func extname(_ fn: String) -> String {
     return Dir(fn).extname
   }
+  
+  /// Returns the aim of a symbolic link
+  public static func readlink(path: String) -> String? {
+    if let link = file_readlink(path.cstr) {
+      return String(cString: link)
+    }
+    else { return nil }
+  }
 
 } // File
 

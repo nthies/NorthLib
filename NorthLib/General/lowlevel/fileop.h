@@ -71,7 +71,7 @@ char *fn_abs(const char *fname);
 int fn_linkpath(char *buff, int len, const char *from, const char *to);
 int fn_resolvelink(char *from, int flen, char *to, int tlen,
                    const char *fn, const char *link);
-
+char *file_readlink(const char *path);
 int file_link(const char *from, const char *to);
 int file_unlink(const char *path);
 int file_open(fileptr_t *rfp, const char *path, const char *mode);
