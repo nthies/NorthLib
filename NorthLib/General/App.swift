@@ -190,6 +190,25 @@ open class App {
     let nn = Int(buildNumber.suffix(2))!
     return (60 <= nn) && (nn < 100)
   }()
+  
+  
+  /// Get info is new Features are available
+  /// Previously used Compiler Flags, unfortunatly they are harder to find within Source Code Search
+  /// and dependecy to Alpha App Versions must be set for each Build
+  /// - Parameter feature: Feature to check
+  /// - Returns: true if Feature is Available
+  public static func isAvailable(_ feature: Feature) -> Bool {
+    switch feature {
+      case .INTERNALBROWSER:
+        return isAlpha //Only in Alpha Versions
+      case .PDFEXPORT:
+        return isAlpha //Only in Alpha Versions
+    }
+  }
+  
+  /// List of upcomming Features
+  /// showBottomTilesAnimation is a ConfigVariable
+  public enum Feature { case  PDFEXPORT, INTERNALBROWSER}
 
   /**
    Set alternate icon depending on alpha/beta/release version

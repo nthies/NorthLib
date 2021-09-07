@@ -114,6 +114,15 @@ open class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
       guard let self = self else { return UIView() }
       let dataItem = self.pdfModel?.item(atIndex: index)
       if let ziv = oview as? ZoomedImageView {
+        if ziv.optionalImage as? ZoomedPdfImage == dataItem as? ZoomedPdfImage {
+          return ziv
+        }
+        
+        if ziv.optionalImage != nil {
+          ziv.optionalImage?.image = nil
+          ziv.optionalImage = nil
+        }
+        
         ziv.optionalImage = dataItem
         dataItem?.renderFullscreenImageIfNeeded { [weak self] success in
           self?.handleRenderFinished(success, ziv)

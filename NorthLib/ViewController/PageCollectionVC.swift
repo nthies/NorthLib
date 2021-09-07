@@ -167,15 +167,29 @@ open class PageCollectionVC: UIViewController {
     
     super.viewWillTransition(to: size, with: coordinator)
     
-    coordinator.animate(alongsideTransition: nil) { [weak self] ctx in
+    let idx = self.index
+    
+    coordinator.animateAlongsideTransition(in: nil) { [weak self] _ in
+      self?.collectionView?.alpha = 0.0
+    } completion: { [weak self] _ in
       self?.collectionView?.collectionViewLayout.invalidateLayout()
       self?.collectionView?.updateLayout()
-      if let idx = self?.index {
-        self?.collectionView?.scrollToItem(at: IndexPath(item: idx,
-                                                         section: 0),
-                                           at: .centeredHorizontally,
-                                           animated: false)
+      guard let i = idx else {
+        self?.collectionView?.alpha = 1.0
+        return
       }
+      self?.collectionView?.isHidden = true
+      
+      self?.collectionView?.scrollToItem(at: IndexPath(item: 0,
+                                                       section: 0),
+                                         at: .centeredHorizontally,
+                                         animated: false)
+      
+      self?.collectionView?.scrollToItem(at: IndexPath(item: i,
+                                                       section: 0),
+                                         at: .centeredHorizontally,
+                                         animated: false)
+      self?.collectionView?.showAnimated(duration: 0.1)
     }
   }
 } // PageCollectionVC

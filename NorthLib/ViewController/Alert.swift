@@ -7,6 +7,24 @@
 
 import UIKit
 
+/// Add option to store dismiss Handler/completion for actionSheet Function as nested class
+public class AlertController : UIAlertController {
+  fileprivate var onDisappearClosures: [()->()] = []
+  
+  /// Define closure to call when a cell is newly displayed
+  public func onDisappear(closure: (()->())?) {
+    guard let cl = closure else { return }
+    onDisappearClosures += cl
+  }
+  
+  public override func viewDidDisappear(_ animated: Bool) {
+    super.viewDidDisappear(animated)
+    for cl in onDisappearClosures { cl() }
+    onDisappearClosures = []
+  }
+}
+
+
 /// A wrapper around some UIAlertController using static methods
 open class Alert {
   
@@ -29,11 +47,12 @@ open class Alert {
                              message: String,
                              actions : [UIAlertAction]) {
     onMain {
-      let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+      let alert = AlertController(title: title, message: message, preferredStyle: .alert)
       for action in actions {
         alert.addAction(action)
       }
       //present even if there is still a modal View presented
+      Log.log("Show Alert with Title: \(title ?? "-") and Message: \(message) AlreadyPresenting? \(UIViewController.top()?.presentedViewController != nil)")
       UIViewController.top()?.present(alert, animated: true, completion: nil)
     }
   }
@@ -51,7 +70,7 @@ open class Alert {
       //Prevent Line Break if no title given
       //message ist automatic title (bold) if no title given!
       let popupMessage = title==nil ? message : "\n\(message)"
-      let alert = UIAlertController(title: title, message:popupMessage , preferredStyle: .alert)
+      let alert = AlertController(title: title, message:popupMessage , preferredStyle: .alert)
       let okButton = UIAlertAction(title: okText, style: okStyle) { _ in closure?(true) }
       let cancelButton = UIAlertAction(title: cancelText, style: .cancel) { _ in closure?(false) }
       alert.addAction(okButton)
@@ -71,23 +90,14 @@ open class Alert {
   public static func actionSheet(title: String? = nil, message: String? = nil,
                                  actions: [UIAlertAction], completion : (()->())? = nil)  {
     
-    /// Add option to store dismiss Handler/completion for actionSheet Function as nested class
-    class MyAlertController : UIAlertController {
-      var dismissHandler : (()->())?
-      override func viewDidDisappear(_ animated: Bool) {
-        dismissHandler?()
-        super.viewDidDisappear(animated)
-      }
-    }
-    
     onMain {
       var msg: String? = nil
       if let message = message { msg = "\n\(message)" }
       //Use Alert on iPad due provide popoverPresentationControllers Source view is unknown
       let style : UIAlertController.Style = Device.singleton == .iPad ? .alert : .actionSheet
-      let alert = MyAlertController(title: title, message: msg, preferredStyle: style)
+      let alert = AlertController(title: title, message: msg, preferredStyle: style)
       let cancelButton = UIAlertAction(title: "Abbrechen", style: .cancel)
-      alert.dismissHandler = completion
+      alert.onDisappear(closure: completion)
       for a in actions { alert.addAction(a) }
       alert.addAction(cancelButton)
       UIViewController.top()?.present(alert, animated: true, completion: nil)

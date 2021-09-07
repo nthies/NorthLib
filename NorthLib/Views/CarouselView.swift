@@ -78,6 +78,8 @@ public class CarouselFlowLayout: UICollectionViewFlowLayout, DoesLog {
   */
 open class CarouselView: PageCollectionView {
   
+  public var pullToLoadMoreHandler: (()->())?
+  
   /// maximum scale of center page
   open var maxScale: CGFloat = 1.3 { 
     didSet { 
@@ -105,5 +107,14 @@ open class CarouselView: PageCollectionView {
   }
 
   public convenience init() { self.init(frame: CGRect()) }
+  
+  // MARK: - UIScrollViewDelegate
+  public override func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+    super.scrollViewWillEndDragging(scrollView, withVelocity: velocity, targetContentOffset: targetContentOffset)
+    if let handler = pullToLoadMoreHandler,
+       scrollView.contentOffset.x < -50 {
+      handler()
+    }
+  }
   
 } // CarouselView

@@ -23,7 +23,7 @@ public extension UIWindow {
   static var rootVC: UIViewController? { return keyWindow?.rootViewController }
   
   /// Returns a snapshot of the key window
-  static var snapshot: UIImage? { return keyWindow?.layer.snapshot }
+  static var snapshot: UIImage? { return keyWindow?.snapshot }
   
   /// Returns a screenshot (ie. snapshot) of the key window
   static var screenshot: UIImage? { return snapshot }

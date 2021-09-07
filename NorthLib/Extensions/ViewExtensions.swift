@@ -64,8 +64,8 @@ public extension UIView {
 
 /// A UIView extension to show/hide views animated
 public extension UIView {
-  func showAnimated(duration:CGFloat=0.6, completion: (()->())? = nil){
-    if isHidden == false { return }
+  func showAnimated(duration:CGFloat=0.3, completion: (()->())? = nil){
+    if isHidden == false { completion?(); return }
     onMain { [weak self] in
       self?.alpha = 0.0
       self?.isHidden = false
@@ -77,8 +77,8 @@ public extension UIView {
     }
   }
   
-  func hideAnimated(duration:CGFloat=0.6, completion: (()->())? = nil){
-    if isHidden == true { return }
+  func hideAnimated(duration:CGFloat=0.3, completion: (()->())? = nil){
+    if isHidden == true { completion?(); return }
     onMain { [weak self] in
       UIView.animate(withDuration: TimeInterval(duration)) {[weak self] in
         self?.alpha = 0.0
@@ -90,6 +90,36 @@ public extension UIView {
     }
   }
 }
+
+/// A UIView extension to show/hide views animated
+public extension Array where Element==UIView {
+  func showAnimated(duration:CGFloat=0.3, completion: (()->())? = nil){
+    let hiddenItems = self.filter{ $0.isHidden }
+    if hiddenItems.count == 0 { completion?(); return }
+    onMain {
+      let itms: [UIView] = hiddenItems.map{ $0.alpha = 0.0; $0.isHidden = false; return $0 }
+      UIView.animate(withDuration: TimeInterval(duration)) {
+        _ = itms.map{ $0.alpha = 1.0 }
+      } completion: {_ in
+        completion?()
+      }
+    }
+  }
+  
+  func hideAnimated(duration:CGFloat=0.3, completion: (()->())? = nil){
+    let visibleItems = self.filter{ $0.isVisible }
+    if visibleItems.count == 0 { completion?(); return }
+    onMain {
+      UIView.animate(withDuration: TimeInterval(duration)) {
+        _ = visibleItems.map{ $0.alpha = 0.0}
+      } completion: {_ in
+        _ = visibleItems.map{ $0.isHidden = true; $0.alpha = 1.0 }
+        completion?()
+      }
+    }
+  }
+}
+
 
 
 // Layout anchors and corresponding views:
@@ -332,6 +362,7 @@ public func pin(_ view: UIView, to: UIView, dist: CGFloat = 0, exclude: UIRectEd
   return (top, bottom, left, right)
 }
 
+@discardableResult
 public func pin(_ view: UIView, toSafe: UIView, dist: CGFloat = 0, exclude: UIRectEdge? = nil) -> tblrConstrains {
   var top:NSLayoutConstraint?, left:NSLayoutConstraint?, bottom:NSLayoutConstraint?, right:NSLayoutConstraint?
   exclude != UIRectEdge.top ? top = NorthLib.pin(view.top, to: toSafe.topGuide(), dist: dist) : nil

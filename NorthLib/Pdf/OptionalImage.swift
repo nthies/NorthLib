@@ -33,7 +33,11 @@ public protocol ZoomedPdfImageSpec : OptionalImage, DoesLog {
 
 //public enum ContentAlignment { case left, right, fill }
 
-open class ZoomedPdfImage: OptionalImageItem, ZoomedPdfImageSpec {
+open class ZoomedPdfImage: OptionalImageItem, ZoomedPdfImageSpec, Equatable {
+  public static func == (lhs: ZoomedPdfImage, rhs: ZoomedPdfImage) -> Bool {
+    return lhs.pdfPage == rhs.pdfPage &&  rhs.pdfPage != nil
+  }
+  
   open var pageType : PdfPageType = .left
   public var size: CGSize = CGSize(width: 100, height: 80)
   public var sectionTitle: String?
