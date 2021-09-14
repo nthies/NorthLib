@@ -52,6 +52,15 @@ public enum Device: CustomStringConvertible {
   public static var isMac: Bool { return Device.singleton == .mac }
   /// Is true if the current device is an Apple TV
   public static var isTv: Bool { return Device.singleton == .tv }
+  
+  /// Is true if the current device is an Simulator
+  public static var isSimulator:Bool {
+      #if targetEnvironment(simulator)
+        return true
+      #else
+        return false
+      #endif
+  }
 
   // Use Device.singleton
   fileprivate init() {
