@@ -53,7 +53,12 @@ public extension Notification {
     if let err = result.error() {
       send(message, error: err, sender: sender)
     }
-    else { send(message, content: result.value()!, sender: sender) }
+    else if let val = result.value() {
+      send(message, content: val, sender: sender)
+    }
+    else {
+      send(message, content: nil, sender: sender)
+    }
   }
   
   /// Receive Notification and return observer object
