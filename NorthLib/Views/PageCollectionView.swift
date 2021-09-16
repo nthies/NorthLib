@@ -53,6 +53,8 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
   /// inset of first/last page
   open var inset: CGFloat { return (cwidth - pwidth) / 2 }
   
+  public var preventScrollIndexUpdate = false
+  
   /// scroll from left to right or vice versa
   open var scrollFromLeftToRight: Bool = false {
     didSet { 
@@ -90,10 +92,6 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
       contentView.subviews.forEach { $0.removeFromSuperview() }
       contentView.addSubview(view)
       pin(view, to: contentView)
-      if nSubViews == 0 {
-        view.isHidden = true
-        view.showAnimated(duration: 0.2)
-      }
     }
     
     /// Request view from provider and put it into a PageCell
@@ -198,6 +196,15 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
       return cell.page
     }
     else { return nil }
+  }
+  
+  public func fixScrollPosition(toIndex: Int?=nil){
+    guard let idx = toIndex ?? index else { return }
+    //debug("fixScrollPosition to idx: \(idx)")
+    self.scrollRectToVisible(.zero, animated: false)
+    self.scrollToItem(at: IndexPath(item: idx, section: 0),
+                      at: .centeredHorizontally,
+                      animated: false)
   }
   
   /// Index of current page, change it to scroll to a certain cell
@@ -339,6 +346,7 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
   
   // While scrolling update page index
   public func scrollViewDidScroll(_ scrollView: UIScrollView) {
+    if preventScrollIndexUpdate { return }
     let pageIndex = offset2index(contentOffset.x)
     if pageIndex != _index { updateDisplaying(pageIndex) }  
   }

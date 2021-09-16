@@ -128,32 +128,6 @@ open class PageCollectionVC: UIViewController {
     if count != 0 { collectionView?.reloadData() }
   }
   
-  open override func viewDidAppear(_ animated: Bool) {
-    super.viewDidAppear(animated)
-    if invalidateLayoutNeededOnViewWillAppear {
-      invalidateLayoutNeededOnViewWillAppear = false
-      self.collectionView?.collectionViewLayout.invalidateLayout()
-      self.collectionView?.updateLayout()
-      if let idx = self.index {
-        self.collectionView?.scrollToItem(at: IndexPath(item: idx,
-                                                         section: 0),
-                                           at: .centeredHorizontally,
-                                           animated: false)
-      }
-    }
-  }
-  
-  open override func willMove(toParent parent: UIViewController?) {
-    super.willMove(toParent: parent)
-    for vc in self.navigationController?.viewControllers ?? [] {
-      if vc != self,
-         vc.view.bounds != self.view.bounds,
-         let pvc = vc as? PageCollectionVC {
-        pvc.invalidateLayoutNeededOnViewWillAppear = true
-      }
-    }
-  }
-  
   // TODO: transition/rotation better with collectionViewLayout subclass as described in:
   // https://www.matrixprojects.net/p/uicollectionviewcell-dynamic-width/
   open override func willTransition(to newCollection: UITraitCollection, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -164,32 +138,19 @@ open class PageCollectionVC: UIViewController {
   }
   
   open override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
-    
+    collectionView?.preventScrollIndexUpdate = true
     super.viewWillTransition(to: size, with: coordinator)
-    
-    let idx = self.index
-    
-    coordinator.animateAlongsideTransition(in: nil) { [weak self] _ in
-      self?.collectionView?.alpha = 0.0
-    } completion: { [weak self] _ in
-      self?.collectionView?.collectionViewLayout.invalidateLayout()
-      self?.collectionView?.updateLayout()
-      guard let i = idx else {
-        self?.collectionView?.alpha = 1.0
-        return
-      }
+    coordinator.animateAlongsideTransition(in: nil) {[weak self] _ in
       self?.collectionView?.isHidden = true
-      
-      self?.collectionView?.scrollToItem(at: IndexPath(item: 0,
-                                                       section: 0),
-                                         at: .centeredHorizontally,
-                                         animated: false)
-      
-      self?.collectionView?.scrollToItem(at: IndexPath(item: i,
-                                                       section: 0),
-                                         at: .centeredHorizontally,
-                                         animated: false)
+    } completion: {[weak self] _ in
+      self?.collectionView?.collectionViewLayout.invalidateLayout()
+      self?.collectionView?.fixScrollPosition()
+      //PDF>Rotate: fix layout pos
+      if let ziv = self?.currentView as? ZoomedImageViewSpec {
+        ziv.invalidateLayout()
+      }
       self?.collectionView?.showAnimated(duration: 0.1)
+      self?.collectionView?.preventScrollIndexUpdate = false
     }
   }
 } // PageCollectionVC
