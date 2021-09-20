@@ -72,6 +72,7 @@ open class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
     self.pageControl?.currentPageIndicatorTintColor = UIColor.red//Const.SetColor.CIColor.color
     self.pinBottomToSafeArea = false
     setupTopGradient()
+    self.view.backgroundColor = .black ///fix bg color on rotate was white even of .clear set
   }
   
   func setupTopGradient() {
@@ -81,25 +82,23 @@ open class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
     pin(topGradient.right, to: self.view.right)
     pin(topGradient.top, to: self.view.top)
   }
-  
+
   open override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
     super.viewWillTransition(to: size, with: coordinator)
-    //Fix Issue iPad: rotation page is missalligned
-    //simple soloution due rotation animation is much longer
-    //worked on iPad Air 2
+    handleTraitsChange(size)
+  }
+
+  open override func viewWillAppear(_ animated: Bool) {
+    super.viewWillAppear(animated)
+    //PDF>Article>Rotate>PDF: fix layout pos
     if let ziv = self.currentView as? ZoomedImageViewSpec {
       onMainAfter(0.3) {
         ziv.invalidateLayout()
       }
     }
-    handleTraitsChange(size)    
-  }
-  
-  open override func viewWillAppear(_ animated: Bool) {
-    super.viewWillAppear(animated)
     handleTraitsChange(self.view.frame.size)
   }
-  
+
   func handleTraitsChange(_ toSize:CGSize) {
     //on iPhone in Landscape, there is no status Bar
     topGradient.isHidden = UIDevice.current.orientation.isLandscape && Device.isIphone
