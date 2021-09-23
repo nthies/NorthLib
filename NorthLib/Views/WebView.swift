@@ -591,7 +591,7 @@ open class ButtonedWebView: UIView {
     pin(webView.right, to: self.right)
     pin(buttonLabel.centerX, to: self.centerX)
     pin(xButton.right, to: self.right, dist: -15)
-    pin(xButton.top, to: self.top, dist: 50)
+    pin(xButton.top, to: self.topGuide(), dist: 5)
     xButton.pinHeight(35)
     xButton.pinWidth(35)
     xButton.color = .black
