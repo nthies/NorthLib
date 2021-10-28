@@ -40,7 +40,22 @@ public extension Date {
     self = Calendar.current.date(byAdding: .day, value: days, to: self)!
   }
   
+  /// Check if an given Date exists and time Interval is smaller than given timeInterval
+  /// - Parameters:
+  ///   - date: date to compare with now
+  ///   - interval: interval to use; default 1 Minute
+  /// - Returns: true if exists and not expired
+  static func existsAndNotExpired(_ date: Date?, intervall:TimeInterval = TimeInterval.minute) -> Bool {
+    guard let d = date else { return false }
+    return Date().timeIntervalSince(d) < intervall
+  }
 } // extension Date
+
+public extension TimeInterval {
+  static var day: Double { get { return 24*hour} }
+  static var hour: Double { get { return 60*minute} }
+  static var minute: Double { get { return 60} }
+}
 
 /**
  Time as seconds and microseconds since 1970-01-01 00:00:00 UTC
