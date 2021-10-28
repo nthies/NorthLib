@@ -45,6 +45,10 @@ extension Log {
       return "\(cachedir)/default.log"
     }()
     
+    public static var lastLogfile: String = {
+      return defaultLogfile + ".old"
+    }()
+    
     /// Using a temporary filename
     public convenience override init() {
       self.init(FileLogger.defaultLogfile)
