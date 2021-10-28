@@ -19,6 +19,62 @@ extension NSObject {
     }
   }
 }
+
+
+private class OnceExecutedHelper {
+  fileprivate static let sharedInstance = OnceExecutedHelper()
+  private init(){}
+//  var appRun:[String]=[]
+  var timedRun:[String:Date]=[:]
+}
+
+/// Helper to check if identifier has been used since app start
+/// - Parameters:
+///   - identifier: id to check
+///   - repeatingMinutes: period after last last positive check is expired
+/// - Returns: true if still not used or period expired; otherwise false
+public func once(identifier:String, repeatingMinutes: Int? = nil) -> Bool {
+  if identifier.length == 0 {Log.log("failed to execute"); return false }
+  guard let last = OnceExecutedHelper.sharedInstance.timedRun[identifier] else {
+    OnceExecutedHelper.sharedInstance.timedRun[identifier] = Date()
+    return true
+  }
+  guard let min = repeatingMinutes else {  return false }
+  if Date().timeIntervalSince(last) < Double(min)*60.0 { return false }
+
+  OnceExecutedHelper.sharedInstance.timedRun[identifier] = Date()
+  return true
+}
+
+public extension NSObject {
+//  /// Helper to cain and execute something on an object once per app execution lifecycle
+//  /// - Parameter identifier: what to execute once; default is bundlename.classname
+//  /// - Returns: the object itself
+//  func once(_ identifier:String?=nil) -> Self? {
+//    let id:String = identifier ?? String(reflecting:self.classForCoder)
+//    if id.length == 0 {Log.log("failed to execute"); return nil }
+//    if OnceExecutedHelper.sharedInstance.appRun.contains(id) { return nil }
+//    OnceExecutedHelper.sharedInstance.appRun.append(id)
+//    return self
+//  }
+    
+  /// Helper to cain and execute to check if identifier has been used since app start
+  /// - Parameters:
+  ///   - identifier: id to check; default is bundlename.classname
+  ///   - repeatingMinutes: period after last last positive check is expired
+  /// - Returns: self if still not used or period expired; otherwise nil
+  func once(_ identifier:String?=nil, repeatingMinutes: Int? = nil) -> Self? {
+    let id:String = identifier ?? String(reflecting:self.classForCoder)
+    return NorthLib.once(identifier:id, repeatingMinutes: repeatingMinutes) ? self : nil
+  }
+  
+  /// Helper to cain and execute something on an object once per app execution lifecycle
+  var once: Self? { get { return once()} }
+  var onceDaily: Self? { get { return once(repeatingMinutes: 60*24)} }
+  var onceEveryMinute: Self? { get { return once(repeatingMinutes: 1)} }
+}
+
+
 /// Helpers to add specific UI Attributes just to iOS 13 or not
 /// usage.eg: myView.iosLower13?.pinWidth(20)
 public extension NSObject{
@@ -77,3 +133,4 @@ public var gt_iOS13 : Bool {
   if #available(iOS 13, *) { return true }
   return false
 }
+
