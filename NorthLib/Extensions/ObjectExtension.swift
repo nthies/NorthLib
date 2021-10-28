@@ -24,7 +24,6 @@ extension NSObject {
 private class OnceExecutedHelper {
   fileprivate static let sharedInstance = OnceExecutedHelper()
   private init(){}
-//  var appRun:[String]=[]
   var timedRun:[String:Date]=[:]
 }
 
@@ -47,16 +46,6 @@ public func once(identifier:String, repeatingMinutes: Int? = nil) -> Bool {
 }
 
 public extension NSObject {
-//  /// Helper to cain and execute something on an object once per app execution lifecycle
-//  /// - Parameter identifier: what to execute once; default is bundlename.classname
-//  /// - Returns: the object itself
-//  func once(_ identifier:String?=nil) -> Self? {
-//    let id:String = identifier ?? String(reflecting:self.classForCoder)
-//    if id.length == 0 {Log.log("failed to execute"); return nil }
-//    if OnceExecutedHelper.sharedInstance.appRun.contains(id) { return nil }
-//    OnceExecutedHelper.sharedInstance.appRun.append(id)
-//    return self
-//  }
     
   /// Helper to cain and execute to check if identifier has been used since app start
   /// - Parameters:
@@ -68,12 +57,11 @@ public extension NSObject {
     return NorthLib.once(identifier:id, repeatingMinutes: repeatingMinutes) ? self : nil
   }
   
-  /// Helper to cain and execute something on an object once per app execution lifecycle
+  /// Helper to chain and execute something on an object once per app execution lifecycle
   var once: Self? { get { return once()} }
   var onceDaily: Self? { get { return once(repeatingMinutes: 60*24)} }
   var onceEveryMinute: Self? { get { return once(repeatingMinutes: 1)} }
 }
-
 
 /// Helpers to add specific UI Attributes just to iOS 13 or not
 /// usage.eg: myView.iosLower13?.pinWidth(20)
