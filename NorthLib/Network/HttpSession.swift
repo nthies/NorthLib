@@ -219,8 +219,6 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
   public var allowMobile = true { didSet { _config = nil } }
   /// Set waitForAvailability to true if a connection should wait for network availability
   public var waitForAvailability = false { didSet { _config = nil } }
-  
-  public var isGoingToBeCanceled = false { didSet { log("isGoingToBeCanceled: \(isGoingToBeCanceled)") } }
 
   fileprivate var _config: URLSessionConfiguration? { didSet { _session = nil } }
   /// Session configuration
@@ -234,7 +232,6 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
   public var session: URLSession {
     if _session == nil {
       _session = URLSession(configuration: config, delegate: self, delegateQueue: nil)
-      isGoingToBeCanceled = false
     }
     return _session!
   }
@@ -413,10 +410,7 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
       Dir(toDir).create()
       createJob(task: task, filename: toFile.path) { [weak self] job in
         if job.wasError { closure(.failure(job.httpError!)) }
-        else {
-              if job.receivedData == nil {
-            print("Trap")
-          }
+        else { 
           var err: Error? = nil
           toFile.mTime = file.moTime
           if toFile.size != file.size 
@@ -443,7 +437,6 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
   public func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
     logIf(error)
     debug("Session finished or cancelled")
-    self._session = nil //Create a new Session!
   }
   
   // Background processing complete - call background completion handler
@@ -699,7 +692,6 @@ open class HttpLoader: ToString, DoesLog {
     
   // Download next file in list
   func downloadNext(file: DlFile) {
-    log("XX DOWNLOAD NEXT!")
     session.downloadDlFile(baseUrl: baseUrl, file: file, toDir: toDir,
                            cacheDir: self.cacheDir) { [weak self] res in
       guard let self = self else { return }
