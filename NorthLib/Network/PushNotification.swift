@@ -395,6 +395,8 @@ open class NotifiedDelegate: UIResponder, UIApplicationDelegate,
   public func onReceivePush(closure: @escaping (PushNotification,
     PushNotification.Payload)->()) {
     notifier.onReceive(closure: closure)
+    let f = File(Dir.tmpPath + "/pushInfo_\(Date().ddMMyy_HHmmss).txt")
+    f.string = "onReceivePush"
   }
   
   /// Set up singleton

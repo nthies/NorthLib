@@ -49,6 +49,16 @@ public extension Date {
     guard let d = date else { return false }
     return Date().timeIntervalSince(d) < intervall
   }
+  
+  
+  var ddMMyy_HHmmss:String{
+    get{
+      let dateFormatterGet = DateFormatter()
+      dateFormatterGet.dateFormat = "ddMMyy_HHmmss"
+      return dateFormatterGet.string(from: self)
+    }
+  }
+  
 } // extension Date
 
 public extension TimeInterval {
