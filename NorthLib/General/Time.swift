@@ -43,9 +43,9 @@ public extension Date {
   /// Check if an given Date exists and time Interval is smaller than given timeInterval
   /// - Parameters:
   ///   - date: date to compare with now
-  ///   - interval: interval to use; default 1 Minute
+  ///   - interval: interval to use; default 1 Hour
   /// - Returns: true if exists and not expired
-  static func existsAndNotExpired(_ date: Date?, intervall:TimeInterval = TimeInterval.minute) -> Bool {
+  static func existsAndNotExpired(_ date: Date?, intervall:TimeInterval = TimeInterval.hour) -> Bool {
     guard let d = date else { return false }
     return Date().timeIntervalSince(d) < intervall
   }
