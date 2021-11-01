@@ -52,6 +52,7 @@ public extension Date {
 } // extension Date
 
 public extension TimeInterval {
+  static var week: Double { get { return 7*day} }
   static var day: Double { get { return 24*hour} }
   static var hour: Double { get { return 60*minute} }
   static var minute: Double { get { return 60} }
