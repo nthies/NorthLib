@@ -27,40 +27,43 @@ private class OnceExecutedHelper {
   var timedRun:[String:Date]=[:]
 }
 
-/// Helper to check if identifier has been used since app start
-/// - Parameters:
-///   - identifier: id to check
-///   - repeatingMinutes: period after last last positive check is expired
-/// - Returns: true if still not used or period expired; otherwise false
-public func once(identifier:String, repeatingMinutes: Int? = nil) -> Bool {
-  if identifier.length == 0 {Log.log("failed to execute"); return false }
-  guard let last = OnceExecutedHelper.sharedInstance.timedRun[identifier] else {
-    OnceExecutedHelper.sharedInstance.timedRun[identifier] = Date()
-    return true
+public extension String {
+  /// Check if entry for given key exists since appStart and time Interval is smaller than given timeInterval
+  /// - Parameter intervall: interval to use; default 1 Hour
+  /// - Returns: true if exists and not expired
+  func existsAndNotExpired(intervall:TimeInterval? = TimeInterval.hour) -> Bool {
+    if self.length == 0 {Log.log("failed to execute"); return false }
+    
+    guard let last = OnceExecutedHelper.sharedInstance.timedRun[self] else {
+      OnceExecutedHelper.sharedInstance.timedRun[self] = Date()
+      return false
+    }
+    
+    guard let ti = intervall else {  return true }
+    if Date().timeIntervalSince(last) < ti { return true }
+    
+    OnceExecutedHelper.sharedInstance.timedRun[self] = Date()
+    return false
   }
-  guard let min = repeatingMinutes else {  return false }
-  if Date().timeIntervalSince(last) < Double(min)*60.0 { return false }
-
-  OnceExecutedHelper.sharedInstance.timedRun[identifier] = Date()
-  return true
 }
+
 
 public extension NSObject {
     
-  /// Helper to cain and execute to check if identifier has been used since app start
+  /// Helper to execute code on the current object (or on a key) once once; or after a lock period has expired.
   /// - Parameters:
-  ///   - identifier: id to check; default is bundlename.classname
-  ///   - repeatingMinutes: period after last last positive check is expired
+  ///   - identifier: id to check; default is bundlename.classname of current/chained object
+  ///   - repeatingMinutes: period after last last positive check is expired, nil for only once execution
   /// - Returns: self if still not used or period expired; otherwise nil
-  func once(_ identifier:String?=nil, repeatingMinutes: Int? = nil) -> Self? {
+  func once(_ identifier:String?=nil, intervall:TimeInterval? = nil) -> Self? {
     let id:String = identifier ?? String(reflecting:self.classForCoder)
-    return NorthLib.once(identifier:id, repeatingMinutes: repeatingMinutes) ? self : nil
+    return id.existsAndNotExpired(intervall: intervall) ? nil : self
   }
-  
+
   /// Helper to chain and execute something on an object once per app execution lifecycle
   var once: Self? { get { return once()} }
-  var onceDaily: Self? { get { return once(repeatingMinutes: 60*24)} }
-  var onceEveryMinute: Self? { get { return once(repeatingMinutes: 1)} }
+  var onceDaily: Self? { get { return once(intervall: .day)} }
+  var onceEveryMinute: Self? { get { return once(intervall: .minute)} }
 }
 
 /// Helpers to add specific UI Attributes just to iOS 13 or not
