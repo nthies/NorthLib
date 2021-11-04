@@ -10,6 +10,20 @@ import Foundation
 /// Wrapper class for push notifications
 open class PushNotification: NSObject, UNUserNotificationCenterDelegate, DoesLog {
   
+  public func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) {
+    log("didReceive response #1")
+    File.notifyUser("didReceive response #1")
+  }
+  
+  public func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+    log("didReceive response #2")
+    File.notifyUser("didReceive response #2")
+    completionHandler()
+    log("done")
+  }
+
+  
+  
   /// AlertPayload defines the alert message of the standard payload
   public class AlertPayload: Decodable, ToString {
     public var title: String?
@@ -395,8 +409,6 @@ open class NotifiedDelegate: UIResponder, UIApplicationDelegate,
   public func onReceivePush(closure: @escaping (PushNotification,
     PushNotification.Payload)->()) {
     notifier.onReceive(closure: closure)
-    let f = File(Dir.tmpPath + "/pushInfo_\(Date().ddMMyy_HHmmss).txt")
-    f.string = "onReceivePush"
   }
   
   /// Set up singleton
@@ -419,13 +431,10 @@ open class NotifiedDelegate: UIResponder, UIApplicationDelegate,
     notifier.register(token: nil)
   }
   
-  // Notification received
-  public func application(_ application: UIApplication, didReceiveRemoteNotification
-    userInfo: [AnyHashable : Any], fetchCompletionHandler 
-    completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
-    notifier.receive(userInfo)
-    completionHandler(UIBackgroundFetchResult.noData)
-  }
+
+  
+
+  
   
   /// Lock all view controllers not obeying the CanRotate protocol to portrait orientation
   public func application(_ application: UIApplication, supportedInterfaceOrientationsFor 
@@ -452,3 +461,5 @@ open class NotifiedDelegate: UIResponder, UIApplicationDelegate,
   }
   
 } // NotifiedDelegate
+
+

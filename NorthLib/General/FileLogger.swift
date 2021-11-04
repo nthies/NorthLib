@@ -49,6 +49,7 @@ extension Log {
       return defaultLogfile + ".old"
     }()
     
+       
     /// Using a temporary filename
     public convenience override init() {
       self.init(FileLogger.defaultLogfile)
