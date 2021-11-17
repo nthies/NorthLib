@@ -181,23 +181,19 @@ open class App {
     return info["CFBundleVersion"] as! String
   }
   
-  /// Is this release a beta version (last two digits of buildNumber < 60 and >= 30)
+  /// Is the beta App
   public static var isBeta: Bool = {
-    let nn = Int(buildNumber.suffix(2))!
-    return (30 <= nn) && (nn < 60)
+    return bundleIdentifier == "de.taz.taz.beta"
   }()
     
-  /// Is this release an alpha version (last two digits of buildNumber < 30 and >= 0)
+  /// Is the alpha App
   public static var isAlpha: Bool = {
-    let nn = Int(buildNumber.suffix(2))!
-    return (0 <= nn) && (nn < 30)
+    return bundleIdentifier == "de.taz.taz.neo"
   }()
 
-  /// Is this release a Release (ie AppStore) version (last two digits of 
-  /// buildNumber < 100 and >= 60)
+  /// Is this  the App Store App
   public static var isRelease: Bool = {
-    let nn = Int(buildNumber.suffix(2))!
-    return (60 <= nn) && (nn < 100)
+    return bundleIdentifier == "de.taz.taz.2"
   }()
   
   
