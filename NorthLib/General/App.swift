@@ -214,48 +214,6 @@ open class App {
   /// List of upcomming Features
   /// showBottomTilesAnimation is a ConfigVariable
   public enum Feature { case  PDFEXPORT, INTERNALBROWSER}
-
-  /**
-   Set alternate icon depending on alpha/beta/release version
-   there must be PNG images named alpha@[23]x.png, beta[23]x.png
-   and release[23]x.png available.
-   
-   If the current icon differs from the icon that should be used on
-   the home screen, the App icon is changed. This invokes an
-   Apple controlled alert telling the user that the icon will change.
-   If given, a prepare closure is called before and after the icon
-   change.
-   
-   - parameters:
-     - alpha: Name of icon to use for alpha versions
-     - beta: Name of icon to use for beta versions
-     - release: Name of icon to use for release versions
-     - prepare: Closure to call before and after icon changes
-                The Bool argument indicates whether the closure
-                is called before (true) or after the icon change
-  **/
-  public static func setAlternateIcon(alpha: String = "Alpha", 
-    beta: String = "Beta", release: String = "Release",
-    prepare: ((String?, String, Bool)->())? = nil) {
-    if UIApplication.shared.supportsAlternateIcons {
-      let oldName = UIApplication.shared.alternateIconName
-      var newName: String?
-      if isAlpha { newName = "Alpha" }
-      else if isBeta { newName = "Beta" }
-      else { newName = nil }
-      if oldName != newName {
-        if newName == nil { newName = "Release" }
-        prepare?(oldName, newName!, true)
-        UIApplication.shared.setAlternateIconName(newName) { err in
-          if err != nil { 
-            Log.error("Can't set alternate icon to: \(newName!)") 
-          }
-          prepare?(oldName, newName!, false)
-        }
-      }
-    }
-    else { Log.error("Alternate Icons are not supported") }
-  }
   
   /// Bundle identifier of currently running app
   public static var bundleIdentifier: String {
