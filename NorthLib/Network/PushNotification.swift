@@ -8,14 +8,7 @@
 import Foundation
 
 /// Wrapper class for push notifications
-open class PushNotification: NSObject, UNUserNotificationCenterDelegate, DoesLog {  
-  // Notification received
-  public func application(_ application: UIApplication, didReceiveRemoteNotification
-    userInfo: [AnyHashable : Any], fetchCompletionHandler
-    completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
-    notifier.receive(userInfo)
-    completionHandler(UIBackgroundFetchResult.noData)
-  }
+open class PushNotification: NSObject, UNUserNotificationCenterDelegate, DoesLog {
   
   /// AlertPayload defines the alert message of the standard payload
   public class AlertPayload: Decodable, ToString {
@@ -424,10 +417,13 @@ open class NotifiedDelegate: UIResponder, UIApplicationDelegate,
     notifier.register(token: nil)
   }
   
-
-  
-
-  
+  // Notification received
+  public func application(_ application: UIApplication, didReceiveRemoteNotification
+    userInfo: [AnyHashable : Any], fetchCompletionHandler
+    completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+    notifier.receive(userInfo)
+    completionHandler(UIBackgroundFetchResult.noData)
+  }
   
   /// Lock all view controllers not obeying the CanRotate protocol to portrait orientation
   public func application(_ application: UIApplication, supportedInterfaceOrientationsFor 
