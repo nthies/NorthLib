@@ -21,6 +21,7 @@
 		770482C725D41AC600CBABDC /* ObjectExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 770482C625D41AC600CBABDC /* ObjectExtension.swift */; };
 		7754452925D15F2300ABE3F8 /* SpeechSynthesizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7754452825D15F2300ABE3F8 /* SpeechSynthesizer.swift */; };
 		777FC6ED26021D51004DD554 /* DownloadStatusButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 777FC6EC26021D51004DD554 /* DownloadStatusButton.swift */; };
+		94487DAA274BC48F0066BCD0 /* LocalNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94487DA9274BC48F0066BCD0 /* LocalNotifications.swift */; };
 		94C84AF925FB6927000A5ACC /* GradientView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C84AF825FB6927000A5ACC /* GradientView.swift */; };
 		AE08C493240D476300D41E91 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE08C492240D476300D41E91 /* Theme.swift */; };
 		AE08C49724101CA900D41E91 /* FontExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE08C49624101CA900D41E91 /* FontExtensions.swift */; };
@@ -132,6 +133,7 @@
 		7754452825D15F2300ABE3F8 /* SpeechSynthesizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpeechSynthesizer.swift; sourceTree = "<group>"; };
 		777FC6EC26021D51004DD554 /* DownloadStatusButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadStatusButton.swift; sourceTree = "<group>"; };
 		77C00CFE25DA9A5C00964861 /* TODO.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TODO.md; sourceTree = "<group>"; };
+		94487DA9274BC48F0066BCD0 /* LocalNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalNotifications.swift; sourceTree = "<group>"; };
 		94C84AF825FB6927000A5ACC /* GradientView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradientView.swift; sourceTree = "<group>"; };
 		AE08C492240D476300D41E91 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		AE08C49624101CA900D41E91 /* FontExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontExtensions.swift; sourceTree = "<group>"; };
@@ -374,6 +376,7 @@
 				C74ED03E25012A22007EB881 /* UIStyleChangeDelegate.swift */,
 				AE831430265CDF40004DBF9E /* Callback.swift */,
 				AE32CC8D269EC65900A1291A /* ZipFile.swift */,
+				94487DA9274BC48F0066BCD0 /* LocalNotifications.swift */,
 			);
 			path = General;
 			sourceTree = "<group>";
@@ -651,6 +654,7 @@
 				006A1004255EEDF3001CBB0B /* PdfOverviewCollectionVC.swift in Sources */,
 				AE71231A231EB8B100B715A8 /* zip.cpp in Sources */,
 				AE480F592409465B0014F9D9 /* ImageExtensions.swift in Sources */,
+				94487DAA274BC48F0066BCD0 /* LocalNotifications.swift in Sources */,
 				AE71231F231FFDFD00B715A8 /* ZipStream.mm in Sources */,
 				AE9851422320FDCE00EAC9D8 /* Database.swift in Sources */,
 				7754452925D15F2300ABE3F8 /* SpeechSynthesizer.swift in Sources */,
