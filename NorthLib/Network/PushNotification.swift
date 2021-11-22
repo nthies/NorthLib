@@ -419,7 +419,7 @@ open class NotifiedDelegate: UIResponder, UIApplicationDelegate,
   
   // Notification received
   public func application(_ application: UIApplication, didReceiveRemoteNotification
-    userInfo: [AnyHashable : Any], fetchCompletionHandler 
+    userInfo: [AnyHashable : Any], fetchCompletionHandler
     completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
     notifier.receive(userInfo)
     completionHandler(UIBackgroundFetchResult.noData)
@@ -450,3 +450,5 @@ open class NotifiedDelegate: UIResponder, UIApplicationDelegate,
   }
   
 } // NotifiedDelegate
+
+
