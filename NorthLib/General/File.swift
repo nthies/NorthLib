@@ -8,21 +8,6 @@
 import Foundation
 
 public extension File {
-  static func logToFile(_ msg:String){
-    let f = anotherLogFile
-    if f.exists {
-      f.string = "\(Date().ddMMyy_HHmmss) :: \(msg)\n\(f.string)"
-    }
-    else {
-      f.string = "\(Date().ddMMyy_HHmmss) :: \(msg)"
-    }
-  }
-  
-  static var anotherLogFile:File{
-    get{
-      return File(Dir.tmpPath + "/anotherLogFile.txt")
-    }
-  }
   
   public static func notifyUser(_ text:String = "Ausgabe wird derzeit im Hintergrund geladen"){
     
