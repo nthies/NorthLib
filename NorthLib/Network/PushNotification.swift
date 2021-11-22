@@ -8,21 +8,14 @@
 import Foundation
 
 /// Wrapper class for push notifications
-open class PushNotification: NSObject, UNUserNotificationCenterDelegate, DoesLog {
-  
-  public func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) {
-    log("didReceive response #1")
-    File.notifyUser("didReceive response #1")
+open class PushNotification: NSObject, UNUserNotificationCenterDelegate, DoesLog {  
+  // Notification received
+  public func application(_ application: UIApplication, didReceiveRemoteNotification
+    userInfo: [AnyHashable : Any], fetchCompletionHandler
+    completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+    notifier.receive(userInfo)
+    completionHandler(UIBackgroundFetchResult.noData)
   }
-  
-  public func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
-    log("didReceive response #2")
-    File.notifyUser("didReceive response #2")
-    completionHandler()
-    log("done")
-  }
-
-  
   
   /// AlertPayload defines the alert message of the standard payload
   public class AlertPayload: Decodable, ToString {
