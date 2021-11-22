@@ -27,6 +27,7 @@ public class AlertController : UIAlertController {
 
 /// A wrapper around some UIAlertController using static methods
 open class Alert {
+  public static var sharedAlertTintColor:UIColor?
   
   /// Popup message to user
   public static func message(title: String? = nil, message: String, closure: (()->())? = nil) {
@@ -71,6 +72,10 @@ open class Alert {
       //message ist automatic title (bold) if no title given!
       let popupMessage = title==nil ? message : "\n\(message)"
       let alert = AlertController(title: title, message:popupMessage , preferredStyle: .alert)
+      if let tint = Alert.sharedAlertTintColor {
+        alert.view.tintColor = tint
+      }
+      
       let okButton = UIAlertAction(title: okText, style: okStyle) { _ in closure?(true) }
       let cancelButton = UIAlertAction(title: cancelText, style: .cancel) { _ in closure?(false) }
       alert.addAction(okButton)
@@ -111,3 +116,12 @@ open class Alert {
   }
   
 } // Alert
+
+
+public extension UIAlertController {
+  func defaultStyle(){
+    if let col = Alert.sharedAlertTintColor {
+      self.view.tintColor = col
+    }
+  }
+}

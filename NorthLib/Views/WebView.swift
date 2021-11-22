@@ -494,6 +494,7 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
                       completionHandler: @escaping () -> Void) {
     let ac = UIAlertController(title: "JavaScript", message: message,
                preferredStyle: UIAlertController.Style.alert)
+    ac.defaultStyle()
     ac.addAction(UIAlertAction(title: "OK",
                                style: UIAlertAction.Style.cancel) { _ in
       completionHandler() })
