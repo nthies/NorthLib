@@ -180,37 +180,7 @@ open class App {
   public static var buildNumber: String {
     return info["CFBundleVersion"] as! String
   }
-  
-  /// Is the beta App
-  public static var isBeta: Bool = {
-    return bundleIdentifier == "de.taz.taz.beta"
-  }()
     
-  /// Is the alpha App
-  public static var isAlpha: Bool = {
-    return bundleIdentifier == "de.taz.taz.neo"
-  }()
-
-  /// Is this  the App Store App
-  public static var isRelease: Bool = {
-    return bundleIdentifier == "de.taz.taz.2"
-  }()
-  
-  
-  /// Get info is new Features are available
-  /// Previously used Compiler Flags, unfortunatly they are harder to find within Source Code Search
-  /// and dependecy to Alpha App Versions must be set for each Build
-  /// - Parameter feature: Feature to check
-  /// - Returns: true if Feature is Available
-  public static func isAvailable(_ feature: Feature) -> Bool {
-    switch feature {
-      case .INTERNALBROWSER:
-        return isAlpha //Only in Alpha Versions
-      case .PDFEXPORT:
-        return isAlpha //Only in Alpha Versions
-    }
-  }
-  
   /// List of upcomming Features
   /// showBottomTilesAnimation is a ConfigVariable
   public enum Feature { case  PDFEXPORT, INTERNALBROWSER}
