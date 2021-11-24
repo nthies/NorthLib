@@ -323,12 +323,12 @@ public func pin(_ la: LayoutDimension, to: LayoutDimension,
 
 /// Pin all edges of one view to the edges of another view
 @discardableResult
-public func pin(_ view: UIView, to: UIView, dist: CGFloat = 0) -> (top: NSLayoutConstraint, 
+public func pin(_ view: UIView, to: UIView, dist: CGFloat = 0, priority: UILayoutPriority? = nil) -> (top: NSLayoutConstraint,
   bottom: NSLayoutConstraint, left: NSLayoutConstraint, right: NSLayoutConstraint) {
-  let top = pin(view.top, to: to.top, dist: dist)
-  let bottom = pin(view.bottom, to: to.bottom, dist: -dist)
-  let left = pin(view.left, to: to.left, dist: dist)
-  let right = pin(view.right, to: to.right, dist: -dist)
+  let top = pin(view.top, to: to.top, dist: dist, priority: priority)
+  let bottom = pin(view.bottom, to: to.bottom, dist: -dist, priority: priority)
+  let left = pin(view.left, to: to.left, dist: dist, priority: priority)
+  let right = pin(view.right, to: to.right, dist: -dist, priority: priority)
   return (top, bottom, left, right)
 }
 
@@ -353,7 +353,7 @@ public typealias tblrConstrains = (
 ///borders Helper
 /// Pin all edges, except one of one view to the edges of another view's safe layout guide
 @discardableResult
-public func pin(_ view: UIView, to: UIView, dist: CGFloat = 0, exclude: UIRectEdge? = nil) -> tblrConstrains {
+public func pin(_ view: UIView, to: UIView, dist: CGFloat = 0, exclude: UIRectEdge) -> tblrConstrains {
   var top:NSLayoutConstraint?, left:NSLayoutConstraint?, bottom:NSLayoutConstraint?, right:NSLayoutConstraint?
   exclude != UIRectEdge.top ? top = NorthLib.pin(view.top, to: to.top, dist: dist) : nil
   exclude != UIRectEdge.left ? left = NorthLib.pin(view.left, to: to.left, dist: dist) : nil
