@@ -88,7 +88,6 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
     // Add view to page cell
     private func addView(_ view: UIView, doRotate: Bool) {
       rotateView(view, doRotate: doRotate)
-      let nSubViews = contentView.subviews.count
       contentView.subviews.forEach { $0.removeFromSuperview() }
       contentView.addSubview(view)
       pin(view, to: contentView)

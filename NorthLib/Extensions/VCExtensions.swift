@@ -108,7 +108,7 @@ public extension UIViewController {
   /**
    * `top` returns the top most view controller
    */
-  class func top(controller: UIViewController? = UIApplication.shared.keyWindow?.rootViewController)
+  class func top(controller: UIViewController? = currentRootController)
     -> UIViewController? {
     if let navigationController = controller as? UINavigationController {
       return top(controller: navigationController.visibleViewController)
@@ -123,6 +123,22 @@ public extension UIViewController {
     }
     return controller
   }
+  
+  /// current if applications key window root controller 
+  static var currentRootController:UIViewController? { UIApplication.shared.keyWindow?.rootViewController }
+  
+  /// check if applications key window root controller is requested type or is navigationcontroller and
+  /// contain requested type in its viewControllers property
+  /// - Parameter type: type to check
+  /// - Returns: true if controller is in navigation/view hirarchy
+  class func keyWindowViewControllerContain(type: AnyClass) -> Bool {
+    let root = currentRootController
+    for ctrl in (root as? UINavigationController)?.viewControllers ?? [] {
+      if ctrl.isKind(of: type) { return true}
+    }
+    return root?.isKind(of: type) ?? false
+  }
+  
   
   /**
    loadFromNib instantiates a view controller from a nib file
