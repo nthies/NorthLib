@@ -91,6 +91,52 @@ public extension UIView {
   }
 }
 
+/// a extension to wrap a view with another view and given paddings/insets
+public extension UIView {
+  
+  /// add self to a wrapper View, pin with dist and return wrapper view
+  /// - Parameter dist: dist to pin between wrapper and self
+  /// - Returns: wrapper
+  @discardableResult
+  func wrapper(_ insets: UIEdgeInsets) -> UIView {
+    let wrapper = UIView()
+    wrapper.addSubview(self)
+    pin(self.left, to: wrapper.left, dist: insets.left)
+    pin(self.right, to: wrapper.right, dist: insets.right)
+    pin(self.top, to: wrapper.top, dist: insets.top)
+    pin(self.bottom, to: wrapper.bottom, dist: insets.bottom)
+    return wrapper
+  }
+}
+
+///chaining helper extension to set background color
+public extension UIView {
+  /// set backgroundColor and return self (for chaining)
+  /// - Parameter backgroundColor: backgroundColor to set
+  /// - Returns: self
+  @discardableResult
+  func set(backgroundColor: UIColor) -> UIView {
+    self.backgroundColor = backgroundColor
+    return self
+  }
+}
+
+//blur background helper, not working
+//extension UIView {
+//  ///Blur Idea from: https://stackoverflow.com/questions/30953201/adding-blur-effect-to-background-in-swift
+//  /// not working here for chaining, need also effect style depending dark/light
+//  func addBlur() -> UIView {
+//    let blurEffect = UIBlurEffect(style: UIBlurEffect.Style.extraLight)
+//    let blurEffectView = UIVisualEffectView(effect: blurEffect)
+//    blurEffectView.frame = self.bounds
+//    blurEffectView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+//    self.addSubview(blurEffectView)
+//    return self
+//  }
+//}
+
+
+
 /// A UIView extension to show/hide views animated
 public extension Array where Element==UIView {
   func showAnimated(duration:CGFloat=0.3, completion: (()->())? = nil){
@@ -119,8 +165,6 @@ public extension Array where Element==UIView {
     }
   }
 }
-
-
 
 // Layout anchors and corresponding views:
 public struct LayoutAnchorX {
