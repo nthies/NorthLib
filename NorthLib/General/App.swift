@@ -183,7 +183,7 @@ open class App {
     
   /// List of upcomming Features
   /// showBottomTilesAnimation is a ConfigVariable
-  public enum Feature { case  PDFEXPORT, INTERNALBROWSER}
+  public enum Feature { case  PDFEXPORT, INTERNALBROWSER, SEARCH_CONTEXTMENU}
   
   /// Bundle identifier of currently running app
   public static var bundleIdentifier: String {
