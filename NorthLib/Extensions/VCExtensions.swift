@@ -129,14 +129,26 @@ public extension UIViewController {
   
   /// check if applications key window root controller is requested type or is navigationcontroller and
   /// contain requested type in its viewControllers property
-  /// - Parameter type: type to check
+  /// - Parameter types : type to check
   /// - Returns: true if controller is in navigation/view hirarchy
-  class func keyWindowViewControllerContain(type: AnyClass) -> Bool {
+  class func keyWindowViewControllerContain(_ types: AnyClass...) -> Bool {
     let root = currentRootController
+    
     for ctrl in (root as? UINavigationController)?.viewControllers ?? [] {
-      if ctrl.isKind(of: type) { return true}
+      for type in types {
+        print("\(ctrl) is none of: \(type)")
+        if ctrl.isKind(of: type) { return true}
+      }
     }
-    return root?.isKind(of: type) ?? false
+    
+    if let rctrl = root {
+      for type in types {
+        print("2. \(rctrl) is none of: \(type)")
+        if rctrl.isKind(of: type) { return true}
+      }
+    }
+    
+    return false
   }
   
   
