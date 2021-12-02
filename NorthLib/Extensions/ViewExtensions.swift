@@ -91,6 +91,52 @@ public extension UIView {
   }
 }
 
+/// a extension to wrap a view with another view and given paddings/insets
+public extension UIView {
+  
+  /// add self to a wrapper View, pin with dist and return wrapper view
+  /// - Parameter dist: dist to pin between wrapper and self
+  /// - Returns: wrapper
+  @discardableResult
+  func wrapper(_ insets: UIEdgeInsets) -> UIView {
+    let wrapper = UIView()
+    wrapper.addSubview(self)
+    pin(self.left, to: wrapper.left, dist: insets.left)
+    pin(self.right, to: wrapper.right, dist: insets.right)
+    pin(self.top, to: wrapper.top, dist: insets.top)
+    pin(self.bottom, to: wrapper.bottom, dist: insets.bottom)
+    return wrapper
+  }
+}
+
+///chaining helper extension to set background color
+public extension UIView {
+  /// set backgroundColor and return self (for chaining)
+  /// - Parameter backgroundColor: backgroundColor to set
+  /// - Returns: self
+  @discardableResult
+  func set(backgroundColor: UIColor) -> UIView {
+    self.backgroundColor = backgroundColor
+    return self
+  }
+}
+
+//blur background helper, not working
+//extension UIView {
+//  ///Blur Idea from: https://stackoverflow.com/questions/30953201/adding-blur-effect-to-background-in-swift
+//  /// not working here for chaining, need also effect style depending dark/light
+//  func addBlur() -> UIView {
+//    let blurEffect = UIBlurEffect(style: UIBlurEffect.Style.extraLight)
+//    let blurEffectView = UIVisualEffectView(effect: blurEffect)
+//    blurEffectView.frame = self.bounds
+//    blurEffectView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+//    self.addSubview(blurEffectView)
+//    return self
+//  }
+//}
+
+
+
 /// A UIView extension to show/hide views animated
 public extension Array where Element==UIView {
   func showAnimated(duration:CGFloat=0.3, completion: (()->())? = nil){
@@ -119,8 +165,6 @@ public extension Array where Element==UIView {
     }
   }
 }
-
-
 
 // Layout anchors and corresponding views:
 public struct LayoutAnchorX {
@@ -323,12 +367,12 @@ public func pin(_ la: LayoutDimension, to: LayoutDimension,
 
 /// Pin all edges of one view to the edges of another view
 @discardableResult
-public func pin(_ view: UIView, to: UIView, dist: CGFloat = 0) -> (top: NSLayoutConstraint, 
+public func pin(_ view: UIView, to: UIView, dist: CGFloat = 0, priority: UILayoutPriority? = nil) -> (top: NSLayoutConstraint,
   bottom: NSLayoutConstraint, left: NSLayoutConstraint, right: NSLayoutConstraint) {
-  let top = pin(view.top, to: to.top, dist: dist)
-  let bottom = pin(view.bottom, to: to.bottom, dist: -dist)
-  let left = pin(view.left, to: to.left, dist: dist)
-  let right = pin(view.right, to: to.right, dist: -dist)
+  let top = pin(view.top, to: to.top, dist: dist, priority: priority)
+  let bottom = pin(view.bottom, to: to.bottom, dist: -dist, priority: priority)
+  let left = pin(view.left, to: to.left, dist: dist, priority: priority)
+  let right = pin(view.right, to: to.right, dist: -dist, priority: priority)
   return (top, bottom, left, right)
 }
 
@@ -353,7 +397,7 @@ public typealias tblrConstrains = (
 ///borders Helper
 /// Pin all edges, except one of one view to the edges of another view's safe layout guide
 @discardableResult
-public func pin(_ view: UIView, to: UIView, dist: CGFloat = 0, exclude: UIRectEdge? = nil) -> tblrConstrains {
+public func pin(_ view: UIView, to: UIView, dist: CGFloat = 0, exclude: UIRectEdge) -> tblrConstrains {
   var top:NSLayoutConstraint?, left:NSLayoutConstraint?, bottom:NSLayoutConstraint?, right:NSLayoutConstraint?
   exclude != UIRectEdge.top ? top = NorthLib.pin(view.top, to: to.top, dist: dist) : nil
   exclude != UIRectEdge.left ? left = NorthLib.pin(view.left, to: to.left, dist: dist) : nil
@@ -410,62 +454,3 @@ public class Label: UILabel, Touchable {
   public var tapRecognizer = TapRecognizer()
 }
 
-/// Helpers to add specific UI Attributes just to iOS 13 or not
-/// usage.eg: myView.iosLower13?.pinWidth(20)
-public extension NSObject{
-  var iosLower13 : Self?{
-    get{
-      if #available(iOS 13, *) {
-        return nil
-      }
-      else {
-        return self
-        
-      }
-    }
-  }
-  
-  var iosHigher13 : Self?{
-    get{
-      if #available(iOS 13, *) {
-        return self
-      }
-      else {
-        return nil
-      }
-    }
-  }
-  
-  var iosLower14 : Self?{
-    get{
-      if #available(iOS 14, *) {
-        return nil
-      }
-      else {
-        return self
-        
-      }
-    }
-  }
-  
-  var iosHigher14 : Self?{
-    get{
-      if #available(iOS 14, *) {
-        return self
-      }
-      else {
-        return nil
-      }
-    }
-  }
-}
-
-public var gt_iOS14 : Bool {
-  if #available(iOS 14, *) { return true }
-  return false
-}
-
-public var gt_iOS13 : Bool {
-  if #available(iOS 13, *) { return true }
-  return false
-}

@@ -22,6 +22,12 @@ public class Toast {
   
   // MARK: Public
   public static func show(_ text: String, _ type: ToastType = .info) {
+    if !Thread.isMainThread {
+      onMainAfter {
+        Self.show(text,type)
+      }
+      return;
+    }
     let dist : CGFloat = 10 //|-Screen-10-AlertBG-10-Text-10-AlertBG-10-Screen-|
     let duration = 2 + text.count/40
     var appFrame = CGRect(origin: .zero, size: UIWindow.size)

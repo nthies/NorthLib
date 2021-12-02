@@ -1287,6 +1287,12 @@ open class ImageView: ButtonView {
 @IBDesignable
 open class TextView: ButtonView {
 
+  /// Draw circle around the Label
+  open var isCircle = false
+  
+  /// Fill color of circle
+  open var circleColor = UIColor.clear
+  
   open var label = LabelWithInsets()
   
   @IBInspectable
@@ -1315,6 +1321,10 @@ open class TextView: ButtonView {
   
   override open func draw(_ rect: CGRect) {
     super.draw(rect)
+    if isCircle && circleColor != .clear {
+      drawCircle(rect)
+    }
+    
     let w = bounds.size.width, h = bounds.size.height,
         vi = h * (vinset/2),
         hi = w * (hinset/2)
@@ -1325,6 +1335,29 @@ open class TextView: ButtonView {
     frame.origin.y = vi
     label.frame = frame
     label.textColor = strokeColor
+  }
+  
+  func drawCircle(_ rect: CGRect) {
+    let w = bounds.size.width,
+        lw = (lineWidth+0.02) * w,
+        center = convert(self.center, from: self.superview),
+        radius = (w - 2*hinset - 2*lw)/2
+    let path = UIBezierPath()
+    path.lineWidth = lw
+    path.lineJoinStyle = .miter
+    strokeColor.setStroke()
+    if isCircle {
+      path.circle(center, radius: radius)
+      circleColor.setFill()
+      path.fill()
+      if circleColor == UIColor.clear {
+        strokeColor.setStroke()
+        path.stroke()
+      }
+      path.removeAllPoints()
+    }
+    strokeColor.setStroke()
+    path.stroke()
   }
   
   override open func layoutSubviews() {
