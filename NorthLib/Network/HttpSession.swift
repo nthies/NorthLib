@@ -203,6 +203,8 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
   /// Perform debug logging?
   public static var isDebug: Bool = true
   public var isDebugLogging: Bool { return HttpSession.isDebug }
+  
+  public var isDownloading: Bool { return !jobs.isEmpty }
 
   /// Dictionary of background completion handlers 
   public static var bgCompletionHandlers: [String:()->()] = [:]  
