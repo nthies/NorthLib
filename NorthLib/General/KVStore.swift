@@ -219,9 +219,11 @@ open class KVStore {
 
   /// setDefaults is used to set all key/value pairs given in 'values'
   /// if they are not already defined.
-  public func setDefaults(values: Values, isNotify: Bool = false) {
+  public func setDefaults(values: Values, isNotify: Bool = false, forceWrite: Bool = false) {
     for (k,v) in values.values {
-      setIfUndefined(key: k, val: v, scope: values.scope, isNotify: isNotify)
+      forceWrite
+      ? set(key: k, val: v, scope: values.scope, isNotify: isNotify)
+      : setIfUndefined(key: k, val: v, scope: values.scope, isNotify: isNotify)
     }
   }
     
