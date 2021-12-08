@@ -134,9 +134,9 @@ public class Log {
     /// toString returns a minimalistic string representing the current message
     public func toString() -> String {
       let t = tstamp.date.components()
-      var s = String( format: "(%@:%02d %02d:%02d:%02d) ", 
-                      onMainThread ? "M" : "T",serialNumber, t.hour!,
-                      t.minute!, t.second! )
+      var s = String( format: "(%@:%02d %02d.%02d %02d:%02d:%02d) ", 
+                      onMainThread ? "M" : "T",serialNumber, t.day ?? 0, t.month ?? 0, t.hour ?? 0,
+                      t.minute ?? 0, t.second ?? 0 )
       if let cn = className { s += cn + "." }
       s += "\(funcName) \(logLevel)"
       if isException { s += " Exception" }
