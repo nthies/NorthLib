@@ -19,22 +19,8 @@ open class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
   public func whenScrolled(minRatio: CGFloat, _ closure: @escaping (CGFloat) -> ()) {
     whenScrolledHandler = (minRatio, closure)
   }
-  var _menuItems: [(title: String, icon: String, closure: (String)->())] = []
-  public var menuItems: [(title: String, icon: String, closure: (String)->())] {
-    get{
-      return _menuItems
-    }
-    set{
-      var newItems = newValue
-      newItems.insert((title: "Zoom 1:1", icon: "1.magnifyingglass", closure: { [weak self] _ in
-        if let ziv = self?.currentView as? ZoomedImageView  {
-          ziv.scrollView.setZoomScale(1.0, animated: true)
-        }
-      }), at: 0)
-      _menuItems = newItems
-    }
-  }
   
+  public var menuItems: [(title: String, icon: String, closure: (String)->())] = []
     
   public var pdfModel : PdfModel? {
     didSet{
