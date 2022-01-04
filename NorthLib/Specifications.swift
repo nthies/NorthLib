@@ -64,6 +64,32 @@ public protocol ZoomedImageViewSpec where Self: UIView {
   func invalidateLayout()
 }
 
+public protocol ModalCloseable where Self: UIViewController {
+  var xButton: Button<CircledXView> { get }
+}
+
+public extension ModalCloseable {
+  static var buttonDist: CGFloat{
+    return UIWindow.size.width < 370
+    ? CGFloat(13.0)
+    : CGFloat(15.0)
+  }
+  
+  func setupXButtonIfNeeded(targetView:UIView,
+                            topDist:CGFloat = buttonDist,
+                            rightDist:CGFloat = buttonDist){
+    if xButton.superview != nil { return }
+    targetView.addSubview(xButton)
+    pin(xButton.right, to: targetView.right, dist: -rightDist)
+    pin(xButton.top, to: targetView.top, dist: topDist)
+    xButton.onPress { [weak self] _ in
+      guard let self = self else { return }
+      self.navigationController?.dismiss(animated: true)
+    }
+  }
+}
+
+
 public extension ZoomedImageViewSpec {
   
   /// This closure is called when the X-Button has been pressed
