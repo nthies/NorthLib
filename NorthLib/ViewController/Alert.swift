@@ -30,23 +30,36 @@ open class Alert {
   public static var sharedAlertTintColor:UIColor?
   
   /// Popup message to user
-  public static func message(title: String? = nil, message: String, closure: (()->())? = nil) {
-    self.message(title: title, message: message, closure: closure, additionalActions: nil)
+  public static func message(title: String? = nil,
+                             message: String,
+                             presentationController: UIViewController? = UIViewController.top(),
+                             closure: (()->())? = nil
+                             ) {
+    self.message(title: title,
+                 message: message,
+                 additionalActions: nil,
+                 presentationController: presentationController,
+                 closure: closure)
   }
   
   public static func message(title: String? = nil,
                              message: String,
-                             closure: (()->())? = nil,
-                             additionalActions : [UIAlertAction]? = nil) {
+                             additionalActions : [UIAlertAction]? = nil,
+                             presentationController: UIViewController? = UIViewController.top(),
+                             closure: (()->())? = nil) {
     var actions = additionalActions ?? []
     let okButton = UIAlertAction(title: "OK", style: .cancel) { _ in closure?() }
     actions.append(okButton)
-    self.message(title: title, message: message, actions: actions)
+    self.message(title: title,
+                 message: message,
+                 actions: actions,
+                 presentationController: presentationController)
   }
   
   public static func message(title: String? = nil,
                              message: String,
-                             actions : [UIAlertAction]) {
+                             actions : [UIAlertAction],
+                             presentationController: UIViewController? = UIViewController.top()) {
     onMain {
       let alert = AlertController(title: title, message: message, preferredStyle: .alert)
       for action in actions {
@@ -54,7 +67,7 @@ open class Alert {
       }
       //present even if there is still a modal View presented
       Log.log("Show Alert with Title: \(title ?? "-") and Message: \(message) AlreadyPresenting? \(UIViewController.top()?.presentedViewController != nil)")
-      UIViewController.top()?.present(alert, animated: true, completion: nil)
+      presentationController?.present(alert, animated: true, completion: nil)
     }
   }
   
@@ -64,6 +77,7 @@ open class Alert {
                              okText: String = "OK",
                              cancelText: String = "Abbrechen",
                              isDestructive: Bool = false,
+                             presentationController: UIViewController? = UIViewController.top(),
                              closure: ((Bool)->())?) {
     onMain {
       var okStyle: UIAlertAction.Style = .default
@@ -81,7 +95,7 @@ open class Alert {
       alert.addAction(okButton)
       alert.addAction(cancelButton)
       //present even if there is still a modal View presented
-      UIViewController.top()?.present(alert, animated: false, completion: nil)
+      presentationController?.present(alert, animated: false, completion: nil)
     }
   }
 
