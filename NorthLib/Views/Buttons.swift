@@ -1205,23 +1205,21 @@ open class ImportView: ExportView {
   }
 }
 
-
-/**
-  ButtonView displaying an Image. 
-*/
 // MARK: - ImageView
 @IBDesignable
 open class ImageView: ButtonView {
 
   open var imageView = UIImageView()
+  open var useAbsoluteImageLayout = false
   
   private var aspectConstraint: NSLayoutConstraint?
   private var widthConstraint: NSLayoutConstraint?
+  private var yAxisImageConstraint: NSLayoutConstraint?
   
   open var image: UIImage? {
     get { imageView.image }
-    set (img) { 
-      imageView.image = img 
+    set (img) {
+      imageView.image = img
       aspectConstraint?.isActive = false
       if let img = img {
         aspectConstraint = imageView.pinAspect(ratio: img.size.width/img.size.height)
@@ -1259,14 +1257,18 @@ open class ImageView: ButtonView {
     super.setup()
     addSubview(imageView)
     pin(imageView.centerX, to: self.centerX)
-    pin(imageView.centerY, to: self.centerY)
+    yAxisImageConstraint = pin(imageView.centerY, to: self.centerY)
   }
     
   override open func layoutSubviews() {
     super.layoutSubviews()
-    let w = bounds.size.width * (1-2*hinset)
+    let w
+    = useAbsoluteImageLayout
+    ? bounds.size.width - 2*hinset
+    : bounds.size.width * (1-2*hinset)
     widthConstraint?.isActive = false
     widthConstraint = imageView.pinWidth(w)
+    yAxisImageConstraint?.constant = vinset
   }
   
 } // class ImageView
