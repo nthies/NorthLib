@@ -176,7 +176,14 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
       delay(seconds: 0.01) { [weak self] in
         guard let self = self else { return }
         self.isInitialized = true
-        if let idx = self.initialIndex { self.index = idx }
+        if var idx = self.initialIndex {
+          if idx > self.count - 1 {
+            self.debug("Prevent Chash set last index: \(self.count - 1) instead: \(idx)")
+            idx = self.count - 1
+          }
+          self.index = idx
+          
+        }
         self.isHidden = false
       }
     }
