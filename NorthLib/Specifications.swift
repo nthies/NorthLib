@@ -65,7 +65,7 @@ public protocol ZoomedImageViewSpec where Self: UIView {
 }
 
 public protocol ModalCloseable where Self: UIViewController {
-  var xButton: Button<CircledXView> { get }
+  var xButton: Button<ImageView> { get }
 }
 
 public extension ModalCloseable {
