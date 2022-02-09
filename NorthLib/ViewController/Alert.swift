@@ -32,7 +32,7 @@ open class Alert {
   /// Popup message to user
   public static func message(title: String? = nil,
                              message: String,
-                             presentationController: UIViewController? = UIViewController.top(),
+                             presentationController: UIViewController? = nil,
                              closure: (()->())? = nil
                              ) {
     self.message(title: title,
@@ -45,7 +45,7 @@ open class Alert {
   public static func message(title: String? = nil,
                              message: String,
                              additionalActions : [UIAlertAction]? = nil,
-                             presentationController: UIViewController? = UIViewController.top(),
+                             presentationController: UIViewController? = nil,
                              closure: (()->())? = nil) {
     var actions = additionalActions ?? []
     let okButton = UIAlertAction(title: "OK", style: .cancel) { _ in closure?() }
@@ -59,7 +59,7 @@ open class Alert {
   public static func message(title: String? = nil,
                              message: String,
                              actions : [UIAlertAction],
-                             presentationController: UIViewController? = UIViewController.top()) {
+                             presentationController: UIViewController? = nil) {
     onMain {
       let alert = AlertController(title: title, message: message, preferredStyle: .alert)
       for action in actions {
@@ -67,7 +67,9 @@ open class Alert {
       }
       //present even if there is still a modal View presented
       Log.log("Show Alert with Title: \(title ?? "-") and Message: \(message) AlreadyPresenting? \(UIViewController.top()?.presentedViewController != nil)")
-      presentationController?.present(alert, animated: true, completion: nil)
+      
+      let target = presentationController ?? UIViewController.top()
+      target?.present(alert, animated: true, completion: nil)
     }
   }
   
@@ -77,7 +79,7 @@ open class Alert {
                              okText: String = "OK",
                              cancelText: String = "Abbrechen",
                              isDestructive: Bool = false,
-                             presentationController: UIViewController? = UIViewController.top(),
+                             presentationController: UIViewController? = nil,
                              closure: ((Bool)->())?) {
     onMain {
       var okStyle: UIAlertAction.Style = .default
@@ -95,7 +97,8 @@ open class Alert {
       alert.addAction(okButton)
       alert.addAction(cancelButton)
       //present even if there is still a modal View presented
-      presentationController?.present(alert, animated: false, completion: nil)
+      let target = presentationController ?? UIViewController.top()
+      target?.present(alert, animated: true, completion: nil)
     }
   }
 
