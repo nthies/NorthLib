@@ -8,7 +8,7 @@
 import Foundation
 
 /// An Error that may be thrown during encoding/decoding
-public struct CodingError: SimpleError {  
+public struct CodingError: Error {  
   var msg: String
   public var description: String { 
     return "CodingError: \(msg)" 
