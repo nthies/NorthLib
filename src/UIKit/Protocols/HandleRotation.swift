@@ -5,7 +5,7 @@
 //  Copyright © 2020 Norbert Thies. All rights reserved.
 //
 
-import Foundation
+import UIKit
 
 /// The Orientation closure is simply a wrapper around a closure which is
 /// called upon orientation changes.

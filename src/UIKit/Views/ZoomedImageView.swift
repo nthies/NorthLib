@@ -239,9 +239,9 @@ extension ZoomedImageView{
     scrollView.contentInsetAdjustmentBehavior = .never
     scrollView.addSubview(imageView)
     addSubview(scrollView)
-    NorthLib.pin(scrollView, to: self)
+    pin(scrollView, to: self)
     (imageViewTopConstraint, imageViewBottomConstraint, imageViewLeadingConstraint, imageViewTrailingConstraint) =
-      NorthLib.pin(imageView, to: scrollView)
+      pin(imageView, to: scrollView)
   }
 }
 

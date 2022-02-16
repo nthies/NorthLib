@@ -111,7 +111,7 @@ public class Overlay: NSObject, OverlaySpec, UIGestureRecognizerDelegate {
     shadeView?.backgroundColor = shadeColor
     shadeView!.alpha = 0.0
     activeVC.view.addSubview(shadeView!)
-    NorthLib.pin(shadeView!, to: activeVC.view)
+    pin(shadeView!, to: activeVC.view)
     contentView = overlayVC.view
     ///configure the overlay vc (TBD::may also create a new one?!)
     let overlayView = UIView()
@@ -155,7 +155,7 @@ public class Overlay: NSObject, OverlaySpec, UIGestureRecognizerDelegate {
       
     }
     overlayView.addSubview(contentView!)
-    NorthLib.pin(contentView!, to: overlayView)
+    pin(contentView!, to: overlayView)
     if overlaySize == nil {
       overlayVC.view.frame = activeVC.view.frame
     }
@@ -167,16 +167,16 @@ public class Overlay: NSObject, OverlaySpec, UIGestureRecognizerDelegate {
     //Do make it niche for ImageCollection VC for now!
     //set overlay view's origin if size given: center
     if overlaySize != nil {
-      NorthLib.pin(overlayVC.view.centerX, to: contentView!.centerX)
-      NorthLib.pin(overlayVC.view.centerY, to: contentView!.centerY)
+      pin(overlayVC.view.centerX, to: contentView!.centerX)
+      pin(overlayVC.view.centerY, to: contentView!.centerY)
       contentView?.setNeedsLayout()
       contentView?.layoutIfNeeded()
     }
     
-    let constr = NorthLib.pin(overlayView, toSafe: activeVC.view)
+    let constr = pin(overlayView, toSafe: activeVC.view)
     if let offset = bottomOffset {
       constr.bottom.isActive = false
-      NorthLib.pin(overlayView.bottom, to: activeVC.view.bottom, dist: -offset)
+      pin(overlayView.bottom, to: activeVC.view.bottom, dist: -offset)
     }
     
     activeVC.addChild(overlayVC)
@@ -682,8 +682,8 @@ extension ZoomedImageView : OverlayChildViewTransfer{
   public func addToOverlayContainer(_ container:UIView?){
     guard let container = container else { return }
     container.addSubview(xButton)
-    NorthLib.pin(xButton.right, to: container.rightGuide(), dist: -15)
-    NorthLib.pin(xButton.top, to: container.topGuide(), dist: 15)
+    pin(xButton.right, to: container.rightGuide(), dist: -15)
+    pin(xButton.top, to: container.topGuide(), dist: 15)
   }
   ///optional
   public func removeFromOverlay(){

@@ -5,7 +5,7 @@
 //  Copyright © 2020 Norbert Thies. All rights reserved.
 //
 
-import Foundation
+import UIKit
 
 /// Wrapper class for push notifications
 open class PushNotification: NSObject, UNUserNotificationCenterDelegate, DoesLog {
@@ -319,7 +319,10 @@ open class StatusBar: UIScrollView, UIScrollViewDelegate, HandleOrientation {
   }
   
   /// Returns true if the real status bar is hidden
-  public static var isHidden: Bool { return UIApplication.shared.isStatusBarHidden }
+  public static var isHidden: Bool { 
+    return UIViewController.keyWindow?.windowScene?.statusBarManager?
+      .isStatusBarHidden ?? true
+  }
   
   // Closure to call on status bar touch
   private var sbTap: ((StatusBar)->())?
