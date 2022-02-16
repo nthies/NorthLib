@@ -5,7 +5,6 @@
 //  Copyright © 2019 Norbert Thies. All rights reserved.
 //
 
-import Foundation
 
 /** 
  ToString simply demands a function toString() to return a String representation
