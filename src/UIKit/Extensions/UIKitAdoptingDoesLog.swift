@@ -5,7 +5,7 @@
 //  Copyright © 2017 Norbert Thies. All rights reserved.
 //
 
-
+import UIKit
 
 /// Common UIKit types adopting DoesLog to perform logging
 extension UIView: DoesLog {}

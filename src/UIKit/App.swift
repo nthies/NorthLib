@@ -17,17 +17,6 @@ extension String {
   }
 }
 
-/// A wrapper around POSIX's struct utsname
-open class Utsname {
-  
-  static public var sysname: String { return String(cString: uts_sysname()) }
-  static public var nodename: String { return String(cString: uts_nodename()) }
-  static public var release: String { return String(cString: uts_release()) }
-  static public var version: String { return String(cString: uts_version()) }
-  static public var machine: String { return String(cString: uts_machine()) }
-
-} // Utsname
-
 /// The type of device currently in use
 public enum Device: CustomStringConvertible {
   
@@ -181,9 +170,13 @@ open class App {
     return info["CFBundleVersion"] as! String
   }
     
+  // TODO: - Move to upcomming TazReader package (@Ringo)
   /// List of upcomming Features
   /// showBottomTilesAnimation is a ConfigVariable
-  public enum Feature { case  PDFEXPORT, INTERNALBROWSER, SEARCH_CONTEXTMENU}
+  public enum Feature { 
+    #warning("TODO: Move as extension into TazReader Package")
+    case PDFEXPORT, INTERNALBROWSER, SEARCH_CONTEXTMENU 
+  }
   
   /// Bundle identifier of currently running app
   public static var bundleIdentifier: String {

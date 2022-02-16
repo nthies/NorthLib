@@ -53,3 +53,42 @@ public extension String {
   }
 
 } // extension String
+
+// MARK: - extension String htmlAttributed
+extension String {
+  public var htmlAttributed : NSAttributedString?{
+    get{
+      do {
+        guard let data = "\(self)".data(using: String.Encoding.utf8) else {
+          return nil
+        }
+        
+        return try NSAttributedString(data: data,
+                                      options: [.documentType: NSAttributedString.DocumentType.html,
+                                                .characterEncoding: String.Encoding.utf8.rawValue],
+                                      documentAttributes: nil)
+      } catch {
+        print("htmlAttributed parse error: ", error)
+        return nil
+      }
+    }
+  }
+  
+  public var mutableAttributedStringFromHtml : NSMutableAttributedString?{
+    get{
+      do {
+        guard let data = "\(self)".data(using: String.Encoding.utf8) else {
+          return nil
+        }
+        
+        return try NSMutableAttributedString(data: data,
+                                      options: [.documentType: NSAttributedString.DocumentType.html,
+                                                .characterEncoding: String.Encoding.utf8.rawValue],
+                                      documentAttributes: nil)
+      } catch {
+        print("htmlAttributed parse error: ", error)
+        return nil
+      }
+    }
+  }
+}

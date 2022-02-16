@@ -124,8 +124,15 @@ public extension UIViewController {
     return controller
   }
   
-  /// current if applications key window root controller 
-  static var currentRootController:UIViewController? { UIApplication.shared.keyWindow?.rootViewController }
+  /// The App's key window
+  static var keyWindow: UIWindow? {
+    UIApplication.shared.windows.filter {$0.isKeyWindow}.first
+  } 
+  
+  /// The App's root view controller
+  static var currentRootController: UIViewController? { 
+    keyWindow?.rootViewController 
+  }
   
   /// check if applications key window root controller is requested type or is navigationcontroller and
   /// contain requested type in its viewControllers property
@@ -144,7 +151,7 @@ public extension UIViewController {
     if let rctrl = root {
       for type in types {
         print("2. \(rctrl) is none of: \(type)")
-        if rctrl.isKind(of: type) { return true}
+        if rctrl.isKind(of: type) { return true }
       }
     }
     

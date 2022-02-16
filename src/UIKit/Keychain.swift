@@ -5,7 +5,8 @@
 //  Copyright © 2020 Norbert Thies. All rights reserved.
 //
 
-import Foundation
+import UIKit
+import NorthFoundation
 
 /** 
  A simple wrapper around Apples's keychain functions
@@ -101,7 +102,7 @@ public final class Keychain: KVStore, Singleton {
   
   /// Init with suite name to share key/values between apps
   private init(suite: String? = nil) {
-    super.init(base: KeychainBase(suite: suite), suite: suite)
+    super.init(base: KeychainBase(suite: suite), name: nil, suite: suite, device: nil)
   }
 
 }
