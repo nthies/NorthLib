@@ -5,18 +5,8 @@
 //  Copyright © 2017 Norbert Thies. All rights reserved.
 //
 
-import UIKit
-
-/// Protocol to adopt from classes which like to use self.log, ...
-public protocol DoesLog {
-  var isDebugLogging: Bool { get }
-}
-
+/// DoesLog extension to make log, debug available to all types adopting DoesLog
 extension DoesLog {
-  
-  public var isDebugLogging: Bool {
-    get { return true }
-  }
   
   public func log(_ msg: String? = nil, logLevel: Log.LogLevel = .Info, file:
     String = #file, line: Int = #line, function: String = #function) {
@@ -32,17 +22,10 @@ extension DoesLog {
   
 }
 
-
-/// Common base classes to adopt DoesLog
-extension UIView: DoesLog {}
-extension UIViewController: DoesLog {}
-
-
 /**
- All logging classes are defined in the namespace Log which is a class
- that doesn't allow instatiation of Log objects. 
+ * All logging classes are defined in the namespace Log which is a class
+ * that doesn't allow instatiation of Log objects.
 */ 
-
 public class Log {
   
   /// class2s returns the classname of the passed object
@@ -86,12 +69,8 @@ public class Log {
       set { if newValue { self.options.insert(.Exception) } else { self.options.remove(.Exception) } }
     }
     
-    // total number of messages produced
-    private static var _messageCount = 0
-    // serial queue to synchronize access to _messageCount
-    private static var countQueue = DispatchQueue(label: "north.messageCount")
     /// number of messages logged in this session
-    public static var messageCount: Int { return countQueue.sync { _messageCount } }
+    public static var messageCount: Int = 0
     
     public var serialNumber: Int = 0
     public var tstamp: UsTime
@@ -103,40 +82,35 @@ public class Log {
     public var line: Int
     public var message: String?
     public var onMainThread: Bool
+    public var threadId: Int64
     
-    public var fileBaseName: String { return (fileName as NSString).lastPathComponent }
+    public var fileBaseName: String { File.basename(fileName) }
     public var id: String { return "\(fileBaseName):\(line)" }
     
     public var description: String { return toString() }
     
-    public init( level: LogLevel, className: String?, fileName: String, funcName: String,
-                 line: Int, message: String? ) {
-      self.tstamp = UsTime.now()
+    public init( level: LogLevel, className: String?, fileName: String,
+                 funcName: String, line: Int, message: String? ) {
+      self.tstamp = UsTime.now
       self.logLevel = level
       self.className = className
       self.fileName = fileName
       self.funcName = funcName
       self.line = line
       self.message = message
-      self.onMainThread = Thread.isMainThread
-      Message.countQueue.sync { [weak self] in
-        Message._messageCount += 1
-        self?.serialNumber = Message._messageCount
-      }
+      self.onMainThread = Thr.isMain
+      self.threadId = Thr.id
     }
     
-    public convenience init( level: LogLevel, object: Any?, fileName: String, funcName: String,
-                             line: Int, message: String? ) {
-      self.init( level: level, className: Log.class2s(object), fileName: fileName, 
-                 funcName: funcName, line: line, message: message )
+    public convenience init( level: LogLevel, object: Any?, fileName: String,
+                 funcName: String, line: Int, message: String? ) {
+      self.init( level: level, className: Log.class2s(object),
+               fileName: fileName, funcName: funcName, line: line, message: message )
     }
     
     /// toString returns a minimalistic string representing the current message
     public func toString() -> String {
-      let t = tstamp.date.components()
-      var s = String( format: "(%@:%02d %02d:%02d:%02d) ", 
-                      onMainThread ? "M" : "T",serialNumber, t.hour!,
-                      t.minute!, t.second! )
+      var s = "(\(onMainThread ? "M" : "T")\(serialNumber) \(tstamp.toString())) "
       if let cn = className { s += cn + "." }
       s += "\(funcName) \(logLevel)"
       if isException { s += " Exception" }
@@ -157,23 +131,23 @@ public class Log {
     fileprivate var prev: Logger? = nil
     fileprivate var next: Logger? = nil
     
-    public func append( _ logger: Logger ) {
+    fileprivate func append( _ logger: Logger ) {
       if let next = self.next { next.prev = logger }
       logger.next = self.next
       self.next = logger
       logger.prev = self
     }
     
-    public func removeFromList() {
+    fileprivate func removeFromList() {
       if let prev = self.prev { prev.next = self.next }
       if let next = self.next { next.prev = self.prev }
     }
     
     /// whether to log to this destination
-    public var isEnabled = true
+    open var isEnabled = true
     
     /// log a message to the standard output
-    public func log( _ msg: Message ) {
+    open func log( _ msg: Message ) {
       print( msg )
     }
     
@@ -184,9 +158,7 @@ public class Log {
 
   /// minimal log level (.Info by default)
   static public var minLogLevel = LogLevel.Info
-  
-  // serial queue to synchronize access to _messageCount
-  private static var logQueue = DispatchQueue(label: "north.logging")
+  static private var spoint = Sync()
   
   // head/tail of Loggers
   static private var head: Logger? = nil
@@ -203,8 +175,13 @@ public class Log {
   // Log objects shall not be created
   private init() {}
   
+  /// Synchronize thread access
+  static public func sync(_ closure: @escaping () async ->())  {
+    Task.detached { await spoint.sync(closure) }
+  }
+
   /// isDebugClass returns true if a class of given name is to debug
-  static public func isDebugClass( _ className: String? ) -> Bool {
+  static public func isDebugClass(_ className: String?) -> Bool {
     var ret = false
     if let cn = className {
       if let val = debugClasses[cn] { ret = val }
@@ -222,19 +199,23 @@ public class Log {
   /// append(logger:) appends logging destinations (derived from class Logger)
   /// to the list of loggers
   static public func append(logger: Logger... ) {
-    for lg in logger {
-      if let tail = self.tail { tail.append(lg) }
-      else { self.head = lg }
-      self.tail = lg
+    sync {
+      for lg in logger {
+        if let tail = self.tail { tail.append(lg) }
+        else { self.head = lg }
+        self.tail = lg
+      }
     }
   }
   
   /// remove(logger:) removes logging destinations from the list of Loggers
   static public func remove(logger: Logger... ) {
-    for lg in logger {
-      if lg === head { head = lg.next }
-      if lg === tail { tail = lg.prev }
-      lg.removeFromList()
+    sync {
+      for lg in logger {
+        if lg === head { head = lg.next }
+        if lg === tail { tail = lg.prev }
+        lg.removeFromList()
+      }
     }
   }
   
@@ -242,7 +223,9 @@ public class Log {
   static public func log( _ msg: Message ) {
     guard (msg.logLevel.rawValue >= minLogLevel.rawValue) ||
           isDebugClass(msg.className) else { return }
-    logQueue.sync {
+    sync {
+      Message.messageCount += 1
+      msg.serialNumber = Message.messageCount
       if head == nil {
         head = Logger()
         tail = head
@@ -254,7 +237,7 @@ public class Log {
       }
     }
     if let closure = fatalClosure, msg.logLevel == .Fatal {
-      DispatchQueue.main.async { closure(msg) }
+      Task { await MainActor.run { closure(msg) } }
     }
   }
   
@@ -263,16 +246,18 @@ public class Log {
   public static func log( _ message: String? = nil, object: Any? = nil,
     logLevel: LogLevel = .Info, file: String = #file, line: Int = #line,
     function: String = #function ) -> Message {
-    let msg = Message( level: logLevel, object: object, fileName: file, funcName: function,
-                       line: line, message: message )
+    let msg = Message( level: logLevel, object: object, fileName: file,
+                       funcName: function, line: line, message: message )
     log(msg)
     return msg
   }
   
   @discardableResult
-  public static func debug( _ msg: String? = nil, object: Any? = nil, file: String = #file, line: 
-    Int = #line, function: String = #function ) -> Message {
-    return log( msg, object: object, logLevel: .Debug, file: file, line: line, function: function )
+  public static func debug( _ msg: String? = nil, object: Any? = nil,
+    file: String = #file, line: Int = #line,
+    function: String = #function ) -> Message {
+    return log( msg, object: object, logLevel: .Debug, file: file, line: line,
+                function: function )
   }
   
 } // class Log

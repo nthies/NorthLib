@@ -5,7 +5,7 @@
 //  Copyright © 2019 Norbert Thies. All rights reserved.
 //
 
-import Foundation
+import NorthLowLevel
 
 extension Log {
   
@@ -13,60 +13,41 @@ extension Log {
   open class FileLogger: Logger {
     
     /// pathname of file to log to
-    private(set) var filename: String?
-    
-    /// URL of file to log to
-    public var url: URL? { 
-      if let fn = filename { return URL(fileURLWithPath: fn) }
-      else { return nil }
-    }
+    public private(set) var filename: String?
     
     /// file descriptor of file to log to
-    private(set) var fp: UnsafeMutablePointer<FILE>?
+    public private(set) var fp: fileptr_t?
     
-    /// contents of logfile as Data
-    public var data: Data? {
-      if let url = self.url { return try? Data(contentsOf: url) }
-      else { return nil }
+    /// contents of logfile as Memory
+    public var mem: Memory? {
+      if let fn = filename {
+        return File(fn).mem
+      }
+      return nil
     }
     
+    /// default logfile
+    public static var tmpLogfile: String = "\(Dir.tmpPath)/default.log"
+    
     /// The FileLogger must be initialized with a filename
-    public init(_ fname: String) {
-      if let fp = fopen(fname, "w") {
-        self.fp = fp
-        self.filename = fname
+    public init(_ fname: String?) {
+      let fn = fname ?? FileLogger.tmpLogfile
+      if file_open(&fp, fn, "w") == 0 {
+        self.filename = fn
       }
       super.init()
     }
     
-    public static var defaultLogfile: String = {
-      let cachedirs = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
-      let cachedir = cachedirs[0].path
-      return "\(cachedir)/default.log"
-    }()
-    
-    public static var lastLogfile: String = {
-      return defaultLogfile + ".old"
-    }()
-    
-       
-    /// Using a temporary filename
-    public convenience override init() {
-      self.init(FileLogger.defaultLogfile)
-    }
-    
     // closes file pointer upon deconstruction
-    deinit {
-      if let fp = self.fp { fclose(fp) }
-    }
+    deinit { file_close(&self.fp) }
     
-    /// log a message to the TextView
+    /// log a message to the logfile
     public override func log(_ msg: Message) {
       if let fp = self.fp {
         var txt = String(describing: msg)
         if !txt.hasSuffix("\n") { txt = txt + "\n" }
-        fwrite(txt.cString(using: .utf8), 1, txt.utf8.count, fp)
-        fflush(fp)
+        _ = txt.withCString { file_write(fp, $0, str_len($0)) }
+        file_flush(fp)
       }
     }
     

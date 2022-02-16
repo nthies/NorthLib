@@ -10,10 +10,7 @@
 import NorthLowLevel
 
 /// String conforms to Error and can thus be thrown:
-extension String: Error {
-  /// Returns self as error description
-  public var localizedDescription: String { self }
-}
+extension String: Error {}
 
 /// String extension supporting subscripts with Int and Int-Ranges.
 public extension String {
@@ -193,6 +190,31 @@ public extension String {
   
 } // Various String extensions
 
+/// Regexpr based regular expression String extension
+public extension String {
+
+  /// Match the passed regular expression against this string
+  func match(_ pattern: String) -> [String]? { Regexpr(pattern).match(self) }
+
+  /// Match the passed regular expression against this string globally
+  func gmatch(_ pattern: String) -> [[String]]? { Regexpr(pattern).gmatch(self) }
+  
+  /// Substitute self according to sed-like substitution specification
+  /// and return the result, self is unchanged.
+  func substituted(_ spec: String, num: Int = -1, ndig: Int = -1) -> String?
+    { Regexpr.subst(self, by: spec, num: num, ndig: ndig) }
+  
+  /// Substitute self according to sed-like substitution specification
+  @discardableResult
+  mutating func subst(_ spec: String, num: Int = -1, ndig: Int = -1) -> Self {
+    if let s = self.substituted(spec, num: num, ndig: ndig) { self = s }
+    return self
+  }
+  
+  /// Returns true if the left hand side String is matched by the RE pattern
+  static func =~(lhs: Self, rhs: Self) -> Bool { Regexpr(rhs).matches(lhs) }
+
+}
 
 /// Array<String> extension to convert to/from C's string arrays
 public extension Array where Element == String {
@@ -221,8 +243,15 @@ public extension Array where Element == String {
   }
   
   /// Initialize with C's mutable string array
-  init(_ av: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>) {
-    self.init(av_const(av))
-  }
+  init(_ av: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>)
+    { self.init(av_const(av)) }
+  
+  /// Return new String array from C's argv
+  static func from(argv: UnsafePointer<UnsafePointer<CChar>?>) -> Array<String>
+    { Array<String>(argv) }
+  
+  /// Return new String array from C's argv
+  static func from(argv: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>)
+    -> Array<String> { Array<String>(argv) }
 
 } // Array<String> extension

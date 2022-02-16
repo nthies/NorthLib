@@ -7,7 +7,7 @@
 //  This file implements various mathematical operations.
 //
 
-import Foundation
+import NorthLowLevel
 
 infix operator /~ : MultiplicationPrecedence
 infix operator =~ : ComparisonPrecedence
@@ -32,11 +32,11 @@ public extension BinaryFloatingPoint {
   
   func log<T:BinaryFloatingPoint>(base: T = 10.0) -> Self {
     let v = Double(self), b = Double(base)
-    return Self( Darwin.log(v) / Darwin.log(b) )
+    return Self(NorthLowLevel.log(v) / NorthLowLevel.log(b))
   }
   
   func pow<T:BinaryFloatingPoint>(exp: T) -> Self {
-    Self(Darwin.pow(Double(self), Double(exp)))
+    Self(NorthLowLevel.pow(Double(self), Double(exp)))
   }
   
   static func **(lhs: Self, rhs: Self) -> Self { lhs.pow(exp: rhs) }

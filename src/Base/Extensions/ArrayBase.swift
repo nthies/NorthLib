@@ -1,11 +1,11 @@
 //
-//  ArrayExtensions.swift
+//  ArrayBase.swift
 //
 //  Created by Norbert Thies on 12.12.18.
 //  Copyright © 2018 Norbert Thies. All rights reserved.
 //
 
-import Foundation
+import NorthLowLevel
 
 public extension Array {
   
@@ -30,9 +30,11 @@ public extension Array {
   }
   
   /// appends one element at the end
-  mutating func push(_ elem: Element) { self.append(elem) }  
+  @discardableResult
+  mutating func push(_ elem: Element) -> Self
+  { self.append(elem); return self }
   
-  /// rotates elements clockwise (n >0) or anti clockwise (n<0)
+  /// rotates elements clockwise (n>0) or anti clockwise (n<0)
   func rotated(_ n: Int) -> Array {
     var ret: Array = []
     if n > 0 {
@@ -48,29 +50,24 @@ public extension Array {
     return ret
   }
   
-  /// creates a copy of the array
-  func copy() -> Array {
-    self.map { ($0 as! NSCopying).copy() as! Element }
-  }
-  
-  ///Safe acces to Array Items by Index returns null if Index did not exist
+  /// Safe acces to Array Items by Index returns null if Index did not exist
   func valueAt(_ index : Int) -> Element?{
     return self.indices.contains(index) ? self[index] : nil
   }
   
+  /// Throwing bounds checking access by index
+  func value(at index: Int) throws -> Element {
+    guard self.indices.contains(index) else { throw "Array index out of bounds" }
+    return self[index]
+  }
+  
 } // Array
 
-extension Array where Element == String {
-  /// Type of C char**
-  typealias Argv = UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>
+extension Array: Copying where Element: Copying {
   
-  /// Convert C char** into [String]
-  static func fromArgv(argv: Argv) -> Self {
-    let n = Int(av_length(argv))
-    var ret = Array<String>(unsafeUninitializedCapacity: n) {_,_  in}
-    for i in 0..<n {
-      ret[i] = String(cString: av_index(argv, Int32(i)))
-    }
-    return ret
+  /// creates a deep copy
+  public func deepcopy() throws -> Array {
+    try self.map { elem in try elem.deepcopy() }
   }
-} // Array<String>
+  
+}
