@@ -18,10 +18,11 @@ public protocol Synchronizable {
 extension Synchronizable {
   /// Synchronize with other closures performed on this actor
   @discardableResult
-  func sync<Result>(_ closure: () throws -> Result) async rethrows -> Result {
+  public func sync<Result>(_ closure: () throws -> Result) async rethrows -> Result {
     try closure()
   }
-  func sync<Result>(_ closure: () async throws -> Result) async rethrows -> Result {
+  public func sync<Result>(_ closure: () async throws -> Result) async
+    rethrows -> Result {
     try await closure()
   }
 }
