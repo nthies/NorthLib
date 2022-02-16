@@ -1,18 +1,18 @@
 //
-//  String.swift
+//  String Extensions
 //
 //  Created by Norbert Thies on 20.07.16.
 //  Copyright © 2016 Norbert Thies. All rights reserved.
 //
-//  This file implements various String extensions depending on the 
-//  Foundation Framework.
+//  This file implements various String extensions based on the Foundation framework.
 //
 
 import Foundation
 
-/// String extension supporting regular expression matches.
-public extension String {
 
+/// Pattern matching string extension
+public extension String {
+  
   /// allMatches returns an array of strings representing all matches
   /// of the passed regular expression in 'self'.
   func allMatches(regexp: String) -> [String] {
@@ -25,15 +25,15 @@ public extension String {
     } catch { return [] }
   }
   
-  /// groupMatches returns an array of strings representing matches of the passed 
-  /// regular expression. 
-  /// 
+  /// groupMatches returns an array of strings representing matches of the passed
+  /// regular expression.
+  ///
   /// Each match itself is an array
   /// of strings matching the groups used in the regular expression. The first
   /// element of the String array is always the completely matched regular expression.
-  /// Ie. "<123> <456>".groupMatches(regexp: #"<(\d+)>"#) yields 
+  /// Ie. "<123> <456>".groupMatches(regexp: #"<(\d+)>"#) yields
   /// [["<123>", "123"], ["<456>", "456"]].
-  /// If a group contains subgroups then the match representing the enclosing 
+  /// If a group contains subgroups then the match representing the enclosing
   /// group preceeds the subgroup in the array. Ie "<123>".groupMatches(#"<(1(\d+))>"#)
   /// returns ["<123>", "123", "23"].
   func groupMatches(regexp: String) -> [[String]] {
@@ -52,5 +52,22 @@ public extension String {
       return []
     }
   }
+  
+} // extension String  - pattern matching
 
-} // extension String
+// MARK: - extension String isValidEmail
+extension String {
+  public func isValidEmail() -> Bool {
+    let emailRegEx = "[A-Z0-9a-z.!#_%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
+    let emailPred = NSPredicate(format:"SELF MATCHES %@", emailRegEx)
+    return emailPred.evaluate(with: self)
+  }
+}
+
+// MARK: - Localized Helper without Comment
+public func Localized(_ key: String) -> String {
+  return NSLocalizedString(key, comment: "n/a")
+}
+public func Localized(keyWithFormat: String, _  arguments: CVarArg...) -> String {
+  return String(format: Localized(keyWithFormat), arguments: arguments)
+}

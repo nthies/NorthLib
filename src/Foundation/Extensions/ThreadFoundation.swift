@@ -9,5 +9,10 @@
 import Foundation
 
 public extension Thread {
-  static var id: Int64 { Int64(thread_id(thread_current())) }
+  /// Id of the current thread
+  static var id: Int64 { Thr.id }
+  /// thread id of main thread
+  static var mainId: Int64 { Thr.mainId }
+  /// Are we on main thread
+  static var isMain: Bool { Thr.isMain }
 }

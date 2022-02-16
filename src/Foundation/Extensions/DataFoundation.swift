@@ -5,6 +5,7 @@
 //  Copyright © 2019 Norbert Thies. All rights reserved.
 //
 
+import NorthLowLevel
 import Foundation
 
 public extension Data {

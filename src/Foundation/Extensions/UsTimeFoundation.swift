@@ -8,7 +8,7 @@
 import Foundation
 
 /// Some extensions to UsTime applying Foundation types
-extension UsTime: Comparable, ToString {
+extension UsTime {
 
   /// Yields Foundation's TimeInterval
   public var timeInterval: TimeInterval { TimeInterval(double) }
@@ -17,18 +17,16 @@ extension UsTime: Comparable, ToString {
   public var date: Date { return Date(timeIntervalSince1970: timeInterval) }
 
   /// Init from optional Date
-  public init(_ date: Date? = nil) {
-    if let d = date {
-      var nsec = d.timeIntervalSince1970
-      tv.tv_sec = type(of: tv.tv_sec).init( nsec.rounded(.down) )
-      nsec = (nsec - TimeInterval(tv.tv_sec)) * 1000000
-      tv.tv_usec = type(of: tv.tv_usec).init( nsec.rounded() )
-    }
+  public convenience init(_ date: Date, usec: Int64? = nil) {
+    let ti = date.timeIntervalSince1970
+    let nsec = Int64(ti)
+    let us = (usec == nil) ? Int64((ti - Double(nsec)) * 1_000_000) : usec
+    self.init(nsec, usec: us!)
   }
 
   /// Init from date/time components in gregorian calendar
-  public init(year: Int, month: Int, day: Int, hour: Int = 12, min: Int = 0,
-              sec: Int = 0, usec: Int = 0, tz: String? = nil) {
+  public convenience init(year: Int, month: Int, day: Int, hour: Int = 12, 
+    min: Int = 0, sec: Int = 0, usec: Int = 0, tz: String? = nil) {
     self.init(0)
     let cal = Calendar(identifier: .gregorian)
     var timeZone = TimeZone.current
@@ -38,16 +36,13 @@ extension UsTime: Comparable, ToString {
     }
     let dc = DateComponents(calendar: cal, timeZone: timeZone, year: year,
                month: month, day: day, hour: hour, minute: min, second: sec)
-    if dc.isValidDate {
-      self.init(dc.date!)
-      tv.tv_usec = type(of: tv.tv_usec).init(usec)
-    }
+    if dc.isValidDate { self.init(dc.date!, usec: Int64(usec)) }
     else { fatal("Invalid date/time: \(dc.description)") }
   }
 
   /// Init from String in ISO8601 format with optional time zone
   /// (default: local time zone)
-  public init(iso: String, tz: String? = nil) {
+  public convenience init(iso: String, tz: String? = nil) {
     self.init(0)
     let isoRE = #"(\d+)-(\d+)-(\d+)( (\d+):(\d+):(\d+)(\.(\d+))?)?"#
     let dfs = iso.groupMatches(regexp: isoRE)
@@ -77,11 +72,6 @@ extension UsTime: Comparable, ToString {
                    dc.year!, dc.month!, dc.day!, dc.hour!, dc.minute!, 
 		   dc.second!, usec )
   }
- 
-  /// Converts UsTime to "YYYY-MM-DD hh:mm:ss.uuuuuu" in local time zone
-  public func toString() -> String {
-    return toString(tz: nil)
-  }
 
   /// Converts UsTime to "YYYY-MM-DD" with optionally given time zone
   public func isoDate(tz: String? = nil) -> String {
@@ -90,3 +80,9 @@ extension UsTime: Comparable, ToString {
   }
 
 } // extension UsTime
+
+/// A small String extension to convert a String into a UsTime
+public extension String {
+  /// Convert string of digits to UsTime
+  var usTime: UsTime { UsTime(self) }
+}

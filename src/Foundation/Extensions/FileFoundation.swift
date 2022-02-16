@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  FileFoundation.swift
 //
 //  Created by Norbert Thies on 20.11.19.
 //  Copyright © 2019 Norbert Thies. All rights reserved.
@@ -11,6 +11,9 @@ import Foundation
 
 extension File {
   
+  /// The default file manager
+  public static var fm: FileManager { return FileManager.default }
+
   /// File modification time as Date
   public var mTime: Date { 
     get { return UsTime(self.mtime).date }
@@ -26,20 +29,6 @@ extension File {
   /// File mode change time as Date
   public var cTime: Date { return UsTime(self.ctime).date }
 
-  @discardableResult
-  fileprivate func getStat() -> stat_t? { 
-    if _status == nil {
-      var tmp = stat_t()
-      if stat_read(&tmp, cpath) == 0 { self._status = tmp }
-    }
-    return _status
-  }
-  
-  /// A File has to be initialized with a filename
-  public init(_ path: String) {
-    self.path = path
-  }
-  
   /// A File searched for in the main bundle
   public convenience init?(inMain fn: String) {
     let pref = File.progname(fn)
@@ -49,92 +38,24 @@ extension File {
     self.init(path)
   }
   
-  /// Initialisation with directory and file name
-  public convenience init(dir: String, fname: String) {
-    var str = fn_pathname(dir.cstr, fname.cstr)
-    self.init(String(cString: str!))
-    str_release(&str)
-  }
-  
   /// Initialisation with URL
   public convenience init(_ url: URL) {
     self.init(url.path)
   }
   
-  /// deinit closes the file pointer if it has been opened
-  deinit {
-    if fp != nil { fclose(fp) }
-  }
-  
-  /// open opens a File as C file pointer, executes the passed closure and closes
-  /// the file pointer
-  public static func open(path: String, mode: String = "a", closure: (File)->()) {
-    let file = File(path)
-    if file_open(&file.fp, file.cpath, mode) == 0 {
-      closure(file)
-      file_close(&file.fp)
-    }
-  }
-  
-  /// Reads one line of characters from the file
-  public func readline() -> String? {
-    guard fp != nil else { return nil }
-    var str = file_readline(fp)
-    if let s = str {
-      let ret = String(cString: s, encoding: .utf8)
-      str_release(&str)
-      return ret
-    }
-    return nil
+  /// Reads one data chunk from the file's current position
+  public func readData() -> Data? {
+    guard let mem = self.read() else { return nil }
+    return mem.moveToData()
   }
     
-  /// Writes one line of characters to the file, a missing \n is added
-  @discardableResult
-  public func writeline(_ str: String) -> Int {
-    guard fp != nil else { return -1 }
-    let ret = file_writeline(fp, str.cString(using: .utf8))
-    return Int(ret)
-  }
-  
-  /// Reads one data chunk from the file's current position
-  public func read() -> Data? {
-    guard fp != nil,
-          let buff = mem_heap(nil, 100 * 1024)
-    else { return nil }
-    let count = file_read(fp, buff, 100 * 1024)
-    if count > 0 {
-      return Data(bytesNoCopy: buff, count: Int(count), deallocator: .free)
-    }
-    else { return nil }
-  }
-  
   /// Writes the passed data to the file's current position
   @discardableResult
   public func write(data: Data) -> Int {
-    let ret =  data.withUnsafeBytes { ptr in
-      file_write(fp, ptr, Int32(data.count))
-    }
-    return Int(ret)
+    let ptr = data.withUnsafeBytes { $0 }
+    return write(ptr: ptr.baseAddress, length: data.count)
   }
 
-  /// Flushes input/output buffers
-  public func flush() { 
-    guard fp != nil else { return }
-    file_flush(fp)
-  }
-  
-  /// Returns true if the file exists and is accessible
-  public var exists: Bool { return fn_access(cpath, "e") == 0 }
-
-  /// Returns true if File exists (is accessible) and is a directory
-  public var isDir: Bool { return hasStat && (stat_isdir(&_status!) != 0) }
-  
-  /// Returns true if File exists (is accessible) and is a regular file
-  public var isFile: Bool { return hasStat && (stat_isfile(&_status!) != 0) }
-  
-  /// Returns true if File exists (is accessible) and is a symbolic link
-  public var isLink: Bool { return hasStat && (stat_islink(&_status!) != 0) }
-  
   /// Returns a file URL
   public var url: URL { return URL(fileURLWithPath: path) }
   
@@ -161,184 +82,12 @@ extension File {
   /// Returns the SHA256 checksum of the file's contents
   public var sha256: String { return data.sha256 }
   
-  /// Returns the basename of a given pathname
-  public var basename: String {
-    var str = fn_basename(path.cString(using: .utf8)!)
-    let ret = String(cString: str!)
-    str_release(&str)
-    return ret
-  }
-  
-  /// Returns the dirname of a given pathname
-  public var dirname: String {
-    var str = fn_dirname(path.cString(using: .utf8)!)
-    let ret = String(cString: str!)
-    str_release(&str)
-    return ret
-  }
-  
-  /// Returns the progname (basename without extension) of a given pathname
-  public var progname: String {
-    var str = fn_progname(path.cString(using: .utf8)!)
-    let ret = String(cString: str!)
-    str_release(&str)
-    return ret
-  }
-  
-  /// Returns the prefname (path without extension) of a given pathname
-  public var prefname: String {
-    var str = fn_prefname(path.cString(using: .utf8)!)
-    let ret = String(cString: str!)
-    str_release(&str)
-    return ret
-  }
-
-  /// Returns the extname (extension) of a given pathname
-  public var extname: String {
-    var str = fn_extname(path.cString(using: .utf8)!)
-    let ret = String(cString: str!)
-    str_release(&str)
-    return ret
-  }
-
-  /// Links the file to an existing file 'to' (beeing an absolute path)
-  /// (ie. makes self a symbolic link)
-  public func link(to: String) {
-    file_link(to.cstr, cpath)
-  }
-  
-  /// Copies the file to a new location while maintaining the file status
-  public func copy(to: String, isOverwrite: Bool = true) {
-    guard exists else { return }
-    if isOverwrite {
-      let dest = File(to)
-      if dest.exists { dest.remove() }
-    }
-    do {
-      Dir(File.dirname(to)).create()
-      try FileManager.default.copyItem(atPath: path, toPath: to)
-      if hasStat { stat_write(&_status!, to.cstr) }
-    }
-    catch (let err) { error(err) }
-  }
-  
-  /// Moves the file to a new location while maintaining the file status
-  public func move(to: String, isOverwrite: Bool = true) {
-    guard exists else { return }
-    if isOverwrite {
-      let dest = File(to)
-      if dest.exists { dest.remove() }
-    }
-    do {
-      Dir(File.dirname(to)).create()
-      try FileManager.default.moveItem(atPath: path, toPath: to)
-      if hasStat { stat_write(&_status!, to.cstr) }
-    }
-    catch (let err) { error(err) }
-  }
-  
-  /// Removes the file (and all subdirs if self is a directory)
-  public func remove() {
-    guard exists else { return }
-    if isDir { dir_remove(cpath) }
-    else { file_unlink(cpath) }
-  }
-
-  /// Returns the basename of a given pathname
-  public static func basename(_ fn: String) -> String {
-    return Dir(fn).basename
-  }
-  
-  /// Returns the dirname of a given pathname
-  public static func dirname(_ fn: String) -> String {
-    return Dir(fn).dirname
-  }
-  
-  /// Returns the progname (basename without extension) of a given pathname
-  public static func progname(_ fn: String) -> String {
-    return Dir(fn).progname
-  }
-  
-  /// Returns the prefname (path without extension) of a given pathname
-  public static func prefname(_ fn: String) -> String {
-    return Dir(fn).prefname
-  }
-  
-  /// Returns the extname (extension) of a given pathname
-  public static func extname(_ fn: String) -> String {
-    return Dir(fn).extname
-  }
-  
-  /// Returns the aim of a symbolic link
-  public static func readlink(path: String) -> String? {
-    if let link = file_readlink(path.cstr) {
-      return String(cString: link)
-    }
-    else { return nil }
-  }
-
 } // File
 
 
 /// The Dir class models a directory in the local file system
-open class Dir: File {
+extension Dir {
     
-  /// Returns true, if the directory at the given path is existent.
-  public override var exists: Bool {
-    return super.exists && super.isDir
-  }
-  
-  /// Create directory at given path, if not existing. Parent dirs are created as well
-  public func create(mode: Int = 0o777) {
-    guard !exists else { return }
-    var st: stat_t = stat()
-    stat_init(&st, mode_t(mode))
-    fn_mkpath(cpath, &st)
-  }
-    
-  /// Creates a Dir object with the given path, the directory is not created
-  /// automatically.
-  public override init(_ dir: String) {
-    super.init(dir)
-  }
-  
-  /// Returns an array of the contents of the directory (without preceeding path)
-  public func contents() -> [String] {
-    guard exists else { return [] }
-    do { return try Dir.fm.contentsOfDirectory(atPath: path) }
-    catch { return [] }
-  }
-  
-  /// Scans for files and returns an array of absolute pathnames.
-  /// 'filter' is an optional predicate to use.
-  public func scan(isAbs: Bool = true, filter:((String)->Bool)? = nil) -> [String] {
-    var ret: [String] = []
-    let contents = self.contents()
-    for f in contents {
-      let path = isAbs ? "\(self.path)/\(f)" : f
-      if let sel = filter { if sel(path) { ret.append(path) } }
-      else { ret.append(path) }
-    }
-    return ret
-  }
-
-  /// scanExtensions searches for files beeing matched
-  /// by any one in a list of given extensions.
-  public func scanExtensions(_ ext: [String]) -> [String] {
-    let lext = ext.map { $0.lowercased() }
-    return scan { (fn: String) -> Bool in
-      let fe = (fn.lowercased() as NSString).pathExtension
-      if let _ = lext.firstIndex(of: fe) { return true }
-      return false
-    }
-  }
-  
-  /// scanExtensions searches for files beeing matched
-  /// by any one in a list of given extensions.
-  public func scanExtensions( _ ext: String... ) -> [String] {
-    return scanExtensions(ext)
-  }
-  
   /// isBackup determines whether this directory is excluded from backups
   public var isBackup: Bool {
     get {
@@ -378,29 +127,11 @@ open class Dir: File {
       in: .userDomainMask, appropriateFor: nil, create: true).path
   }
   
-  /// returns the path to the temp directory
-  public static var tmpPath: String {
-    return NSTemporaryDirectory()
-  }
-
   /// returns the path to the home directory
   public static var homePath: String {
     return NSHomeDirectory()
   }
   
-  /// returns the current working directory
-  public static var currentPath: String {
-    var str = fn_abs(".".cstr)
-    let ret = String(cString: str!)
-    str_release(&str)
-    return ret
-  }
-  
-  /// returns the current working directory
-  public static var current: Dir {
-    return Dir(Dir.currentPath)
-  }
-
   /// returns the document directory
   public static var documents: Dir {
     return Dir(Dir.documentsPath)
@@ -426,11 +157,6 @@ open class Dir: File {
     return Dir(Dir.homePath)
   }
   
-  /// returns the temp directory
-  public static var tmp: Dir {
-    return Dir(Dir.tmpPath)
-  }
-
   /// returns a list of files in the inbox
   public static func scanInbox(_ ext: String) -> [String] {
     return Dir.inbox.scanExtensions(ext)
