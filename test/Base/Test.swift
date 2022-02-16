@@ -6,120 +6,16 @@
 //
 
 import XCTest
-extension XCTestCase: DoesLog {}
 
-@testable import NorthLib
-
-class EtcTests: XCTestCase {
-  override func setUp() { super.setUp() }  
-  override func tearDown() { super.tearDown() }
-
-  func testTmppath() {
-    let p1 = tmppath(), p2 = tmppath(), p3 = tmppath()
-    print(p1, p2, p3)
-    XCTAssertNotEqual(p1, p2)
-    XCTAssertNotEqual(p2, p3)
-  } 
-  
-  func testArray() {
-    let a1 = [1,2,3,4,5,6,7,8,9,10]
-    XCTAssertEqual(a1.rotated(1), [2,3,4,5,6,7,8,9,10,1])
-    XCTAssertEqual(a1.rotated(-1), [10,1,2,3,4,5,6,7,8,9])
-    XCTAssertEqual(a1.rotated(2), [3,4,5,6,7,8,9,10,1,2])
-    XCTAssertEqual(a1.rotated(-2), [9,10,1,2,3,4,5,6,7,8])
-  }
-  
-  func testCodableEnum() {
-    enum TestEnum: String, CodableEnum {
-      case one = "one(ONE)"
-      case two = "two(TWO)"
-      case three = "three"
-      case unknown = "unknown"
-    }
-    var te = TestEnum.one
-    print("MemoryLayout<TestEnum>.size = \(MemoryLayout<TestEnum>.size)")
-    print("MemoryLayout<TestEnum>.stride = \(MemoryLayout<TestEnum>.stride)")
-    print("MemoryLayout<TestEnum>.alignment = \(MemoryLayout<TestEnum>.alignment)")
-    XCTAssertEqual(te.external, "ONE")
-    XCTAssertEqual(te.representation, "one")
-    XCTAssertEqual(te.description, "one(ONE)")
-    XCTAssertEqual(te.index, 0)
-    let jsEncoder = JSONEncoder()
-    if let data = try? jsEncoder.encode(te), 
-       let s = String(data: data, encoding: .utf8) {
-      XCTAssertEqual(s, "[\"ONE\"]")
-      let jsDecoder = JSONDecoder()
-      if let ret = try? jsDecoder.decode([TestEnum].self, from: data) {
-        XCTAssertEqual(ret[0].representation, "one")
-      }
-    }
-    te = TestEnum.two
-    XCTAssertEqual(te.external, "TWO")
-    XCTAssertEqual(te.representation, "two")
-    XCTAssertEqual(te.description, "two(TWO)")
-    XCTAssertEqual(te.index, 1)
-    te = TestEnum.three
-    XCTAssertEqual(te.external, "three")
-    XCTAssertEqual(te.representation, "three")
-    XCTAssertEqual(te.description, "three")
-    XCTAssertEqual(te.index, 2)
-    te = TestEnum("one")!
-    XCTAssertEqual(te.external, "ONE")
-    XCTAssertEqual(te.representation, "one")
-    XCTAssertEqual(te.description, "one(ONE)")
-    XCTAssertEqual(te.index, 0)    
-    te = TestEnum("two")!
-    XCTAssertEqual(te.external, "TWO")
-    XCTAssertEqual(te.representation, "two")
-    XCTAssertEqual(te.description, "two(TWO)")
-    XCTAssertEqual(te.index, 1)
-    let jsDecoder = JSONDecoder()
-    let data = "\"test\"".data(using: .utf8)!
-    if let ret = try? jsDecoder.decode(TestEnum.self, from: data) {
-      XCTAssertEqual(ret, TestEnum.unknown)
-    }
-  }
-  
-} // class EtcTests
-
-class MathTests: XCTestCase {  
-  override func setUp() { super.setUp() }  
-  override func tearDown() { super.tearDown() }
-  
-  func testRemainder() {
-    XCTAssertFalse(1.000001 =~ 1.000002)
-    XCTAssertTrue((3.6 % 0.5) =~ 0.1)
-    XCTAssertTrue((3.6 /~ 0.5) =~ 7.0)
-  }
-  
-  func testLog() {
-    let a: Double = 4
-    XCTAssertTrue(a.log(base: 2) =~ 2.0)
-  }
-  
-  func testGcd() {
-    XCTAssertEqual(gcd(2,3), 1)
-    XCTAssertEqual(gcd([]), 1)
-    XCTAssertEqual(gcd([3]), 3)
-    XCTAssertEqual(gcd([2,3]), 1)
-    XCTAssertEqual(gcd([2,4,8]), 2)
-    XCTAssertEqual(gcd([8,16,4]), 4)
-  }
-  
-} // class MathTests
+@testable import NorthBase
 
 class StringTests: XCTestCase {
   
-  override func setUp() {
+  override static func setUp() {
     super.setUp()
-    print("nodename: \(Utsname.nodename)")
-    print("sysname:  \(Utsname.sysname)")
-    print("release:  \(Utsname.release)")
-    print("version:  \(Utsname.version)")
-    print("machine:  \(Utsname.machine)")
   }
   
-  override func tearDown() {
+  override static func tearDown() {
     super.tearDown()
   }
   
@@ -149,16 +45,6 @@ class StringTests: XCTestCase {
     XCTAssertEqual(s.indent(by:3), "   This is a string")  
   }
   
-  func testGroupMatches() {
-    let s = "12:18:22 17:30:45"
-    let re = #"(\d+):(\d+):(\d+)"#
-    let ret = s.groupMatches(regexp:re)
-    XCTAssertEqual(ret[0], ["12:18:22", "12", "18", "22"])
-    XCTAssertEqual(ret[1], ["17:30:45", "17", "30", "45"])
-    XCTAssertEqual("<123> <456>".groupMatches(regexp: #"<(\d+)>"#), [["<123>", "123"], ["<456>", "456"]])
-    XCTAssertEqual("<123>".groupMatches(regexp: #"<(1(\d+))>"#), [["<123>", "123", "23"]])
-  }
-
   func testMultiply() {
     XCTAssertEqual("abc" * 3, "abcabcabc")
     XCTAssertEqual("abc" * 0, "")
@@ -166,198 +52,85 @@ class StringTests: XCTestCase {
     XCTAssertEqual(3 * "abc", "abc" * 3)
   }
   
-}
-
-class UsTimeTests: XCTestCase {
+  func testCStringArrays() {
+    let array = ["one", "two", "three", "four"]
+    let a = try! array.withCStrings { Array<String>($0) }
+    for i in 0..<array.count {
+      XCTAssertEqual(array[i], a[i])
+    }
+  }
   
-  override func setUp() {
+} // StringTests
+
+class MathTests: XCTestCase {
+  override func setUp() { super.setUp() }
+  override func tearDown() { super.tearDown() }
+  
+  func testRemainder() {
+    XCTAssertFalse(1.000001 =~ 1.000002)
+    XCTAssertTrue((3.6 % 0.5) =~ 0.1)
+    XCTAssertTrue((3.6 /~ 0.5) =~ 7.0)
+  }
+  
+  func testLog() {
+    let a: Double = 4
+    XCTAssertTrue(a.log(base: 2) =~ 2.0)
+  }
+  
+  func testGcd() {
+    XCTAssertEqual(gcd(2,3), 1)
+    XCTAssertEqual(gcd([]), 1)
+    XCTAssertEqual(gcd([3]), 3)
+    XCTAssertEqual(gcd([2,3]), 1)
+    XCTAssertEqual(gcd([2,4,8]), 2)
+    XCTAssertEqual(gcd([8,16,4]), 4)
+  }
+  
+} // class MathTests
+
+class EtcTests: XCTestCase {
+  
+  override static func setUp() {
+    print("nodename: \(Utsname.nodename)")
+    print("sysname:  \(Utsname.sysname)")
+    print("release:  \(Utsname.release)")
+    print("version:  \(Utsname.version)")
+    print("machine:  \(Utsname.machine)")
     super.setUp()
   }
   
-  override func tearDown() {
+  override static func tearDown() {
     super.tearDown()
   }
   
-  func testIsoConversion() {
-    XCTAssertEqual(UsTime(iso: "2019-10-09 13:44:56").toString(), "2019-10-09 13:44:56.000000")
-    XCTAssertEqual(UsTime(iso: "2019-10-09 13:44:56.123").toString(), "2019-10-09 13:44:56.123000")
-    XCTAssertEqual(UsTime(iso: "2019-10-09 13:44:56.123", tz: "Europe/London").toString(tz: "Europe/London"),
-                   "2019-10-09 13:44:56.123000")
-    XCTAssertEqual(UsTime(iso: "2019-10-09").toString(), "2019-10-09 12:00:00.000000")
-  }
-  
-}
-
-class ZipTests: XCTestCase {
-  
-  var testPath: String!
-  var testDir: String!
-  var nerrors: Int = 0
-  var md5: [String:String] = [:]
-    
-  override func setUp() {
-    super.setUp()
-    Log.minLogLevel = .Debug
-    self.testPath = Bundle(for: type(of: self)).path(forResource: "test", ofType: "zip")!
-    self.testDir = File.dirname(testPath)
-    self.md5 = [
-      "a.txt": "3740129b68388b4f41404d93ae27a79c",
-      "b.txt": "abeecdc0f0a02c2cd90a1555622a84a4"
-    ]
-  }
-  
-  override func tearDown() {
-    super.tearDown()
-  }
-  
-  func checkContent(name: String?, data: Data?) {
-    guard let name = name, let data = data else { return }
-    if let checksum = md5[name] {
-      let computed = data.md5
-      XCTAssertEqual(checksum, computed)
-      if checksum != computed {
-        print( "error(\(name): md5 sum doesn't match" )
-        self.nerrors += 1
-      }
-    }
-    else {
-      print( "error: unexpected file" )
-      self.nerrors += 1
-    }
-  }
-    
-  func testZipStream() {
-    guard let fd = FileHandle(forReadingAtPath: testPath)
-    else { return }
-    self.nerrors = 0
-    let zipStream = ZipStream()
-    zipStream.onFile { (name, data) in
-      print( "file \(name!) with \(data!.count) bytes content found" )
-      self.checkContent(name: name, data: data)
-    }
-    var data: Data
-    repeat {
-      data = fd.readData(ofLength: 10)
-      if data.count > 0 {
-        zipStream.scanData(data)
-      }
-    } while data.count > 0
-    XCTAssertEqual(self.nerrors, 0)
-  }
-  
-  func testZipFile() {
-    let zfile = ZipFile(path: testPath)
-    let destTop = "\(testDir!)/unpacked"
-    let dest = "\(destTop)/zipfile"
-    zfile.unpack(toDir: dest)
-    for fn in ["a.txt", "b.txt"] {
-      let data = File("\(dest)/\(fn)").data
-      print( "file \(fn) with \(data.count) bytes content unpacked")
-      checkContent(name: fn, data: data)
-    }
-    XCTAssertEqual(self.nerrors, 0)
-    for f in Dir(dest).contents() { print(f) }
-    Dir(dest).remove()
-  }
-  
-} // class ZipTests
-
-class DefaultsTests: XCTestCase {
-  
-  var defaults = Defaults.singleton
-  @Default("testBool")
-  var testBool: Bool
-  @Default("testString")
-  var testString: String
-  @Default("testCGFloat")
-  var testCGFloat: CGFloat
-  @Default("testDouble")
-  var testDouble: Double
-  @Default("testInt")
-  var testInt: Int
-  
-  override func setUp() {
-    super.setUp()
-    Log.minLogLevel = .Debug
-    defaults.suite = "taz"
-    defaults.onChange { arg in
-      print("Notification: \(arg.0)=" +
-              "\"\(arg.1 ?? "nil")\" in scope " +
-              "\"\(arg.2 ?? "nil")\"")
-      
-    }
-    let iPhoneDefaults: [String:String] = [
-      "key1" : "iPhone-value1",
-      "key2" : "iPhone-value2"
-    ]
-    let iPadDefaults: [String:String] = [
-      "key1" : "iPad-value1",
-      "key2" : "iPad-value2"
-    ]
-    defaults.setDefaults(values: Defaults.Values(scope: "iPhone", values: iPhoneDefaults), isNotify: true)
-    defaults.setDefaults(values: Defaults.Values(scope: "iPad", values: iPadDefaults), isNotify: true)
-  }
-  
-  override func tearDown() {
-    super.tearDown()
-  }
-  
-  func testDefaults() {
-    let dfl = Defaults.singleton
-    dfl[nil,"test"] = "non scoped"
-    dfl["iPhone","test"] = "iPhone"
-    dfl["iPad","test"]   = "iPad"
-    XCTAssertEqual(dfl[nil,"test"], "non scoped")
-    if Device.isIphone {
-      XCTAssertEqual(dfl["test"], "iPhone")
-      XCTAssertEqual(dfl["key1"], "iPhone-value1")
-      XCTAssertEqual(dfl["key2"], "iPhone-value2")
-    }
-    else if Device.isIpad {
-      XCTAssertEqual(dfl["test"], "iPad")      
-      XCTAssertEqual(dfl["key1"], "iPad-value1")
-      XCTAssertEqual(dfl["key2"], "iPad-value2")
-    }
-  }
-  
-  func testWrappers() {
-    testBool = false
-    $testBool.onChange { val in print(val) }
-    testBool = true
-    XCTAssertEqual(testBool, true)
-    testBool = true
-    testBool = false
-    testString = ""
-    $testString.onChange { val in print(val) }
-    testString = "test"
-    XCTAssertEqual(testString, "test")
-    testInt = 0
-    $testInt.onChange { val in print(val) }
-    testInt = 14
-    XCTAssertEqual(testInt, 14)
-    testCGFloat = 0
-    $testCGFloat.onChange { val in print(val) }
-    testCGFloat = 15
-    XCTAssertEqual(testCGFloat, 15)
-    testDouble = 0
-    $testDouble.onChange { val in print(val) }
-    testDouble = 16
-    XCTAssertEqual(testDouble, 16)
+  func testArray() {
+    let a1 = [1,2,3,4,5,6,7,8,9,10]
+    XCTAssertEqual(a1.rotated(1), [2,3,4,5,6,7,8,9,10,1])
+    XCTAssertEqual(a1.rotated(-1), [10,1,2,3,4,5,6,7,8,9])
+    XCTAssertEqual(a1.rotated(2), [3,4,5,6,7,8,9,10,1,2])
+    XCTAssertEqual(a1.rotated(-2), [9,10,1,2,3,4,5,6,7,8])
+    var a2 = [1]
+    XCTAssertEqual(a2 += 2, [1,2])
+    XCTAssertEqual(a2 += [3,4], [1,2,3,4])
+    XCTAssertEqual(a2.pop(), 1)
+    XCTAssertEqual(a2, [2,3,4])
+    XCTAssertEqual(a2.push(5), [2,3,4,5])
+    try XCTAssertEqual(a2.value(at:1), 3)
+    XCTAssertThrowsError(try a2.value(at:4))
+    var a3 = ["1", "2", "3"]
+    let a4 = try! a3.deepcopy()
+    XCTAssertEqual(a3,a4)
+    a3 += "4"
+    XCTAssertNotEqual(a3,a4)
   }
 
-} // class DefaultsTest
+} // EtcTests
 
 class FileTests: XCTestCase {
   
   override func setUp() {
     super.setUp()
     Log.minLogLevel = .Debug
-    print("homePath:       \(Dir.homePath)")
-    print("documentsPath:  \(Dir.documentsPath)")
-    print("inboxPath:      \(Dir.inboxPath)")
-    print("appSupportPath: \(Dir.appSupportPath)")
-    print("cachePath:      \(Dir.cachePath)")
-    print("tmpPath:        \(Dir.tmpPath)")
   }
   
   override func tearDown() {
@@ -406,102 +179,385 @@ class FileTests: XCTestCase {
   
 } // FileTests
 
-class ThreadClosureTests: XCTestCase {
+class LogTests: XCTestCase, DoesLog {
   
-  var mainTid: Int64 = 0
-  var asyncTid: Int64 = 0
-  var mainClosure: ThreadClosure<Void>!
-  var asyncClosure: ThreadClosure<Void>!
+  static override func setUp() {
+    super.setUp()
+    Log.append(logger: Log.Logger(), Log.FileLogger(nil))
+    Log.minLogLevel = .Debug
+  }
   
+  static override func tearDown() {
+    super.tearDown()
+    File(Log.FileLogger.tmpLogfile).remove()
+  }
   
-  func testClosure() {
-    mainClosure = ThreadClosure { [weak self] in
-      guard let self = self else { return }
-      self.mainTid = Thread.id
-      print("mainClosure: ID = \(self.mainTid)")
-    }
-    async { [weak self] in
-      guard let self = self else { return }
-      self.asyncClosure = ThreadClosure { [weak self] in
-        guard let self = self else { return }
-        self.asyncTid = Thread.id
-        print("asyncClosure: ID = \(self.asyncTid)")
-        self.mainClosure(wait: true)
+  func testFileLogger() async {
+    let logfn = Log.FileLogger.tmpLogfile
+    debug("Logging to: \(logfn)")
+    log("log test")
+    debug("debug test")
+    error("error test")
+    /// sleep 1ms to give logging tasks time to log
+    try! await Task.sleep(nanoseconds: 1_000_000)
+    Log.sync { [self] in
+      if let str = File(logfn).mem?.string {
+        print("\nlog file content: \n\(str)")
       }
-      self.asyncClosure(wait: true)
-      XCTAssertNotEqual(self.asyncTid, 0)
-      XCTAssertNotEqual(self.mainTid, 0)
-      XCTAssertNotEqual(self.asyncTid, self.mainTid)
+      else { error("Can't read log file: \(logfn)")}
     }
   }
   
 }
 
-class CallbackTests: XCTestCase {
+class ZipTests: XCTestCase, DoesLog {
   
-  class Test1 {
-    @Callback(notification: "test")
-    var whenReady: Callback<Void>.Store
-  }
-
-  // Visualize concurrent access to local var
-  func testConcurrentVar() {
-    let semaphore = DispatchSemaphore(value: 0)
-    var result = 0
-    async {
-      async(after: 0.1) {
-        result = 1
-        semaphore.signal()
-      }
-    }
-    semaphore.wait()
-    XCTAssertEqual(result, 1)
-  }
-  
-  private var count = 0
-  // Make sure that *onMain* doesn't call the closure itself
-  func testMainStack() {
-    guard count < 10 else { count = 0; return }
-    let tmp = count
-    onMain { self.count += 1; self.testMainStack() }
-    XCTAssertEqual(count, tmp)
-    print(count)
-  }
- 
+  var testPath: String!
+  var testDir: String!
+  var nerrors: Int = 0
+  var md5: [String:String] = [:]
+    
   override func setUp() {
     super.setUp()
+    Log.minLogLevel = .Debug
+    debug("cwd: \(Dir.current.path), file: \(#file)")
+    self.testDir = File.dirname(#file)
+    self.testPath = "\(self.testDir!)/test.zip"
+    self.md5 = [
+      "a.txt": "3740129b68388b4f41404d93ae27a79c",
+      "b.txt": "abeecdc0f0a02c2cd90a1555622a84a4"
+    ]
   }
   
-  func testClosures() {    
-    let t1 = Test1()
-    var str = ""
-    Notification.receive("dog") { _ in print("dog received") }
-    Notification.receive("test") { notif in
-      let sender = notif.sender as? Self
-      XCTAssertNotNil(sender)
-      XCTAssertEqual(sender, self)
-      print(notif.content ?? "nil")
-      print("test received")
+  override func tearDown() {
+    super.tearDown()
+  }
+  
+  func checkContent(name: String, data: Memory) {
+    if let checksum = md5[name] {
+      let computed = data.md5
+      XCTAssertEqual(checksum, computed)
+      if checksum != computed {
+        error( "error(\(name): md5 sum doesn't match" )
+        self.nerrors += 1
+      }
     }
-    let i1 = t1.$whenReady { str += "1" }
-    XCTAssertEqual(i1, 0)
-    let i2 = t1.$whenReady { str += "2" }
-    XCTAssertEqual(i2, 1)
-    let idx = t1.$whenReady.store { str += "." }
-    XCTAssertEqual(idx, 2)
-    let i3 = t1.$whenReady { str += "3" }
-    XCTAssertEqual(i3, 3)
-    let i4 = t1.$whenReady { str += "4" }
-    XCTAssertEqual(i4, 4)
-    let i5 = t1.$whenReady { print("i5") }
-    XCTAssertEqual(i5, 5)
-    t1.$whenReady.remove(idx)
-    t1.$whenReady.notify(sender: self, wait: true)
-    XCTAssertEqual(str, "1234")
-    t1.$whenReady.remove(i1)
-    t1.$whenReady.notification = "dog"
-    t1.$whenReady.notify(sender: self, wait: true)
-    XCTAssertEqual(str, "1234234")
+    else {
+      error( "error: unexpected file" )
+      self.nerrors += 1
+    }
+  }
+    
+  func testZipStream() {
+    self.nerrors = 0
+    let zipStream = ZipStream()
+    zipStream.onFile { (name, data) in
+      self.debug( "file \(name) with \(data.count) bytes content found" )
+      self.checkContent(name: name, data: data)
+    }
+    File(self.testPath).open { file in
+      let data = Memory(length: 10)
+      var nbytes: Int
+      repeat {
+        nbytes = file.read(mem: data)
+        if nbytes > 0 { try! zipStream.scanData(mem: data, length: nbytes) }
+      } while nbytes > 0
+    }
+    XCTAssertEqual(self.nerrors, 0)
   }
   
-} // CallbackTests
+  func testZipFile() {
+    let zfile = ZipFile(path: testPath)
+    let destTop = "\(testDir!)/unpacked"
+    let dest = "\(destTop)/zipfile"
+    try! zfile.unpack(toDir: dest)
+    for fn in ["a.txt", "b.txt"] {
+      if let data = File("\(dest)/\(fn)").mem {
+        debug( "file \(fn) with \(data.count) bytes content unpacked")
+        checkContent(name: fn, data: data)
+      }
+      else { XCTFail("Can't read \(fn)") }
+    }
+    XCTAssertEqual(self.nerrors, 0)
+    debug("Files found: \(Dir(dest).contents().joined(separator: " "))")
+    Dir(destTop).remove()
+  }
+  
+} // class ZipTests
+
+class RegexprTests: XCTestCase, DoesLog {
+  
+  func testPreliminary() {
+    if Regexpr("@a@a").matches("öä") {
+      print("*** Regexpr matches UTF-8 in :alpha: ***")
+    }
+    else {
+      print("*** Regexpr does *NOT* match UTF-8 in :alpha: ***")
+    }
+    if Regexpr("ä+").matches("ää") {
+      print("*** Regexpr(\"ä+\") matches \"ää\" ***")
+    }
+    else {
+      print("*** Regexpr(\"ä+\") does *NOT* match \"ää\" ***")
+    }
+    let re = Regexpr("@a+")
+    XCTAssertEqual(re.pattern, "[[:alpha:]]+")
+    XCTAssertEqual(re.match(" 12ab34")![0], "ab")
+    re.pattern = "aBcäö"
+    re.ignoreCase = true
+    XCTAssertEqual(re.match(" AbCÄÖ ")![0], "AbCÄÖ")
+    re.pattern = "@d+"
+    XCTAssertEqual(re.pattern, "[[:digit:]]+")
+    XCTAssertEqual(re.match(" 12ab34")![0], "12")
+    re.pattern = "^@d+$"
+    XCTAssertNil(re.match("\n34"))
+    re.newlineSensitive = true
+    XCTAssertTrue(re.newlineSensitive)
+    XCTAssertEqual(re.match("\n34")![0], "34")
+  }
+  
+  func testMatch() {
+    var re = Regexpr("(@d+)@s+(@d+)")
+    var matched = re.match("abc123  456def")
+    XCTAssertNotNil(matched)
+    if let m = matched {
+      XCTAssertEqual(m.count, 3)
+      XCTAssertEqual(m[0], "123  456")
+      XCTAssertEqual(m[1], "123")
+      XCTAssertEqual(m[2], "456")
+    }
+    XCTAssertTrue(re.matches("abc123  456def"))
+    matched = re.match("abc123  def")
+    XCTAssertNil(matched)
+    XCTAssertFalse(re.matches("abc123  def"))
+    re = Regexpr("c((@d+)@s+(@d+))")
+    matched = re.match("abc123  456def")
+    XCTAssertNotNil(matched)
+    if let m = matched {
+      XCTAssertEqual(m.count, 4)
+      XCTAssertEqual(m[0], "c123  456")
+      XCTAssertEqual(m[1], "123  456")
+      XCTAssertEqual(m[2], "123")
+      XCTAssertEqual(m[3], "456")
+    }
+    re = Regexpr("([0-9]+)-([0-9]+)")
+    matched = re.match("abc 123-456 def")
+    XCTAssertNotNil(matched)
+    if let m = matched {
+      XCTAssertEqual(m.count, 3)
+      XCTAssertEqual(m[0], "123-456")
+      XCTAssertEqual(m[1], "123")
+      XCTAssertEqual(m[2], "456")
+    }
+  }
+  
+  func testGmatch() {
+    let re = Regexpr("(\\d+)-(\\d+)")
+    let matched = re.gmatch("abc 12-13  def 14-15")
+    XCTAssertNotNil(matched)
+    if let m = matched {
+      XCTAssertEqual(matched?.count, 2)
+      XCTAssertEqual(m[0].count, 3)
+      XCTAssertEqual(m[0][0], "12-13")
+      XCTAssertEqual(m[0][1], "12")
+      XCTAssertEqual(m[0][2], "13")
+      XCTAssertEqual(m[1].count, 3)
+      XCTAssertEqual(m[1][0], "14-15")
+      XCTAssertEqual(m[1][1], "14")
+      XCTAssertEqual(m[1][2], "15")
+    }
+    XCTAssertNil(re.gmatch("123"))
+  }
+  
+  func testSubst() {
+    var re = Regexpr("@a+")
+    var subst = re.subst("huhu gaga", with: ">&<")
+    XCTAssertNotNil(subst)
+    if let s = subst {
+      XCTAssertEqual(s, ">huhu< gaga")
+    }
+    XCTAssertNil(re.subst("123", with: ""))
+    re = Regexpr("\\d+")
+    subst = re.subst("ab12", with: "(&) - #", num: 15)
+    XCTAssertNotNil(subst)
+    if let s = subst {
+      XCTAssertEqual(s, "ab(12) - 15")
+    }
+    subst = re.subst("ab12", with: "(&) - #", num: 1, ndig: 3)
+    XCTAssertNotNil(subst)
+    if let s = subst {
+      XCTAssertEqual(s, "ab(12) - 001")
+    }
+    re = Regexpr("@s+(@d+)")
+    subst = re.subst("abc 14def", with: "(&1)")
+    XCTAssertNotNil(subst)
+    if let s = subst {
+      XCTAssertEqual(s, "abc(14)def")
+    }
+    subst = re.subst("abc 14def", with: "\\n(&1)\\n")
+    XCTAssertNotNil(subst)
+    if let s = subst {
+      XCTAssertEqual(s, "abc\n(14)\ndef")
+    }
+    subst = re.subst("abc 14def", with: "\n(\\1)\n")
+    XCTAssertNotNil(subst)
+    if let s = subst {
+      XCTAssertEqual(s, "abc\n(14)\ndef")
+    }
+  }
+  
+  func testGsubst() {
+    var re = Regexpr("@a+")
+    var subst = re.gsubst("huhu gaga", with: ">&<")
+    XCTAssertNotNil(subst)
+    if let s = subst {
+      XCTAssertEqual(s, ">huhu< >gaga<")
+    }
+    XCTAssertNil(re.gsubst("123", with: ""))
+    re = Regexpr("\\d+")
+    subst = re.gsubst("ab12 34", with: "(&) - #", num: 15)
+    XCTAssertNotNil(subst)
+    if let s = subst {
+      XCTAssertEqual(s, "ab(12) - 15 (34) - 15")
+    }
+    re = Regexpr("@s+(@d+)")
+    subst = re.gsubst("abc 14def 15ghi", with: "(&1)")
+    XCTAssertNotNil(subst)
+    if let s = subst {
+      XCTAssertEqual(s, "abc(14)def(15)ghi")
+    }
+  }
+  
+  func testSedSubst() {
+    var ret = Regexpr.subst("abc123def456ghi", by: "/@d+/<&>/")
+    XCTAssertNotNil(ret)
+    if let ret = ret {
+      XCTAssertEqual(ret, "abc<123>def456ghi")
+    }
+    ret = Regexpr.subst("abc123def456ghi", by: "/@d+/<&>/g")
+    XCTAssertNotNil(ret)
+    if let ret = ret {
+      XCTAssertEqual(ret, "abc<123>def<456>ghi")
+    }
+    ret = Regexpr.subst("abc123def456ghi", by: "/@d+/\n&/g")
+    XCTAssertNotNil(ret)
+    if let ret = ret {
+      XCTAssertEqual(ret, "abc\n123def\n456ghi")
+    }
+    ret = Regexpr.subst("abc123def456ghi", by: "/@d+/\\n&/g")
+    XCTAssertNotNil(ret)
+    if let ret = ret {
+      XCTAssertEqual(ret, "abc\n123def\n456ghi")
+    }
+    ret = Regexpr.subst("abc123def456ghi", by: ",@d+,\\n&,g")
+    XCTAssertNotNil(ret)
+    if let ret = ret {
+      XCTAssertEqual(ret, "abc\n123def\n456ghi")
+    }
+    ret = Regexpr.subst("abc123def456ghi", by: ",@d+,\\n&\\,,g")
+    XCTAssertNotNil(ret)
+    if let ret = ret {
+      XCTAssertEqual(ret, "abc\n123,def\n456,ghi")
+    }
+  }
+  
+  func testStringExtensions() {
+    XCTAssertTrue("ab12cd" =~ "@d+")
+    XCTAssertFalse("abcd" =~ "@d+")
+    let m = "ab123cd".match("@d+")
+    XCTAssertNotNil(m)
+    if let m = m {
+      XCTAssertEqual(m.count, 1)
+      XCTAssertEqual(m[0], "123")
+    }
+    let gm = "abä123cdö".gmatch("@a+")
+    XCTAssertNotNil(gm)
+    if let gm = gm {
+      XCTAssertEqual(gm.count, 2)
+      XCTAssertEqual(gm[0][0], "abä")
+      XCTAssertEqual(gm[1][0], "cdö")
+    }
+    var s = "abä123cdö"
+    XCTAssertEqual(s.subst("/@a+/<&>/g"), "<abä>123<cdö>")
+    s = "abc"
+    XCTAssertEqual(s.subst("/.*/<&> #/g", num:1, ndig:3), "<abc> 001")
+  }
+
+} // class RegexprTests
+
+class VersionTests: XCTestCase {
+  
+  func testVersion() {
+    let a = Version("1.2")
+    let b = Version("2.0")
+    XCTAssertTrue(a < b)
+    XCTAssertFalse(a == b)
+    XCTAssertFalse(a.isCompatible(ver: b))
+    XCTAssertFalse(a > b)
+    XCTAssertEqual(a[2], 0)
+    a[3] = 4
+    XCTAssertEqual(a.toString(), "1.2.0.4")
+    a[2] = 16
+    XCTAssertEqual(a.major, 1)
+    XCTAssertEqual(a.minor, 2)
+    XCTAssertEqual(a.patch, 16)
+    a[0] = 2
+    XCTAssertTrue(a.isCompatible(ver: b))
+  }
+  
+}
+
+class UsTimeTests: XCTestCase {
+  
+  static override func setUp() {
+    super.setUp()
+    let now = UsTime.now
+    print("Current local time: \(now) \(UsTime.tz)", terminator: " ")
+    print("\(now.isDst ? "daylight saving time" : "standard time")")
+    print("  offsets: \(UsTime.tzOffset)s standard, \(UsTime.tzDstOffset)s daylight")
+  }
+  
+  func testConversion() {
+    var t: UsTime?
+    t = UsTime.parse(iso: "2019-10-09 13:44:56")
+    XCTAssertNotNil(t)
+    if let t = t { XCTAssertEqual(t.toString(), "2019-10-09 13:44:56") }
+    t = UsTime.parse(iso: "2019-10-09 13:45:56.123")
+    XCTAssertNotNil(t)
+    if let t = t { 
+      XCTAssertEqual(t.toString(), "2019-10-09 13:45:56") 
+      XCTAssertEqual(t.usecond, 123000)
+    }
+    t = UsTime.parse(iso: "2019-10-09")
+    XCTAssertNotNil(t)
+    if let t = t { XCTAssertEqual(t.toString(), "2019-10-09 12:00:00") }
+    t = UsTime.parse(iso: "2019-13-09")
+    XCTAssertNil(t)
+    t = UsTime.parse(iso: "2019-10-09")
+    if let t = t {
+      XCTAssertEqual(t.sec, 1570615200)
+      let t2 = UsTime("1570615200")
+      XCTAssertEqual(t.sec, t2.sec)
+    }
+  }
+  
+  func testOperators() {
+    let t1 = UsTime.parse(iso: "2022-01-10, 14:00:00")
+    XCTAssertNotNil(t1)
+    if let t = t1 {
+      t += 3600
+      XCTAssertEqual(t.toString(), "2022-01-10 15:00:00") 
+    }
+    let t2 = UsTime.parse(iso: "2022-01-10, 14:00:00")
+    XCTAssert(t1! != t2!)
+    XCTAssert(t1! > t2!)
+    XCTAssert(t2! < t1!)
+    t1! -= 3600
+    XCTAssert(t1! == t2!)
+    t1!.usec = 100
+    XCTAssert(t1! > t2!)
+    t1! -= 1
+    XCTAssert(t1! < t2!)
+  }
+  
+}

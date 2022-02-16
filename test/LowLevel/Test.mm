@@ -6,9 +6,8 @@
 //  Copyright © 2020 Norbert Thies. All rights reserved.
 //
 
-#import <XCTest/XCTest.h>
-#include "NorthLib/strext.h"
-#include "NorthLib/fileop.h"
+#import  <XCTest/XCTest.h>
+#import  "NorthLowLevel.h"
 
 @interface TestLowlevel : XCTestCase
 
@@ -176,7 +175,7 @@
   snprintf(buff, 1000, "%s/../..", home);
   dir = fn_abs(buff);
   XCTAssert(dir != 0);
-  printf("%s\n", dir);
+  printf("$HOME/../..: %s\n", dir);
   stat_t st;
   XCTAssert(stat_read(&st, home) == 0);
   XCTAssert(stat_isdir(&st));
@@ -191,6 +190,86 @@
   tmp = fn_progname(buff);
   XCTAssert(str_cmp(tmp, "test") == 0);
   str_release(&tmp);
+  char *fn1 = fn_tmp("test"), *fn2 = fn_tmp("test");
+  printf("fn1: %s\nfn2: %s\n", fn1, fn2);
+  fileptr_t fp;
+  XCTAssert(file_open(&fp, fn1, "w") == 0);
+  XCTAssert(file_writeline(fp, "1234") == 5);
+  file_close(&fp);
+  XCTAssert(file_copy(fn1, fn2) == -1);
+  unlink(fn2);
+  XCTAssert(file_copy(fn1, fn2) == 5);
+  XCTAssert(file_open(&fp, fn2, "r") == 0);
+  tmp = file_readline(fp);
+  file_close(&fp);
+  XCTAssert(str_cmp(tmp, "1234\n") == 0);
+  str_release(&tmp);
+  unlink(fn2);
+  XCTAssert(file_trymove(fn1, fn2) == 0);
+  XCTAssert(file_copy(fn2, fn1) == 5);
+  XCTAssert(file_move(fn1, fn2) == -1);
+  unlink(fn1);
+  unlink(fn2);
+  str_release(&fn2);
+  str_release(&fn1);
+}
+
+- (void) testMapfile {
+  const char test_data [] =  "this is a test";
+  const char *fn  =  "./test.map",
+             *fn2 =  "./test2.map";
+  mapfile_t m1, m2;
+  char buff [1024];
+  int ret;
+  XCTAssert(m1.map(fn) == 0);
+  XCTAssert(m1.resize(1000) == 0);
+  XCTAssert(m1.size() == 1000);
+  XCTAssert(m2.map(fn) == 0);
+  XCTAssert(m2.size() == 1000);
+  mem_cpy(m1.data(10), test_data, sizeof test_data);
+  mem_cpy(buff, m2.data(10), sizeof test_data);
+  XCTAssert(str_cmp(test_data, buff) == 0);
+  XCTAssert(m2.resize(20000) == 0);
+  XCTAssert(m2.size() == 20000);
+  mem_cpy(buff, m2.data(10), sizeof test_data);
+  XCTAssert(str_cmp(test_data, buff) == 0);
+  m1.unmap();
+  m2.unmap();
+  mapfile_t m3(fn);
+  XCTAssert(m3.ok());
+  mem_cpy(buff, m3.data(10), sizeof test_data);
+  XCTAssert(str_cmp(test_data, buff) == 0);
+  m3.sync();
+  mapfile_t m4;
+  XCTAssert(m4.map(fn2) == 0);
+  XCTAssert(m4.ok());
+  m4.read(m3.fd());
+  mem_cpy(buff, m4.data(10), sizeof test_data);
+  XCTAssert(str_cmp(test_data, buff) == 0);
+  lseek ( m3.fd (), 0, SEEK_SET );
+  m4.read ( m3.fd (), (unsigned long) -1, 2000 );
+  mem_cpy ( buff, m4.data ( 2010 ), sizeof test_data );
+  XCTAssert(str_cmp(test_data, buff) == 0);
+  mem_cpy(buff, m4.data(10), sizeof test_data);
+  XCTAssert(str_cmp(test_data, buff) == 0);
+  m3.unmap();
+  m4.unmap();
+  mapfile_t m5;
+  XCTAssert(m5.map(fn) == 0);
+  XCTAssert(m5.ok());
+  XCTAssert(m5.resize(1000) == 0);
+  XCTAssert(m5.size() == 1000);
+# if !defined(TARGET_OS_IPHONE)
+  char cmd [512];
+  snprintf ( cmd, 511, "echo 0123 > %s", fn );
+  system ( cmd );
+  m5.remap();
+  XCTAssert(m5.size() == 5);
+  mem_cpy ( buff, m5.data ( 0 ), 4 );
+  XCTAssert(mem_cmp("0123", buff, 4) == 0);
+# endif
+  unlink(fn);
+  unlink(fn2);
 }
 
 @end

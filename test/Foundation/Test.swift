@@ -5,8 +5,10 @@
 //  Copyright © 2019 Norbert Thies. All rights reserved.
 //
 
-import NorthLib
+import NorthFoundation
+
 import XCTest
+
 extension XCTestCase: DoesLog {}
 
 class EtcTests: XCTestCase {
@@ -98,11 +100,14 @@ class StringTests: XCTestCase {
 class UsTimeTests: XCTestCase {
   
   func testIsoConversion() {
-    XCTAssertEqual(UsTime(iso: "2019-10-09 13:44:56").toString(), "2019-10-09 13:44:56.000000")
-    XCTAssertEqual(UsTime(iso: "2019-10-09 13:44:56.123").toString(), "2019-10-09 13:44:56.123000")
-    XCTAssertEqual(UsTime(iso: "2019-10-09 13:44:56.123", tz: "Europe/London").toString(tz: "Europe/London"),
+    XCTAssertEqual(UsTime(iso: "2019-10-09 13:44:56").toString(tz: nil), 
+                   "2019-10-09 13:44:56.000000")
+    XCTAssertEqual(UsTime(iso: "2019-10-09 13:44:56.123").toString(tz: nil), 
                    "2019-10-09 13:44:56.123000")
-    XCTAssertEqual(UsTime(iso: "2019-10-09").toString(), "2019-10-09 12:00:00.000000")
+    XCTAssertEqual(UsTime(iso: "2019-10-09 13:44:56.123", tz: "Europe/London")
+                    .toString(tz: "Europe/London"), "2019-10-09 13:44:56.123000")
+    XCTAssertEqual(UsTime(iso: "2019-10-09").toString(tz: nil), 
+                   "2019-10-09 12:00:00.000000")
   }
   
 }
@@ -114,8 +119,6 @@ class DefaultsTests: XCTestCase {
   var testBool: Bool
   @Default("testString")
   var testString: String
-  @Default("testCGFloat")
-  var testCGFloat: CGFloat
   @Default("testDouble")
   var testDouble: Double
   @Default("testInt")
@@ -153,16 +156,6 @@ class DefaultsTests: XCTestCase {
     dfl["iPhone","test"] = "iPhone"
     dfl["iPad","test"]   = "iPad"
     XCTAssertEqual(dfl[nil,"test"], "non scoped")
-    if Device.isIphone {
-      XCTAssertEqual(dfl["test"], "iPhone")
-      XCTAssertEqual(dfl["key1"], "iPhone-value1")
-      XCTAssertEqual(dfl["key2"], "iPhone-value2")
-    }
-    else if Device.isIpad {
-      XCTAssertEqual(dfl["test"], "iPad")      
-      XCTAssertEqual(dfl["key1"], "iPad-value1")
-      XCTAssertEqual(dfl["key2"], "iPad-value2")
-    }
   }
   
   func testWrappers() {
@@ -180,10 +173,6 @@ class DefaultsTests: XCTestCase {
     $testInt.onChange { val in print(val) }
     testInt = 14
     XCTAssertEqual(testInt, 14)
-    testCGFloat = 0
-    $testCGFloat.onChange { val in print(val) }
-    testCGFloat = 15
-    XCTAssertEqual(testCGFloat, 15)
     testDouble = 0
     $testDouble.onChange { val in print(val) }
     testDouble = 16
