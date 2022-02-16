@@ -1,0 +1,12 @@
+//
+//  UIKitAdoptingDoesLog.swift
+//
+//  Created by Norbert Thies on 21.08.17.
+//  Copyright © 2017 Norbert Thies. All rights reserved.
+//
+
+
+
+/// Common UIKit types adopting DoesLog to perform logging
+extension UIView: DoesLog {}
+extension UIViewController: DoesLog {}

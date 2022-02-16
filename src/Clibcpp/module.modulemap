@@ -1,0 +1,4 @@
+module Clibcpp [system] {
+  link "c++"
+  export *
+}

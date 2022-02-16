@@ -1,0 +1,6 @@
+module Clibzip [system] {
+  umbrella header "Clibzip.h"
+  link "z"
+  export *
+  module * { export * }
+}
