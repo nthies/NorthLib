@@ -1,1 +1,5 @@
-xcschememanagement.plist
+/.swiftpm
+/.build
+*.swp
+Package.resolved
+.DS_Store
