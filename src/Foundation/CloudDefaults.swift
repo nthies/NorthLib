@@ -29,7 +29,7 @@ public final class CloudDefaults: KVStore, Singleton {
   
   /// Init with suite name to share defaults between apps
   private init(suite: String? = nil) {
-    super.init(base: CloudDefaultsBase(suite: suite), suite: suite)
+    super.init(base: CloudDefaultsBase(suite: suite), name: nil, suite: suite)
     Notification.receive(NSUbiquitousKeyValueStore.didChangeExternallyNotification)
     { [weak self] notif in
       guard let self = self else { return }

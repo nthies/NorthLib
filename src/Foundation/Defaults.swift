@@ -5,9 +5,7 @@
 //  Copyright © 2017 Norbert Thies. All rights reserved.
 //
 
-import UIKit
-
-
+import Foundation
 
 /** The Defaults class is just some syntactic sugar around iOS' UserDefaults.
  
@@ -39,8 +37,8 @@ public final class Defaults: KVStore, Singleton {
   public static var singleton: Defaults = Defaults()
   
   /// Init with suite name to share defaults between apps
-  private init(suite: String? = nil) {
-    super.init(base: DefaultsBase(suite: suite), suite: suite)
+  public init(suite: String? = nil) {
+    super.init(base: DefaultsBase(suite: suite), name: nil, suite: suite)
   }
 
 }

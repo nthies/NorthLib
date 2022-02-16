@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UserNotifications
 
 open class LocalNotifications: DoesLog {
    

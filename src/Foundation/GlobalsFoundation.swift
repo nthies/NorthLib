@@ -1,5 +1,5 @@
 //
-//  Globals.swift
+//  GlobalsFoundation.swift
 //
 //  Created by Norbert Thies on 20.12.18.
 //  Copyright © 2018 Norbert Thies. All rights reserved.
@@ -87,18 +87,9 @@ public func onThreadAfter(_ timeout : Double = 0.2,
                                     execute: closure)
 }
 
-/// returns the type name of an object as String
-public func typeName<T>(_ obj: T) -> String { return "\(type(of:obj))" }
-
 /// Returns a path to a unique temporary file
 public func tmppath() -> String {
   let dir = FileManager.default.temporaryDirectory
   let uuid = UUID().uuidString
   return "\(dir.path)/\(uuid).tmp"
 }
-
-/// Returns address of raw pointer
-public func address(_ obj: UnsafeRawPointer) -> Int { Int(bitPattern: obj) }
-
-/// Returns address of object
-public func address<T>(_ obj: T) -> Int { unsafeBitCast(obj, to: Int.self) }

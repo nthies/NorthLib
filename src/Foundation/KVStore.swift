@@ -57,13 +57,14 @@ open class KVStore {
   public var onChange: Callback<NotificationArg>.Store
   
   /// Initialize with optional name and optional suite name
-  public init(base: KVStoreBase, name: String? = nil, suite: String? = nil) {
+  public init(base: KVStoreBase, name: String?, suite: String? = nil,
+              device: String? = nil) {
     self.base = base
     self.name = "\(type(of: self))"
     if let name = name { self.name = name }
     $onChange.notification = self.name
     self.suite = suite
-    addScope(Device.singleton.description)
+    if let device = device { addScope(device) }
   }
   
   /// Syntactic sugar for Notification.receive
@@ -269,14 +270,6 @@ extension Double: StringConvertible {
   public static func toString(_ val: Self) -> String { "\(val)" }
 }
 
-extension CGFloat: StringConvertible {
-  public static func fromString(_ str: String?) -> Self {
-    if let str = str, let d = Double(str) { return Self(d) }
-    return 0
-  }
-  public static func toString(_ val: Self) -> String { "\(val)" }
-}
-
 extension Date: StringConvertible {
   public static func fromString(_ str: String?) -> Date { (str ?? "0").usTime.date }
   public static func toString(_ val: Self) -> String { "\(UsTime(val).sec)" }
@@ -292,26 +285,26 @@ public protocol Singleton {
 open class KeyValue<Store: KVStore & Singleton, T: StringConvertible> {
     
   /// The String to use as Defaults key
-  public var key: String
+  open var key: String
   
   /// The raw String? value (in essence Defaults.singleton[key])
-  public var value: String? {
+  open var value: String? {
     get { Store.singleton[key] }
     set { Store.singleton[key] = newValue }
   }
   
   /// The wrapped value is the interpreted value as type T
-  public var wrappedValue: T {
+  open var wrappedValue: T {
     get { T.fromString(value) }
     set { value = T.toString(newValue) }
   }
 
   /// The projected value is the wrapper itself
-  public var projectedValue: KeyValue<Store, T> { self }
+  open var projectedValue: KeyValue<Store, T> { self }
   
   /// The closures to call when this value has been changed
   @Callback<T>
-  public var onChange: Callback<T>.Store
+  open var onChange: Callback<T>.Store
   
   private func setupNotifications() {
     guard $onChange.count == 0 else { return }
