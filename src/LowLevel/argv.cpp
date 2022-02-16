@@ -9,7 +9,13 @@
 #include  <ctype.h>
 #include  "strext.h"
       
- 
+/**
+ * av_const returns a const argv array (as simple cast)
+ */
+const char * const *av_const(char **argv) {
+  return argv;
+}
+
 /**
  *  av_release releases an array of allocated strings.
  *  The last string in 'argv' must be a 0 pointer.
@@ -41,9 +47,9 @@ char *av_index(char **argv, int i) {
 }
 
 /// av_length returns the number of strings in 'argv'.
-int av_length(char **argv) {
+int av_length(const char * const *argv) {
   if (!argv) return 0;
-  char **p =  argv;
+  const char * const *p =  argv;
   int val =  0;
   while ( *(p++) ) val ++;
   return val;
@@ -70,9 +76,9 @@ int av_size(char **argv) {
  * argv[i] is expected of size 'len' and as many bytes are allocated
  * for each element of the retuned array.
  */
-char **av_heap(char **argv, int len) {
+char **av_heap(const char * const *argv, int len) {
   char **ret =  0;
-  char **p =  argv;
+  const char * const *p =  argv;
   if ( p ) {
     int n =  av_length ( argv );
     if ( (ret =  (char **) calloc ( n + 1, sizeof ( char * ) )) ) {
@@ -84,6 +90,19 @@ char **av_heap(char **argv, int len) {
 	p++; d++;
   } } } 
   return ret;
+}
+
+/**
+ * av_alloc returns a new allocated char**
+ *
+ * It allocates space for len+1 char pointer, all pointers are initialized
+ * with (char *) 0.
+ *
+ *  @param len size of array - 1
+ *  @return new allocated char*[] containing len+1 char*
+ */
+char **av_alloc(int len) {
+  return (char **) calloc(len+1, sizeof(char *));
 }
 
 /// av_clone returns a deep copy of 'argv'.

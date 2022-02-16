@@ -15,6 +15,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include "strext.h"
+#include "mapfile.h"
 #include "fileop.h"
 
 // MARK: struct stat macros
@@ -775,6 +776,58 @@ char *fn_abs(const char *fname) {
 }
 
 /**
+ * fn_tmpdir returns the pathname of the default directory for storing
+ * temporary files.
+ *
+ * @return allocated pathname of temporary directory.
+ */
+char *fn_tmpdir() {
+  const char *dir;
+  if (!(dir = getenv("TMPDIR")))
+    if (!(dir = getenv("TEMP")))
+      if (!(dir = getenv("TMP")))
+        dir = "/tmp";
+  int l = str_len(dir);
+  if ( dir[l-1] == '/' ) l--;
+  return str_heap(dir, l);
+}
+
+/**
+ * fn_tmp is used to return a temporary file name currently
+ * not in use.
+ *
+ * The returned filename looks like:
+ *
+ *    /tmp/<pid>-<idx>-<str>
+ *
+ * where <pid> is the process id of the running process and <idx>
+ * is a sequential number 0, 1, ...
+ *
+ * In addition to returning the file name, the file is also created.
+ *
+ * @return allocated filename if file can be created
+ * @return 0 if file can't be created
+ */
+char *fn_tmp ( const char *str ) {
+  char buff [1024];
+  char *tmpdir = fn_tmpdir();
+  char *ret = 0;
+  pid_t pid =  getpid ();
+  for (int i = 0;; i++ ) {
+    int fd;
+    snprintf ( buff, 1023, "%s/%d-%d-%s", tmpdir, pid, i, str );
+    fd =  open ( buff, O_RDWR | O_CREAT | O_EXCL, 0666 );
+    if ( fd >= 0 ) {
+      close ( fd );
+      ret = str_heap ( buff, 0 );
+      break;
+    }
+    else if ( errno != EEXIST ) break;
+  }
+  return ret;
+}
+
+/**
  * fn_linkpath evaluates the relative link path of two files.
  * 
  * This is used when constructing a relative symbolic link, which in most
@@ -785,12 +838,11 @@ char *fn_abs(const char *fname) {
  * Eg. fn_linkpath ( buff, len, "/usr/bin/foo", "/bin/lfoo" ) would write
  * "../usr/bin/foo" to 'buff' and hence symlink ( buff, "/bin/lfoo" )
  * would create the desired symbolic link.
+ *
+ *   @param from: absolute pathname of original file
+ *   @param to:   absolute pathname of symbolic link
  * 
- * - arguments:
- *   - from: absolute pathname of original file
- *   - to:   absolute pathname of symbolic link
- * 
- * - returns: #chars written to buff
+ *   @return #chars written to buff
  */
 int fn_linkpath(char *buff, int len, const char *from, const char *to) {
   if ( buff && from && to ) {
@@ -874,7 +926,14 @@ int fn_resolvelink(char *from, int flen, char *to, int tlen,
 /**
  * file_link links an existing path 'from' to a symbolic link 'to'.
  * 
- * Both, 'from' and 'to' must be absolute pathnames.
+ * Both, 'from' and 'to' must be absolute pathnames. If possible the link
+ * created is made relative.
+ *
+ * @param from: absolute pathname of existing file
+ * @param to: absolute pathname of symbolic link to create
+ *
+ * @return 0: OK
+ * @return -1: Error
  */
 int file_link(const char *from, const char *to) {
   char buff[1000];
@@ -886,7 +945,13 @@ int file_link(const char *from, const char *to) {
 
 /**
  * file_readlink returns the file a given 'path' links to symbollically.
+ *
  * If the given path is not a symbolic link, 0 is returned.
+ *
+ * @param path: pathname pointing to symbolic link
+ *
+ * @return 0: path is not a symbolic link
+ * @return allocated pathname of file 'path' points to
  */
 char *file_readlink(const char *path) {
   char buff[1001];
@@ -907,6 +972,79 @@ int file_unlink(const char *path) {
   if ( stat_readlink(&tmp, path) != 0 ) return -1;
   if ( stat_isdir(&tmp) ) return rmdir(path);
   else return unlink(path);
+}
+
+/**
+ * file_trymove tries to move a file via link/unlink.
+ *
+ * If the file 'src' cannot be linked to 'dest' (ie. the given pathes are not
+ * on the same filesystem) 1 is returned. This function fails if 'dest' is
+ * already existing.
+ *
+ * @param src: source file to move
+ * @param dest: destination path (ehere to move to)
+ *
+ * @return 0: OK (file has been moved)
+ * @return 1: file can't be linked
+ * @return -1: Error
+ */
+int file_trymove( const char *src, const char *dest) {
+  if ( link(src, dest) != 0 ) {
+    if ( errno == EXDEV ) return 1;
+    else return -1;
+  }
+  return unlink(src);
+}
+
+/**
+ * file_copy copies the contents of file 'src' to file 'dest'.
+ *
+ * If 'dest' is already existing this function will fail.
+ *
+ * @param src: source file to copy
+ * @param dest: destination path (where to copy to)
+ *
+ * @return >=0: #bytes copied
+ * @return -1: Error
+ */
+long file_copy(const char *src, const char *dest) {
+  stat_t tmp;
+  if ( (stat_readlink(&tmp, src) != 0) ||
+       !stat_isfile(&tmp) ||
+       (stat_readlink(&tmp, dest) == 0)
+     ) return -1;
+  mapfile_t msrc(src), mdest(dest);
+  if ( msrc.ok() && mdest.ok() ) {
+    mdest.resize(msrc.size());
+    mem_cpy(mdest.data(), msrc.data(), msrc.size());
+    return msrc.size();
+  }
+  return -1;
+}
+
+/**
+ * file_move moves the file 'src' to a new place at 'dest'.
+ *
+ * This function fails if 'dest' exists. If 'dest' resides on a different
+ * file system, 'src' is copied to 'dest' and then removed.
+ *
+ * @param src: source file to move
+ * @param dest: destination path (where to move to)
+ *
+ * @return 0: OK (file moved)
+ * @return >0: #bytes copied (different filesystems)
+ * @return -1: Error
+ */
+long file_move(const char *src, const char *dest) {
+  long ret = file_trymove(src, dest);
+  if (ret != 0) {
+    if ( ret == 1 ) {
+      if ( (ret = file_copy(src, dest)) >= 0 ) {
+        unlink(src);
+        return ret;
+  } } }
+  else return 0;
+  return -1;
 }
 
 /// Open a file pointer and write it to *fp
@@ -930,7 +1068,15 @@ char *file_readline(fileptr_t fp) {
   else return 0;
 }
 
-/// Writes one line to the file pointer (a missing \n is appended)
+/**
+ * Writes one line to the file pointer (a missing \\n is appended)
+ *
+ * @param fp: file pointer to write to
+ * @param str: string to write to 'fp'
+ *
+ * @return >=0 the number of bytes written
+ * @return -1 Error
+ */
 int file_writeline(fileptr_t fp, const char *str) {
   if ( fputs(str, fp) >= 0 ) {
     int l = str_len(str);
@@ -969,7 +1115,7 @@ char **dir_content(const char *dir) {
     while ((de = readdir(d))) {
       if (str_cmp(de->d_name, ".") != 0 && str_cmp(de->d_name, "..") != 0) n++;
     }
-    char **ret = av_heap(0, n + 1);
+    char **ret = av_alloc(n + 1);
     char **ap = ret;
     rewinddir(d);
     while ((de = readdir(d))) {

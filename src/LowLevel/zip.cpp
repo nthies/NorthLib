@@ -1,10 +1,8 @@
 #include <zlib.h>
-#include "zip.hh"
-
-#undef DEBUG
+#include "zip.h"
 
 // a simple debug macro
-#ifdef DEBUG
+#ifdef ZIP_DEBUG
 
 #  define debug(fmt,...) \
      printf("%s(%d): ", __FUNCTION__, __LINE__); \
@@ -352,7 +350,14 @@ char *Buffer::heapFilename( void ) const {
     int l = header() -> fnlength();
     ret = (char *) malloc( (l+1) * sizeof(char) );
     if ( ret ) {
-      memcpy( ret, _buffer + sizeof(Header), l * sizeof(char) );
+      const tByte *p = _buffer + sizeof(Header);
+      // remove leading '/', '\' and '.' characters
+      while (l>0) {
+        tByte ch = *p;
+        if (ch == '/' || ch == '\\' || ch == '.') { p++; l--; }
+        else break;
+      }
+      memcpy( ret, p, l * sizeof(char) );
       ret[l] = '\0';
   } }
   return ret;
@@ -461,6 +466,7 @@ File::File( void *buffer ) {
   if ( !(_header = malloc( datasize )) ) throw Exception();
   memcpy( _header, h, h->hsize() );
   _name = b->heapFilename();
+  if (!*_name) throw Exception("empty file name");
   if ( h->size() > 0 ) {
     // decompress file contents
     _data = ((tByte*) _header) + h->hsize();
@@ -553,7 +559,56 @@ void Stream::scan( const char *buff, int blen ) {
 
 } // namespace zip
 
-#ifdef DEBUG
+// C Interface
+typedef void zip_handler_t(void *, const char *, const void *, int);
+
+class zip_reader_t;
+class zip_delegate_t: public zip::StreamDelegate {
+  friend class zip_reader_t;
+  zip_handler_t *handler;
+  void          *context;
+  zip_delegate_t(zip_handler_t *hdl, void *ctx)
+  { handler = hdl; context = ctx; }
+  void handleFile(zip::File *file) {
+    handler(context, file->name(), file->data(), file->size());
+  }
+};
+
+class zip_reader_t {
+public:
+  zip::Stream   *zip_stream;
+  zip_delegate_t zip_delegate;
+  const char    *zip_lasterr;
+  zip_reader_t(zip_handler_t *handler, void *context)
+    : zip_delegate(handler, context) {
+    zip_lasterr = 0;
+    zip_stream = new zip::Stream(zip_delegate);
+  }
+  ~zip_reader_t() { delete zip_stream; }
+};
+
+/// Initialize/allocate zip stream class
+void *zip_stream_init(void *context, zip_handler_t *handler) {
+  return (void *) new zip_reader_t(handler, context);
+}
+
+/// Release zip stream class
+void zip_stream_release(void *zs) { delete (zip_reader_t *)zs; }
+
+/// Scan data for zipped files, returns -1 in case of error
+int zip_stream_scan(void *zs, const void *data, int len) {
+  zip_reader_t *reader = (zip_reader_t *)zs;
+  try { reader->zip_stream->scan((const char *)data, len); }
+  catch (zip::Exception e) { reader->zip_lasterr = e.what(); return -1; }
+  return 0;
+}
+
+/// Returns description of last scan error
+const char *zip_stream_lasterr(void *zs) {
+  return ((zip_reader_t *)zs)->zip_lasterr;
+}
+
+#ifdef ZIP_DEBUG
 
 int main() {
   using namespace zip;

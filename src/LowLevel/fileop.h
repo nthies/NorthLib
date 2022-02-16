@@ -9,9 +9,10 @@
 #define fileop_h
 
 #include  <stdarg.h>
+#include  <stdio.h>
 #include  <sys/types.h>
 #include  <sys/stat.h>
-#include  <NorthLib/sysdef.h>
+#include  "sysdef.h"
 
 /// File status
 typedef struct stat stat_t;
@@ -68,12 +69,17 @@ int fn_getdir(char *buff, int len, const char *path);
 char *fn_compress(char *fn);
 int fn_getabs(char *buff, int len, const char *fname);
 char *fn_abs(const char *fname);
+char *fn_tmpdir();
+char *fn_tmp (const char *str);
 int fn_linkpath(char *buff, int len, const char *from, const char *to);
 int fn_resolvelink(char *from, int flen, char *to, int tlen,
                    const char *fn, const char *link);
 char *file_readlink(const char *path);
 int file_link(const char *from, const char *to);
 int file_unlink(const char *path);
+int file_trymove( const char *src, const char *dest);
+long file_copy(const char *src, const char *dest);
+long file_move(const char *src, const char *dest);
 int file_open(fileptr_t *rfp, const char *path, const char *mode);
 int file_close(fileptr_t *rfp);
 char *file_readline(fileptr_t fp);

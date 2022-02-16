@@ -36,8 +36,8 @@ class mapfile_t {
     ~mapfile_t () { unmap (); }
     int ok ( void ) const;
     int resize ( unsigned long newsize );
-    int read ( int fd, unsigned long nbytes = (unsigned long) -1,
-               unsigned long off = 0 );
+    long read ( int fd, unsigned long nbytes = (unsigned long) -1,
+                unsigned long off = 0 );
     void *data ( unsigned long idx = 0 );
     unsigned long size ( void ) const { return mf_len; }
     const char *fntmp ( void ) const { return mf_tmpfn; }

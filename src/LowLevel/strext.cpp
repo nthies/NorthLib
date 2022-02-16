@@ -1,5 +1,5 @@
 //
-//  strext.c
+//  strext.cpp
 //
 //  Created by Norbert Thies on 18.03.1993.
 //  Copyright © 1993 Norbert Thies. All rights reserved.
@@ -10,6 +10,7 @@
 #include  <ctype.h>
 #include  <stdio.h>
 #include  <string.h>
+#include  <time.h>
 #include  <sys/errno.h>
 #include  <sys/utsname.h>
 #include  "strext.h"
@@ -23,13 +24,14 @@ const char *str_empty_c =  "";
  * mem_cpy is simply a replacement of 'memcpy'.
  * 
  * mem_cpy copies 'len' bytes from 'src' to 'dest' and returns 'dest'.
- * - parameters:
- *   - dest: where to copy 'src' to
- *   - src:  data to copy
- *   - len:  number of bytes to copy;
- * - returns: dest 
+ *
+ * @param dest where to copy 'src' to
+ * @param src  data to copy
+ * @param len  number of bytes to copy;
+ *
+ * @return dest
  */
-void *mem_cpy(void *dest, const void *src, int len) {
+void *mem_cpy(void *dest, const void *src, size_t len) {
   if ( dest && src ) {
     unsigned char *d =  (unsigned char *) dest;
     const unsigned char *s =  (const unsigned char *) src;
@@ -48,7 +50,7 @@ void *mem_cpy(void *dest, const void *src, int len) {
  *   - len: number of bytes to copy;
  * - returns: p1 
  */
-void *mem_swap(void *p1, void *p2, int len) {
+void *mem_swap(void *p1, void *p2, size_t len) {
   if ( p1 && p2 ) {
     unsigned char ch;
     unsigned char *d =  (unsigned char *) p1;
@@ -70,7 +72,7 @@ void *mem_swap(void *p1, void *p2, int len) {
  *   - len:  number of bytes to copy to
  * - returns dest
  */
-void *mem_set(void *dest, int ch, int len) {
+void *mem_set(void *dest, int ch, size_t len) {
   if ( dest ) {
     unsigned char *d =  (unsigned char *) dest;
     unsigned char byte =  (unsigned char) ch;
@@ -92,7 +94,7 @@ void *mem_set(void *dest, int ch, int len) {
  *     <0, if the first not equal byte of p1 is smaller than that of p2
  *     >0  otherwise
  */
-int mem_cmp(const void *p1, const void *p2, int len) {
+int mem_cmp(const void *p1, const void *p2, size_t len) {
   if ( p1 && p2 && (len >= 0) ) {
     const unsigned char *a =  (const unsigned char *) p1;
     const unsigned char *b =  (const unsigned char *) p2;
@@ -115,7 +117,7 @@ int mem_cmp(const void *p1, const void *p2, int len) {
  *   - len: #bytes to move
  * - returns: dest
  */
-void *mem_move(void *dest, const void *src, int len) {
+void *mem_move(void *dest, const void *src, size_t len) {
   if ( dest && src ) {
     unsigned char *d =  (unsigned char *) dest;
     const unsigned char *s =  (const unsigned char *) src;
@@ -137,13 +139,54 @@ void *mem_move(void *dest, const void *src, int len) {
  *   - len: #bytes to allocate (and copy)
  * - returns: the allocated pointer
  */
-void *mem_heap(const void *ptr, int len) {
+void *mem_heap(const void *ptr, size_t len) {
   if ( len > 0 ) {
     void *buff =  malloc ( len );
     if ( buff && ptr ) mem_cpy ( buff, ptr, len );
     return buff;
   }
   return 0;
+}
+
+/**
+ * mem_resize is simply a replacement of 'realloc'.
+ *
+ * mem_resize assumes that the passed pointer 'ptr' has been
+ * allocated. The allocated memory area is resized to 'len' bytes
+ * and the newly re-allocated pointer is returned.
+ *
+ * @param ptr  allocated pointer to memory
+ * @param len  number of bytes to (re-)allocate
+ *
+ * @return reallocated pointer
+ */
+void *mem_resize(void *ptr, size_t len) {
+  return realloc(ptr, len);
+}
+
+/**
+ * mem_0byte enforces a trailing zero byte.
+ *
+ * mem_0byte enforces a zero byte at the last byte position of the
+ * passed pointer 'ptr'. If the last byte is not 0, the memory is reallocated
+ * and an additional zero byte is appended.
+ *
+ * @param ptr  allocated pointer to memory
+ * @param len  number of bytes stored in 'ptr'
+ *
+ * @return reallocated pointer
+ */
+void *mem_0byte(void **ptr, size_t *len) {
+  unsigned char *p = ((unsigned char *)*ptr) + *len - 1;
+  if ( *p ) {
+    if ( (p = (unsigned char *)realloc(*ptr, *len+1)) ) {
+      p[*len] = 0;
+      *ptr = p; *len += 1;
+      return p;
+    }
+    else return 0;
+  }
+  else return *ptr;
 }
 
 /**
@@ -686,18 +729,18 @@ static int _pattern(const unsigned char **rs, const unsigned char **rp) {
  * str_gmatch is used to match a given string 'str' against a pattern
  * as used by the bourne shell 'sh'.
  * The pattern must be constructed like follows:
- *
+ * @code
  *        pattern =  item { item }.
  *        item    =  char | altchar | "*" | "?" | ( "\" char ).
  *        altchar =  "[" [ "!" ] altitem "]".
  *        altitem =  char | ( "\" char ) | ( char "-" char ).
+ * @endcode
  *
- * - parameters:
- *   - str:     string to match against
- *   - pattern: shell pattern
- * - returns:
- *   - 1: string was matched
- *   - 0: string wasn't matched
+ * @param str      string to match against
+ * @param pattern  shell pattern
+ *
+ * @return 1  string was matched
+ * @return 0  string wasn't matched
  */
 int str_gmatch(const char *str, const char *pattern) {
   const unsigned char *s =  (const unsigned char *) str,
@@ -715,13 +758,13 @@ int str_gmatch(const char *str, const char *pattern) {
  * If an optional delimiter character has been specified, the search is 
  * stopped at this character. Eg. str_match("X=abc", "abc", '=') would
  * return 0.
- * - parameters:
- *   - str:   string to search in
- *   - match: string to look for in 'str'
- *   - delim: delimiter character (0 => don't use)
- * - returns:
- *   - pointer to occurrence of 'match' in str, if found
- *   - 0, if 'match' couldn't be found
+ *
+ * @param str:   string to search in
+ * @param match: string to look for in 'str'
+ * @param delim: delimiter character (0 => don't use)
+ *
+ * @return  pointer to occurrence of 'match' in str, if found
+ * @return  0, if 'match' couldn't be found
  */
 const char *str_match(const char *str, const char *match, char delim) {
   const char *s =  str, *m =  match;
@@ -1376,6 +1419,31 @@ char *str_mexpand ( const char *str, str_matchfunc_t *match,
       return (char *) realloc( buff, ( l + 1 ) * sizeof ( char ));
   } }
   return 0;
+}
+
+/**
+ * Returns an allocated string referencing the passed struct tm time data.
+ * 
+ * This function converts a struct tm to a string in ISO8601 format, which
+ * is "yyyy-mm-dd hh:mm:ss[.uuuuuu]". The micosecond part "uuuuuu" is optional
+ * and will only be produced if usec >= 0.
+ * 
+ * @param t    struct tm pointer as returned from 'localtime'
+ * @param usec microseconds to format if >= 0
+ *
+ * @return allocated string in ISO8601 format
+ */
+char *str_tm2iso(struct tm *t, int usec) {
+  char buff[101];
+  if (usec >= 0) {
+    snprintf(buff, 100, "%04d-%02d-%02d %02d:%02d:%02d.%06d", t->tm_year+1900,
+             t->tm_mon+1, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec, usec);
+  }
+  else {
+    snprintf(buff, 100, "%04d-%02d-%02d %02d:%02d:%02d", t->tm_year+1900,
+             t->tm_mon+1, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec);
+  }
+  return str_heap(buff);
 }
 
 // The struct utsname singleton

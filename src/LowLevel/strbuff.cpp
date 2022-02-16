@@ -109,8 +109,8 @@ int _strbuff_t:: put ( const char *str, int len, int isupdate ) {
 int _strbuff_t:: put ( char ch, int len, int isupdate ) {
   if ( len > 0 ) {
     if ( reserve_at_pos ( len ) > 0 ) {
-      register char *p =  b_buffer + b_pos;
-      register int n =  len;
+      char *p =  b_buffer + b_pos;
+      int n =  len;
       while ( n-- ) *p++ =  ch;
       if ( b_len < ( b_pos + len ) ) {
         b_len =  b_pos + len;
@@ -370,6 +370,7 @@ void strbuff_t:: truncate ( void ) {
 int strbuff_t:: length ( void ) const {
   _strbuff_t *bp =  (_strbuff_t *) sb_buffer;
   if ( bp && bp -> ok () ) return bp -> length ();
+  return 0;
 }
 
 
@@ -386,6 +387,7 @@ int strbuff_t:: length ( void ) const {
 int strbuff_t:: refcount ( void ) const {
   _strbuff_t *bp =  (_strbuff_t *) sb_buffer;
   if ( bp && bp -> ok () ) return bp -> b_refcount;
+  return 0;
 }
 
 
@@ -403,6 +405,7 @@ int strbuff_t:: refcount ( void ) const {
 int strbuff_t:: size ( int newsize ) {
   _strbuff_t *bp =  (_strbuff_t *) sb_buffer;
   if ( bp && bp -> ok () ) return bp -> size ( newsize );
+  return 0;
 }
 
 
@@ -420,6 +423,7 @@ int strbuff_t:: size ( int newsize ) {
 int strbuff_t:: position ( int newpos ) {
   _strbuff_t *bp =  (_strbuff_t *) sb_buffer;
   if ( bp && bp -> ok () ) return bp -> position ( newpos );
+  return 0;
 }
 
 
@@ -436,6 +440,7 @@ int strbuff_t:: position ( int newpos ) {
 int strbuff_t:: is_fixed ( void ) const {
   _strbuff_t *bp =  (_strbuff_t *) sb_buffer;
   if ( bp && bp -> ok () ) return bp -> is_fixed ();
+  return 0;
 }
 
 
@@ -453,6 +458,7 @@ int strbuff_t:: is_fixed ( void ) const {
 int strbuff_t:: is_static ( void ) const {
   _strbuff_t *bp =  (_strbuff_t *) sb_buffer;
   if ( bp && bp -> ok () ) return bp -> is_static ();
+  return 0;
 }
 
 
@@ -486,6 +492,7 @@ const char *strbuff_t:: value ( int atpos ) const {
   _strbuff_t *bp =  (_strbuff_t *) sb_buffer;
   if ( bp && bp -> ok () ) 
     return bp -> b_buffer + ( atpos? bp -> b_pos : 0 );
+  return 0;
 }
   
 

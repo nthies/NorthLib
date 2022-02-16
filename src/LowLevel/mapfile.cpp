@@ -168,9 +168,10 @@ int mapfile_t:: resize ( unsigned long newsize ) {
   return -1;
 }
 
-int mapfile_t:: read ( int fd, unsigned long nbytes, unsigned long off ) {
+long mapfile_t:: read ( int fd, unsigned long nbytes, unsigned long off ) {
   unsigned long n =  nbytes, pos =  off;
-  int ret, resized = 0;
+  long ret;
+  int resized = 0;
   if ( nbytes == (unsigned long) -1 ) n =  8*1024;
   while ( n > 0 ) {
     if ( (pos + n) > mf_len ) {

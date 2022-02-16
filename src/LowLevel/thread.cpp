@@ -8,6 +8,12 @@
 
 #include "thread.h"
 
+static pthread_t _thread_main = thread_current();
+static unsigned long _thread_main_id = thread_id(thread_current());
+
+pthread_t thread_main() { return _thread_main; }
+unsigned long thread_main_id() { return _thread_main_id; }
+
 unsigned long thread_id(pthread_t thread) {
 # if defined(__APPLE__)
     mach_port_t mtid = pthread_mach_thread_np(pthread_self());

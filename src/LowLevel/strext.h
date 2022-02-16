@@ -8,8 +8,9 @@
 #ifndef  strext_h
 #define  strext_h
 
-#include  <stdarg.h>
-#include  <NorthLib/sysdef.h>
+#include <stdarg.h>
+#include <regex.h>
+#include "sysdef.h"
 
 // constants used by various conversion functions:
 #define  cvt_signed_c             1
@@ -130,6 +131,90 @@ int cvt_a2l ( unsigned long *lnref, const char **rstr, int base = 0,
 int cvt_d2a ( char **ref, int *len, double val, int base = 10, int prec = 6,
               unsigned flags = cvt_adapt_c );
 
+/**
+ * A simple pattern matching class based on libc's regex funtions
+ *
+ * This interface uses the POSIX extended Syntax, e.g. grouping with
+ * parantheses like (<group>) instead of \(group\).
+ * In addition to [:<class>:] character classes the following shorthands
+ * are provided:
+ *   @d : digit
+ *   @D : no digits
+ *   @s : spaces
+ *   @S : no spaces
+ *   @a : alpha
+ *   @A : no alpha
+ *   @w : word
+ *   @W : no word
+ *   @@ : a single '@' character
+ * Warning: Unicode alternate character representations may not be supported
+ *          by POSIX regex functions.
+ *
+ * The substitute functions allow references to matching (sub-)expressions:
+ *   &    : substitues complete matching string
+ *   &<n> : substitutes the n'th sub-expression (aka group),
+ *          e.g. '&1' refers to the first group, '&0' to the complete matching
+ *          string
+ *   &&   : substitutes a single '&'
+ */
+class regexpr_t {
+private:
+  char    *pattern;  /// pattern given to constructor
+  regex_t *re;       /// libc's compiled pattern
+  unsigned flags;    /// flags passed to regcomp
+  static const char *locale; /// locale used for LC_CTYPE and LC_COLLATE
+  static const char *locale_check(void);
+  void compile(void);
+  void clear();
+public:
+  /// return true if pattern is a valid regular expression
+  bool ok(void);
+  /// perform sensitive newline mode
+  void set_sensnl(int);
+  int get_sensnl(void) const { return this->flags & REG_NEWLINE; }
+  /// don't provide match results
+  void set_noresult(int);
+  int get_noresult(void) const { return this->flags & REG_NOSUB; }
+  /// ignore case while matching
+  void set_icase(int);
+  int get_icase(void) const { return this->flags & REG_ICASE; }
+  /// initialize with pattern
+  regexpr_t(const char *pattern);
+  /// free all allocated memory
+  ~regexpr_t();
+  /// Set new pattern
+  void set_pattern(const char *pattern);
+  /// Return current pattern
+  const char *get_pattern(void) const { return this->pattern; }
+  /// test whether 'str' is matched
+  bool matches(const char *str);
+  /// return regmatch_t array of match offsets
+  regmatch_t *match_offsets(const char **str);
+  /// return match result as argv array (index 0 is complete matched string)
+  char **match(const char *str);
+  /// return match result and update string pointer
+  char **match(const char **str);
+  /// return nb. of strings in result of 'match'
+  int nmatches(void);
+  /// substitute matched pattern with string and write result to string buffer
+  /// returns true when successfully substituted
+  bool subst(strbuff_t &buff, const char **rstr, const char *with,
+             int lino = -1, int ndig = -1);
+  /// substitute matched part with string
+  char *subst(const char **rstr, const char *with,
+              int lino = -1, int ndig = -1);
+  /// substitute all matches with string and write result to string buffer
+  /// returns true when at least one pattern was successfully substituted
+  bool gsubst(strbuff_t &buff, const char **rstr, const char *with,
+              int lino = -1, int ndig = -1);
+  /// substitute all matched parts with string
+  char *gsubst(const char **rstr, const char *with,
+               int lino = -1, int ndig = -1);
+  /// substitue string by sed-like /pattern/substitution/g specification
+  static char *subst(const char *str, const char *spec, int lino = -1,
+                     int ndig = -1);
+};
+
 #endif /* __cplusplus */
 
 BeginCLinkage
@@ -138,14 +223,19 @@ BeginCLinkage
 typedef const char *str_matchfunc_t ( void *, const char * );
 typedef int str_updatefunc_t ( void *, const char *, const char * );
 
-// Exports of strext.c
+// An opaque type for regexpr_t
+typedef void *re_t;
+
+// Exports of strext.cpp
 extern const char *str_empty_c;
-void *mem_cpy ( void *p1, const void *p2, int len );
-void *mem_swap ( void *p1, void *p2, int len );
-void *mem_set ( void *ptr, int c, int len );
-int mem_cmp ( const void *p1, const void *p2, int len );
-void *mem_move ( void *p1, const void *p2, int len );
-void *mem_heap ( const void *, int );
+void *mem_cpy ( void *p1, const void *p2, size_t len );
+void *mem_swap ( void *p1, void *p2, size_t len );
+void *mem_set ( void *ptr, int c, size_t len );
+int mem_cmp ( const void *p1, const void *p2, size_t len );
+void *mem_move ( void *p1, const void *p2, size_t len );
+void *mem_heap ( const void *, size_t );
+void *mem_resize(void *ptr, size_t len);
+void *mem_0byte(void **ptr, size_t *len);
 void mem_release(void **);
 int str_len (  const char *s );
 int str_vcpy ( char **rdst, int n, va_list vp );
@@ -196,13 +286,14 @@ int str_i2roman ( char *buff, int len, int val, int islarge );
 int str_rroman2i ( const char **rstr );
 int str_roman2i ( const char *str );
 char *str_mexpand(const char *, str_matchfunc_t *, str_updatefunc_t *, void *);
+char *str_tm2iso(struct tm *t, int usec);
 const char *uts_sysname();
 const char *uts_nodename();
 const char *uts_release();
 const char *uts_version();
 const char *uts_machine();
 
-/* Exports of strcvt.c: */
+/* Exports of strcvt.cpp: */
 int str_rbin2a ( char **dest, int dlen, const void *mem, int len );
 int str_bin2a ( char *dest, int dlen, const void *mem, int len );
 int str_rcntl2a ( char **dest, int dlen, const void *mem, int len );
@@ -227,12 +318,14 @@ int str_ra2l ( long unsigned int *rval, const char **str, int base );
 int str_a2l ( long unsigned int *rval, const char *str, int base );
 int str_bin2fhex ( char *dest, int dlen, const void *src, int len, long unsigned int addr );
 
-/* Exports of argv.c: */
+/* Exports of argv.cpp: */
 int av_release ( char **ptr );
+const char * const *av_const(char **argv);
 char *av_index(char **argv, int i);
-int av_length ( char ** );
+int av_length (const char * const * );
 int av_size ( char **argv );
-char **av_heap ( char **argv, int len );
+char **av_heap ( const char * const *argv, int len );
+char **av_alloc(int len);
 char **av_clone ( char **argv );
 char **av_a2av ( const char *str, char delim );
 int av_av2a ( char *buff, int blen, char **av, char delim );
@@ -245,6 +338,36 @@ char **av_append ( char **av, const char *s );
 char **av_avinsert ( char **av, int pos, char **arg );
 char **av_delete ( char **av, int from, int to );
 
+/* Exports of regexpr.cpp */
+re_t re_init(const char *str);
+void re_release(re_t);
+void re_set_sensnl(re_t re, int val);
+void re_set_noresult(re_t re, int val);
+void re_set_icase(re_t re, int val);
+void re_set_pattern(re_t re, const char *pattern);
+int re_get_sensnl(re_t re);
+int re_get_icase(re_t re);
+int re_get_noresult(re_t re);
+const char *re_get_pattern(re_t re);
+int re_matches(re_t re, const char *str);
+char **re_match(re_t re, const char *str);
+char **re_rmatch(re_t re, const char **str);
+char *re_subst(re_t re, const char **rstr, const char *with);
+char *re_nsubst(re_t re, const char **rstr, const char *with, int lino, int ndig);
+char *re_gsubst(re_t re, const char **rstr, const char *with);
+char *re_ngsubst(re_t re, const char **rstr, const char *with, int lino, int ndig);
+char *re_strsubst(const char *str, const char *spec);
+char *re_nstrsubst(const char *str, const char *spec, int lino, int ndig);
+
 EndCLinkage
+
+#ifdef __cplusplus
+
+inline char *str_heap(const char *str) { return str_heap(str, 0); }
+inline int str_cpy ( char **rdst, int n, const char *src )
+  { return str_rcpy( rdst, n, src); }
+inline char **av_heap(const char *const *argv) { return av_heap(argv, 0); }
+
+#endif /* __cpluplus */
 
 #endif  /* strext_h */

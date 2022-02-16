@@ -5,7 +5,19 @@
 //  Copyright © 2019 Norbert Thies. All rights reserved.
 //
 
-#include <CommonCrypto/CommonDigest.h>
+#if defined(__APPLE__)
+#  include <CommonCrypto/CommonDigest.h>
+#  define MD5_DIGEST_LENGTH    CC_MD5_DIGEST_LENGTH
+#  define SHA1_DIGEST_LENGTH   CC_SHA1_DIGEST_LENGTH
+#  define SHA256_DIGEST_LENGTH CC_SHA256_DIGEST_LENGTH
+#  define MD5    CC_MD5
+#  define SHA1   CC_SHA1
+#  define SHA256 CC_SHA256
+#else
+#  include <openssl/sha.h>
+#  include <openssl/md5.h>
+#endif /* __APPLE__ */
+
 #include <stdlib.h>
 #include "hashes.h"
 
@@ -27,27 +39,30 @@ char *data_toHex(const void *data, size_t len) {
 
 /// Returns the md5 sum of the passed byte array in hex representation
 /// as allocated string.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 char *hash_md5(const void *data, size_t len) {
-  unsigned l = CC_MD5_DIGEST_LENGTH;
+  unsigned l = MD5_DIGEST_LENGTH;
   unsigned char buff[l];
-  CC_MD5( data, (CC_LONG)len, buff );
+  MD5( data, (CC_LONG)len, buff );
   return data_toHex(buff, l);
 }
+#pragma clang diagnostic pop
 
 /// Returns the sha1 sum of the passed byte array in hex representation
 /// as allocated string.
 char *hash_sha1(const void *data, size_t len) {
-  unsigned l = CC_SHA1_DIGEST_LENGTH;
+  unsigned l = SHA1_DIGEST_LENGTH;
   unsigned char buff[l];
-  CC_SHA1( data, (CC_LONG)len, buff );
+  SHA1( data, (CC_LONG)len, buff );
   return data_toHex(buff, l);
 }
 
 /// Returns the sha256 sum of the passed byte array in hex representation
 /// as allocated string.
 char *hash_sha256(const void *data, size_t len) {
-  unsigned l = CC_SHA256_DIGEST_LENGTH;
+  unsigned l = SHA256_DIGEST_LENGTH;
   unsigned char buff[l];
-  CC_SHA256( data, (CC_LONG)len, buff );
+  SHA256( data, (CC_LONG)len, buff );
   return data_toHex(buff, l);
 }

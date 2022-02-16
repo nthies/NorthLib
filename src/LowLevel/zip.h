@@ -1,10 +1,10 @@
-/** zip.hh
+/** zip.h
  *
  *  Defines some classes to scan and extract files from zip archives.
  *  Zip archives are defined in:
  *    http://www.pkware.com/documents/casestudies/APPNOTE.TXT
  *
- *  Every files in a zip archive is preceeded by a file header and
+ *  Every file in a zip archive is preceeded by a file header and
  *  is optionally succeeded by a data descriptor.
  *  A data descriptor has to be used if the file size and/or CRC hash sum are
  *  not defined in the header.
@@ -75,6 +75,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "sysdef.h"
+
+#ifdef __cplusplus
+
 #include <iostream>
 #include <exception>
 
@@ -141,5 +145,20 @@ class Stream {
 
 
 }; // namespace zip
+
+#endif // __cplusplus
+
+/// C Interface
+
+typedef void zip_handler_t(void *, const char *, const void *, int);
+
+BeginCLinkage
+
+void *zip_stream_init(void *context, zip_handler_t *handler);
+void zip_stream_release(void *zs);
+int zip_stream_scan(void *zs, const void *data, int len);
+const char *zip_stream_lasterr(void *zs);
+
+EndCLinkage
 
 #endif // __zipfile_h

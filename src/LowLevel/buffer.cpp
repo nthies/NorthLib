@@ -51,8 +51,8 @@ int buffer_t:: read ( char **ptr, int &len ) {
 
 int buffer_t:: readline ( char **ptr, int &len ) {
   if ( ptr && *ptr ) {
-    register char *p =  *ptr;
-    register int l =  1;
+    char *p =  *ptr;
+    int l =  1;
     while ( l < len ) {
       int ch =  getch ();
       if ( (ch != -1) && (ch != '\n') ) { *p++ = (char) ch; l++; }
