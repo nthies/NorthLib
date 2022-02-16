@@ -166,7 +166,7 @@ class FileTests: XCTestCase {
     }
     File.open(path: f.path, mode: "r") { file in
       let str = file.readline()
-      XCTAssert(str == "a test\n")
+      XCTAssert(str == "a test")
     }
     let dpath = "\(d1.path)/new"
     let fpath = "\(dpath)/test"

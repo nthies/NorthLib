@@ -1061,10 +1061,20 @@ int file_close(fileptr_t *fp) {
   return ret;
 }
 
-/// Reads one line of data and returns the allocated result
+/// Reads one line of data and returns the allocated result, trailing \n, \r
+/// are removed.
 char *file_readline(fileptr_t fp) {
   char buff[2001];
-  if (fgets(buff, 2000, fp)) return str_heap(buff, 0);
+  if (fgets(buff, 2000, fp)) {
+    char *p = buff;
+    int l = str_len(buff);
+    if (l > 0) {
+      p += l-1;
+      while (*p == '\n' || *p == '\r') p--;
+      *(p+1) = '\0';
+    }
+    return str_heap(buff, 0);
+  }
   else return 0;
 }
 

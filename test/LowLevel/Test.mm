@@ -202,7 +202,7 @@
   XCTAssert(file_open(&fp, fn2, "r") == 0);
   tmp = file_readline(fp);
   file_close(&fp);
-  XCTAssert(str_cmp(tmp, "1234\n") == 0);
+  XCTAssert(str_cmp(tmp, "1234") == 0);
   str_release(&tmp);
   unlink(fn2);
   XCTAssert(file_trymove(fn1, fn2) == 0);

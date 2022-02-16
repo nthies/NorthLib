@@ -148,7 +148,7 @@ open class File: DoesLog {
     try File(fpath).open(mode: mode, closure: closure)
   }
 
-  /// Reads one line of characters from the file
+  /// Reads one line of characters from the file, trailing \n, \r are removed.
   public func readline() -> String? {
     guard fp != nil else { return nil }
     var str = file_readline(fp)
