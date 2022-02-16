@@ -66,9 +66,18 @@ Set it to false to build for MacOS or Linux:
   swift build -c release # build release version
 ````
 
+## How to use
+
+Add the dependency to NorthLib either to your Package.swift or to your Xcode 
+project and link to libc++ and libz, eg. in Package.swift add:
+````
+  linkerSettings: [.linkedLibrary("z"), .linkedLibrary("c++")] 
+````
+to your target's definition.
+
 ## Authors
 
-Norbert Thies, norbert@taz.de
+Norbert Thies, norbert@taz.de<br/>
 Ringo Müller, ringo.mueller@taz.de
 
 ## License
