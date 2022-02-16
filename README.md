@@ -1,12 +1,75 @@
-[![Carthage Compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
+[![SPM compatible](https://img.shields.io/badge/SPM-compatible-4BC51D.svg?style=flat)](https://github.com/apple/swift-package-manager)
 
 # NorthLib
 
-Library of Swift classes for iOS development
+NorthLib is a library of Swift types primarily intended to support iOS development.
+Although the main focus is on iOS, we modularized the library so that limited support
+for other platforms is available.
+Beside some wrappers of system libraries (to make these libraries available in Swift)
+the following modules are available:
 
-## Author
+- NorthLowLevel<br/>
+  Offers some C-functions based on POSIX libc library functions. Since Swift's
+  standard library still lacks base OS functionality we feel the necessity to
+  provide some minimal Swift types in NorthBase (see below) to be independent 
+  from Apple's Foundation module. Thus at least some functionality is available
+  for Swift programs running on Linux.
+  In addition we offer an interface for reading zip-Files as a stream, i.e. the
+  ability to unpack a zip data stream without having to wait for the final table
+  of contents.
+  
+- NorthBase<br/>
+  Offers Swift types purely based on the Swift standard library, NorthLowLevel
+  and POSIX functions (e.g. class File). 
+  
+- NorthFoundation<br/>
+  Extends NorthBase and imports _Foundation_ to offer additional Functionality which
+  is only available on MacOS and iOS (+ derivatives).
+  
+- NorthUIKit<br/>
+  Imports _UIKit_ and is therefore only available on iOS compatible platforms. 
+  In a later release we might support Mac Catalyst as well.
+  
+- NorthLib<br/>
+  Is a tiny module that only imports NorthBase, NorthFoundation, NorthUIKit and
+  re-exports all symbols from these modules, similar to how UIKit re-exports the
+  symbols from Foundation.
+  
+- unzip<br/>
+  Is an executable based on NorthBase to test the zip stream unpacker.
+  
+## File-Tree
+
+The source files are grouped under the _src_ subdirectory. C library wrappers 
+reside in C&lt;library&gt; directories and the above noted modules are organized in:
+````
+  LowLevel   -> NorthLowLevel sources
+  Base       -> NorthBase sources
+  Foundation -> NorthFoundation sources
+  UIKit      -> NorthUIKit sources
+  unzip      -> unzip test utility
+````
+
+## How to build
+
+Since we couldn't find a way to determine for which platform we are going to build,
+we specify whether to build iOS modules or not by a variable in _Package.swift_ 
+(near the top of the file):
+````
+  var isIos = true
+````
+Keep this variable to true to build the library for use in Xcode and iOS apps. 
+Set it to false to build for MacOS or Linux:
+````
+  swift build # build library and unzip utility with debugging information
+  swift build --show-bin-path # show where libNorthLib.a and unzip are located
+  swift build -c release # build release version
+````
+
+## Authors
 
 Norbert Thies, norbert@taz.de
+Ringo Müller, ringo.mueller@taz.de
 
 ## License
 
