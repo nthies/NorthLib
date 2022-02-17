@@ -435,6 +435,8 @@ class RegexprTests: XCTestCase, DoesLog {
   }
   
   func testSedSubst() {
+    XCTAssertTrue(Regexpr.isValidSubst(spec: "/@d+/<&>/"))
+    XCTAssertFalse(Regexpr.isValidSubst(spec: "/@d+/<&>"))
     var ret = Regexpr.subst("abc123def456ghi", by: "/@d+/<&>/")
     XCTAssertNotNil(ret)
     if let ret = ret {

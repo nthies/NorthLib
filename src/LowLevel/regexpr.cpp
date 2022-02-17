@@ -275,6 +275,17 @@ static bool is_subst_pattern(strbuff_t &pattern, strbuff_t &subst, bool &is_glob
   return false;
 }
 
+bool regexpr_t::is_valid_subst(const char *spec) {
+  strbuff_t pattern;
+  strbuff_t subst;
+  bool is_global;
+  if (is_subst_pattern(pattern, subst, is_global, spec)) {
+    auto re = regexpr_t(pattern.value());
+    if (re.ok()) return true;
+  }
+  return false;
+}
+
 char *regexpr_t::subst(const char *str, const char *spec, int lino, int ndig) {
   strbuff_t pattern;
   strbuff_t subst;
@@ -319,3 +330,5 @@ char *re_strsubst(const char *str, const char *spec)
   { return regexpr_t::subst(str, spec); }
 char *re_nstrsubst(const char *str, const char *spec, int lino, int ndig)
   { return regexpr_t::subst(str, spec, lino, ndig); }
+int re_is_valid_subst(const char *spec) 
+  { return regexpr_t::is_valid_subst(spec); }

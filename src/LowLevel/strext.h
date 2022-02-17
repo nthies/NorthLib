@@ -213,6 +213,8 @@ public:
   /// substitute all matched parts with string
   char *gsubst(const char **rstr, const char *with,
                int lino = -1, int ndig = -1);
+  /// Returns true if 'spec' is a valid substitution pattern
+  static bool is_valid_subst(const char *spec);
   /// substitue string by sed-like /pattern/substitution/g specification
   static char *subst(const char *str, const char *spec, int lino = -1,
                      int ndig = -1);
@@ -362,6 +364,7 @@ char *re_gsubst(re_t re, const char **rstr, const char *with);
 char *re_ngsubst(re_t re, const char **rstr, const char *with, int lino, int ndig);
 char *re_strsubst(const char *str, const char *spec);
 char *re_nstrsubst(const char *str, const char *spec, int lino, int ndig);
+int re_is_valid_subst(const char *spec);
 
 EndCLinkage
 

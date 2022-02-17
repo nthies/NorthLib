@@ -80,7 +80,11 @@ open class Regexpr {
   /// Initialize with String pattern
   public init(_ pattern: String) throws {
     re = pattern.withCString { re_init($0) }
-    if let err = re_last_error(re) { throw String(validatingUTF8: err)! }
+    var err: UnsafeMutablePointer<CChar>? = re_last_error(re)
+    if err != nil { 
+      defer { str_release(&err) }
+      throw String(validatingUTF8: err!)! 
+    }
   }
   
   deinit { re_release(re) }
@@ -240,6 +244,20 @@ open class Regexpr {
         if let ret = ret { return String(validatingUTF8: ret) }
         else { return nil }
       }
+    }
+  }
+  
+  /**
+   * Checks whether the passed String 'spec' is a valid substitution specification.
+   * 
+   * isValidSubst can be used to verify whether a given substitution specification
+   * as used in the 'subst' method is valid, ie. is of the correct syntax.
+   * 
+   * - returns: true => valid, false otherwise
+   */
+  public static func isValidSubst(spec: String) -> Bool {
+    spec.withCString { spec in
+      return re_is_valid_subst(spec) != 0
     }
   }
   
