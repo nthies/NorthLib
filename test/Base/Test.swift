@@ -160,6 +160,12 @@ class FileTests: XCTestCase {
     XCTAssert(d1.dirname == d.path)
     XCTAssert(d1.progname == "b")
     XCTAssert(d1.extname == "1")
+    XCTAssert(File.extname("test") == nil)
+    XCTAssert(File.prefname("test") == "test")
+    XCTAssert(File.basename("test") == "test")
+    XCTAssert(File.extname("test.txt") == "txt")
+    XCTAssert(File.prefname("test.txt") == "test")
+    XCTAssert(File.progname("test.txt") == "test")
     var f = File("\(d2.path)/test")
     File.open(path: f.path, mode: "a") { file in
       file.writeline("a test")

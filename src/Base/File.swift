@@ -256,12 +256,16 @@ open class File: DoesLog {
     return ret!
   }
 
-  /// Returns the extname (extension) of a given pathname
-  public var extname: String {
-    var str = fn_extname(cpath)
-    let ret = String(validatingUTF8: str!)
-    str_release(&str)
-    return ret!
+  /// Returns the extname (extension) of the file. If it has no extension,
+  /// nil is returned. 
+  public var extname: String? {
+    if fn_has_ext(cpath) != 0 {
+      var str = fn_extname(cpath)
+      let ret = String(validatingUTF8: str!)
+      str_release(&str)
+      return ret!
+    }
+    else { return nil }
   }
 
   /// Links the file to an existing file 'to' (beeing an absolute path)
@@ -373,7 +377,7 @@ open class File: DoesLog {
   }
   
   /// Returns the extname (extension) of a given pathname
-  public static func extname(_ fn: String) -> String {
+  public static func extname(_ fn: String) -> String? {
     return File(fn).extname
   }
 
@@ -427,8 +431,8 @@ open class Dir: File {
   public func scanExtensions(_ ext: [String]) -> [String] {
     let lext = ext.map { $0.lowercased() }
     return scan { (fn: String) -> Bool in
-      let fe = File.extname(fn).lowercased()
-      if let _ = lext.firstIndex(of: fe) { return true }
+      if let fe = File.extname(fn)?.lowercased(),
+         lext.firstIndex(of: fe) != nil { return true }
       return false
     }
   }

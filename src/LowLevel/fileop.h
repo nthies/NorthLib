@@ -51,6 +51,7 @@ int fn_base(char *buff, int len, const char *fn);
 int fn_dir(char *buff, int len, const char *fn);
 int fn_prefix(char *buff, int len, const char *fn);
 int fn_ext(char *buff, int len, const char *path);
+int fn_has_ext(const char *fn);
 int fn_prog(char *buff, int len, const char *fn);
 char *fn_repext(const char *fn, const char *next);
 char *fn_basename(const char *fn);

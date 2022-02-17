@@ -139,7 +139,7 @@
  * All fields are cleared and the passed file mode is set to the mode field.
  * In addition the UID/GID and time stamps are set to the current values.
  * 
- * - returns: 'st'
+ * @Returns 'st'
  */
 stat_t *stat_init(stat_t *st, mode_t mode) {
   mem_set(st, 0, sizeof(stat_t));
@@ -278,7 +278,7 @@ time_t stat_ctime(stat_t *st) { return st->st_ctime; }
  *   following mode is returned, eg. "!fp" will return 1 if the file
  *   is not an ordinary file and not a named pipe.
  *   
- *   - returns: 1 => is of type, 0 otherwise
+ *   @Returns 1 => is of type, 0 otherwise
  */
 int stat_istype(stat_t *st, const char *mode) {
   int ret =  0, is_negate =  0;
@@ -308,7 +308,7 @@ int stat_istype(stat_t *st, const char *mode) {
  *  
  *  Remark: a leading './' in 'dir' is skipped.
  *  
- *  - returns: #char written 'to buff'
+ *  @Returns #char written 'to buff'
  */
 int fn_mkpathname(char *buff, int len, const char *dir, const char *fn) {
   if ( buff && dir && fn ) {
@@ -342,7 +342,7 @@ int fn_mkpathname(char *buff, int len, const char *dir, const char *fn) {
  *  Eg let path be "/usr/xxx", then fn_base( buff, len, path) writes "xxx"
  *  to buff.
  *  
- *  - returns: #char written to buff
+ *  @Returns #char written to buff
  */
 int fn_base(char *buff, int len, const char *fn) {
   if ( buff && fn ) {
@@ -360,7 +360,7 @@ int fn_base(char *buff, int len, const char *fn) {
  *  Eg let path be "/usr/xxx", then fn_dir( buff, len, path) writes "/usr"
  *  to buff.
  *  
- *  - returns: #char written to buff
+ *  @Returns #char written to buff
  */
 int fn_dir(char *buff, int len, const char *fn) {
   if ( buff && fn ) {
@@ -379,7 +379,7 @@ int fn_dir(char *buff, int len, const char *fn) {
  *  Eg let path be "/usr/xxx.yy", then fn_prefix(buff, len, path) writes 
  *  "/usr/xx" to buff.
  *  
- *  - returns: #char written to buff
+ *  @Returns #char written to buff
  */
 int fn_prefix(char *buff, int len, const char *fn) {
   if ( buff && fn ) {
@@ -399,7 +399,7 @@ int fn_prefix(char *buff, int len, const char *fn) {
  *  Eg let path be "/usr/xxx.yy", then fn_ext(buff, len, path) writes 
  *  "yy" to buff.
  *  
- *  - returns: #char written to buff
+ *  @Returns #char written to buff
  */
 int fn_ext(char *buff, int len, const char *path) {
   if ( buff && path ) {
@@ -412,12 +412,27 @@ int fn_ext(char *buff, int len, const char *path) {
 }
 
 /**
+ * fn_has_ext returns 1 if the passed file has an extension.
+ * 
+ * @Returns 1 if 'fn' has extension, 0 otherwise
+ */
+
+int fn_has_ext(const char *fn) {
+  if (fn) {
+    const char *p =  str_rchr(fn, '.'),
+               *d =  str_rchr(fn, '/');
+    if (p && p > d) return 1;
+  }
+  return 0;
+}
+
+/**
  *  fn_prog writes the program name of 'path' to 'buff'.
  *  
  *  Eg let path be "/usr/xxx.yy", then fn_prog(buff, len, path) writes 
  *  "xxx" to buff.
  *  
- *  - returns: #char written to buff
+ *  @Returns #char written to buff
  */
 int fn_prog(char *buff, int len, const char *fn) {
   char prg [1000];
@@ -433,7 +448,7 @@ int fn_prog(char *buff, int len, const char *fn) {
  *  then the result will be "/usr/local/test.next" (the same as when
  *  fn = "/usr/local/test" ).
  *  
- *  - returns: allocated new filename
+ *  @Returns allocated new filename
  */
 char *fn_repext(const char *fn, const char *next) {
   char *ret =  0;
@@ -536,7 +551,7 @@ int fn_mkfpath (const char *path, stat_t *st) {
  *            "r"    : is file readable
  *            "w"    : is file writable
  *            "x"    : is file executable
- * - returns: 0: OK, -1: Error (no access)
+ * @Returns 0: OK, -1: Error (no access)
  */
 int fn_access(const char *path, const char *amode) {
   mode_t mode = 0;
@@ -565,7 +580,7 @@ int fn_access(const char *path, const char *amode) {
  *  new allocated copy of 'fname' is returned (instead of looking for it
  *  in 'path'). If 'amode == 0', then amode="f" is implied.
  * 
- *  - returns: allocated pathname if found, 0 otherwise
+ *  @Returns allocated pathname if found, 0 otherwise
  */
 char *fn_find(const char *path, const char *fname, const char *amode) {
   char *ret =  0;
@@ -612,7 +627,7 @@ int fn_istype(const char *fn, const char *type) {
  *
  * Remark: The passed directory 'path' must exist!
  * 
- * returns: #char written to buff
+ * @Returns #char written to buff
  */
 int fn_getdir(char *buff, int len, const char *path) {
   if ( path ) {
@@ -677,7 +692,7 @@ int fn_getdir(char *buff, int len, const char *path) {
  * structure) than the first directory specified. So fn_compress ( ../x ) cannot
  * be compressed, it results in returning the unchanged 'fn'.
  * 
- * - returns: fn
+ * @Returns fn
  */
 char *fn_compress(char *fn) {
   if ( fn && *fn ) {
@@ -747,7 +762,7 @@ char *fn_compress(char *fn) {
 /**
  * fn_getabs writes an absolute pathname of a given file to 'buff'
  * 
- * - returns: #chars written to 'buff'
+ * @Returns #chars written to 'buff'
  */
 int fn_getabs(char *buff, int len, const char *fname) {
   int ret =  -1;
@@ -767,7 +782,7 @@ int fn_getabs(char *buff, int len, const char *fname) {
 /**
  * fn_abs returns an absolute pathname of a given file 'fname'
  * 
- * - returns: allocated pathname
+ * @Returns allocated pathname
  */
 char *fn_abs(const char *fname) {
   char buff [1000];
@@ -779,7 +794,7 @@ char *fn_abs(const char *fname) {
  * fn_tmpdir returns the pathname of the default directory for storing
  * temporary files.
  *
- * @return allocated pathname of temporary directory.
+ * @Returns allocated pathname of temporary directory.
  */
 char *fn_tmpdir() {
   const char *dir;
@@ -805,8 +820,8 @@ char *fn_tmpdir() {
  *
  * In addition to returning the file name, the file is also created.
  *
- * @return allocated filename if file can be created
- * @return 0 if file can't be created
+ * @Returns allocated filename if file can be created,
+ *          0 if file can't be created
  */
 char *fn_tmp ( const char *str ) {
   char buff [1024];
@@ -932,8 +947,8 @@ int fn_resolvelink(char *from, int flen, char *to, int tlen,
  * @param from: absolute pathname of existing file
  * @param to: absolute pathname of symbolic link to create
  *
- * @return 0: OK
- * @return -1: Error
+ * @return 0: OK,
+ *        -1: Error
  */
 int file_link(const char *from, const char *to) {
   char buff[1000];
@@ -950,8 +965,8 @@ int file_link(const char *from, const char *to) {
  *
  * @param path: pathname pointing to symbolic link
  *
- * @return 0: path is not a symbolic link
- * @return allocated pathname of file 'path' points to
+ * @return 0: path is not a symbolic link,
+ *         allocated pathname of file 'path' points to
  */
 char *file_readlink(const char *path) {
   char buff[1001];
@@ -985,8 +1000,8 @@ int file_unlink(const char *path) {
  * @param dest: destination path (ehere to move to)
  *
  * @return 0: OK (file has been moved)
- * @return 1: file can't be linked
- * @return -1: Error
+ * @return 1: file can't be linked,
+ *        -1: Error
  */
 int file_trymove( const char *src, const char *dest) {
   if ( link(src, dest) != 0 ) {
@@ -1004,8 +1019,8 @@ int file_trymove( const char *src, const char *dest) {
  * @param src: source file to copy
  * @param dest: destination path (where to copy to)
  *
- * @return >=0: #bytes copied
- * @return -1: Error
+ * @return >=0: #bytes copied,
+ *         Error otherwise
  */
 long file_copy(const char *src, const char *dest) {
   stat_t tmp;
@@ -1031,9 +1046,9 @@ long file_copy(const char *src, const char *dest) {
  * @param src: source file to move
  * @param dest: destination path (where to move to)
  *
- * @return 0: OK (file moved)
- * @return >0: #bytes copied (different filesystems)
- * @return -1: Error
+ * @return 0: OK (file moved),
+ *            #bytes copied (different filesystems),
+ *            Error otherwise
  */
 long file_move(const char *src, const char *dest) {
   long ret = file_trymove(src, dest);
@@ -1084,8 +1099,8 @@ char *file_readline(fileptr_t fp) {
  * @param fp: file pointer to write to
  * @param str: string to write to 'fp'
  *
- * @return >=0 the number of bytes written
- * @return -1 Error
+ * @return >=0 the number of bytes written,
+ *         -1 Error
  */
 int file_writeline(fileptr_t fp, const char *str) {
   if ( fputs(str, fp) >= 0 ) {
