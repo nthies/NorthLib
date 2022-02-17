@@ -162,6 +162,7 @@ private:
   char    *pattern;  /// pattern given to constructor
   regex_t *re;       /// libc's compiled pattern
   unsigned flags;    /// flags passed to regcomp
+  int      last_err; /// last error encountered
   static const char *locale; /// locale used for LC_CTYPE and LC_COLLATE
   static const char *locale_check(void);
   void compile(void);
@@ -169,6 +170,8 @@ private:
 public:
   /// return true if pattern is a valid regular expression
   bool ok(void);
+  /// return nil (if no error) or allocated error description
+  char *last_error(void);
   /// perform sensitive newline mode
   void set_sensnl(int);
   int get_sensnl(void) const { return this->flags & REG_NEWLINE; }
@@ -340,6 +343,7 @@ char **av_delete ( char **av, int from, int to );
 
 /* Exports of regexpr.cpp */
 re_t re_init(const char *str);
+char *re_last_error(re_t re);
 void re_release(re_t);
 void re_set_sensnl(re_t re, int val);
 void re_set_noresult(re_t re, int val);

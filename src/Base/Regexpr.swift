@@ -78,8 +78,9 @@ open class Regexpr {
   }
 
   /// Initialize with String pattern
-  public init(_ pattern: String) {
+  public init(_ pattern: String) throws {
     re = pattern.withCString { re_init($0) }
+    if let err = re_last_error(re) { throw String(validatingUTF8: err)! }
   }
   
   deinit { re_release(re) }

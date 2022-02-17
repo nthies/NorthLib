@@ -194,10 +194,10 @@ public extension String {
 public extension String {
 
   /// Match the passed regular expression against this string
-  func match(_ pattern: String) -> [String]? { Regexpr(pattern).match(self) }
+  func match(_ pattern: String) -> [String]? { try! Regexpr(pattern).match(self) }
 
   /// Match the passed regular expression against this string globally
-  func gmatch(_ pattern: String) -> [[String]]? { Regexpr(pattern).gmatch(self) }
+  func gmatch(_ pattern: String) -> [[String]]? { try! Regexpr(pattern).gmatch(self) }
   
   /// Substitute self according to sed-like substitution specification
   /// and return the result, self is unchanged.
@@ -212,7 +212,7 @@ public extension String {
   }
   
   /// Returns true if the left hand side String is matched by the RE pattern
-  static func =~(lhs: Self, rhs: Self) -> Bool { Regexpr(rhs).matches(lhs) }
+  static func =~(lhs: Self, rhs: Self) -> Bool { try! Regexpr(rhs).matches(lhs) }
 
 }
 

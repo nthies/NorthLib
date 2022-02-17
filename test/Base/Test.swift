@@ -288,19 +288,19 @@ class ZipTests: XCTestCase, DoesLog {
 class RegexprTests: XCTestCase, DoesLog {
   
   func testPreliminary() {
-    if Regexpr("@a@a").matches("öä") {
+    if try! Regexpr("@a@a").matches("öä") {
       print("*** Regexpr matches UTF-8 in :alpha: ***")
     }
     else {
       print("*** Regexpr does *NOT* match UTF-8 in :alpha: ***")
     }
-    if Regexpr("ä+").matches("ää") {
+    if try! Regexpr("ä+").matches("ää") {
       print("*** Regexpr(\"ä+\") matches \"ää\" ***")
     }
     else {
       print("*** Regexpr(\"ä+\") does *NOT* match \"ää\" ***")
     }
-    let re = Regexpr("@a+")
+    let re = try! Regexpr("@a+")
     XCTAssertEqual(re.pattern, "[[:alpha:]]+")
     XCTAssertEqual(re.match(" 12ab34")![0], "ab")
     re.pattern = "aBcäö"
@@ -317,7 +317,7 @@ class RegexprTests: XCTestCase, DoesLog {
   }
   
   func testMatch() {
-    var re = Regexpr("(@d+)@s+(@d+)")
+    var re = try! Regexpr("(@d+)@s+(@d+)")
     var matched = re.match("abc123  456def")
     XCTAssertNotNil(matched)
     if let m = matched {
@@ -330,7 +330,7 @@ class RegexprTests: XCTestCase, DoesLog {
     matched = re.match("abc123  def")
     XCTAssertNil(matched)
     XCTAssertFalse(re.matches("abc123  def"))
-    re = Regexpr("c((@d+)@s+(@d+))")
+    re = try! Regexpr("c((@d+)@s+(@d+))")
     matched = re.match("abc123  456def")
     XCTAssertNotNil(matched)
     if let m = matched {
@@ -340,7 +340,7 @@ class RegexprTests: XCTestCase, DoesLog {
       XCTAssertEqual(m[2], "123")
       XCTAssertEqual(m[3], "456")
     }
-    re = Regexpr("([0-9]+)-([0-9]+)")
+    re = try! Regexpr("([0-9]+)-([0-9]+)")
     matched = re.match("abc 123-456 def")
     XCTAssertNotNil(matched)
     if let m = matched {
@@ -352,7 +352,7 @@ class RegexprTests: XCTestCase, DoesLog {
   }
   
   func testGmatch() {
-    let re = Regexpr("(\\d+)-(\\d+)")
+    let re = try! Regexpr("(\\d+)-(\\d+)")
     let matched = re.gmatch("abc 12-13  def 14-15")
     XCTAssertNotNil(matched)
     if let m = matched {
@@ -370,14 +370,14 @@ class RegexprTests: XCTestCase, DoesLog {
   }
   
   func testSubst() {
-    var re = Regexpr("@a+")
+    var re = try! Regexpr("@a+")
     var subst = re.subst("huhu gaga", with: ">&<")
     XCTAssertNotNil(subst)
     if let s = subst {
       XCTAssertEqual(s, ">huhu< gaga")
     }
     XCTAssertNil(re.subst("123", with: ""))
-    re = Regexpr("\\d+")
+    re = try! Regexpr("\\d+")
     subst = re.subst("ab12", with: "(&) - #", num: 15)
     XCTAssertNotNil(subst)
     if let s = subst {
@@ -388,7 +388,7 @@ class RegexprTests: XCTestCase, DoesLog {
     if let s = subst {
       XCTAssertEqual(s, "ab(12) - 001")
     }
-    re = Regexpr("@s+(@d+)")
+    re = try! Regexpr("@s+(@d+)")
     subst = re.subst("abc 14def", with: "(&1)")
     XCTAssertNotNil(subst)
     if let s = subst {
@@ -407,20 +407,20 @@ class RegexprTests: XCTestCase, DoesLog {
   }
   
   func testGsubst() {
-    var re = Regexpr("@a+")
+    var re = try! Regexpr("@a+")
     var subst = re.gsubst("huhu gaga", with: ">&<")
     XCTAssertNotNil(subst)
     if let s = subst {
       XCTAssertEqual(s, ">huhu< >gaga<")
     }
     XCTAssertNil(re.gsubst("123", with: ""))
-    re = Regexpr("\\d+")
+    re = try! Regexpr("\\d+")
     subst = re.gsubst("ab12 34", with: "(&) - #", num: 15)
     XCTAssertNotNil(subst)
     if let s = subst {
       XCTAssertEqual(s, "ab(12) - 15 (34) - 15")
     }
-    re = Regexpr("@s+(@d+)")
+    re = try! Regexpr("@s+(@d+)")
     subst = re.gsubst("abc 14def 15ghi", with: "(&1)")
     XCTAssertNotNil(subst)
     if let s = subst {

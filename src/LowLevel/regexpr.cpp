@@ -24,11 +24,21 @@ const char *regexpr_t::locale = locale_check();
 void regexpr_t::compile(void) {
   if (re) return;
   regex_t *ret = (regex_t *)malloc(sizeof(regex_t));
-  if ( ret && regcomp(ret, pattern, flags) == 0 ) {
+  if ( ret && (last_err = regcomp(ret, pattern, flags)) == 0 ) {
     re = ret;
     return;
   }
   if ( ret ) free(ret);
+}
+
+char *regexpr_t::last_error() {
+  compile();
+  if (last_err) {
+    char buff[2001];
+    regerror(last_err, re, buff, 2000);
+    return str_heap(buff);
+  }
+  else return 0;
 }
 
 bool regexpr_t::ok() {
@@ -112,7 +122,7 @@ regexpr_t::~regexpr_t() {
 }
 
 bool regexpr_t::matches(const char *str) {
-  return ok() && regexec(re, str, 0, 0, 0) == 0;
+  return ok() && (last_err = regexec(re, str, 0, 0, 0)) == 0;
 }
 
 int regexpr_t::nmatches(void) {
@@ -124,7 +134,7 @@ regmatch_t *regexpr_t::match_offsets(const char **str) {
     int n = nmatches();
     regmatch_t *matches = (regmatch_t *)calloc(n, sizeof(regmatch_t));
     if (matches) {
-      if ( regexec(re, *str, n, matches, 0) == 0 ) {
+      if ( (last_err = regexec(re, *str, n, matches, 0)) == 0 ) {
         if (matches[0].rm_eo >= 0) *str += matches[0].rm_eo;
         return matches;
       }
@@ -179,7 +189,6 @@ bool regexpr_t::subst(strbuff_t &buff, const char **rstr, const char *with,
           while (isdigit(*p)) p++;
           idx = atoi(mark);
         }
-        else if (*p == ch) { buff.cat(*p++); continue; }
         else if (ch == '\\') {
           switch(*p) {
             case 'n': buff.cat('\n'); break;
@@ -281,6 +290,7 @@ char *regexpr_t::subst(const char *str, const char *spec, int lino, int ndig) {
 
 // C interface:
 re_t re_init(const char *pattern) { return (re_t) new regexpr_t(pattern); }
+char *re_last_error(re_t re) { return ((regexpr_t *)re)->last_error(); }
 void re_release(re_t re) { delete (regexpr_t *)re; }
 void re_set_sensnl(re_t re, int val) { ((regexpr_t *)re)->set_sensnl(val); }
 void re_set_icase(re_t re, int val) { ((regexpr_t *)re)->set_icase(val); }
