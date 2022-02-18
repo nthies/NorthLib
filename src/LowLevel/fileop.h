@@ -83,6 +83,7 @@ long file_copy(const char *src, const char *dest);
 long file_move(const char *src, const char *dest);
 int file_open(fileptr_t *rfp, const char *path, const char *mode);
 int file_close(fileptr_t *rfp);
+int file_touch(const char *fn, struct timeval motime, struct timeval atime);
 char *file_readline(fileptr_t fp);
 int file_writeline(fileptr_t fp, const char *str);
 int file_read(fileptr_t fp, void *buff, int nbytes);

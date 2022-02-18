@@ -18,7 +18,29 @@
 #include "mapfile.h"
 #include "fileop.h"
 
-// MARK: struct stat macros
+// MARK: Apple specifica
+
+#if __APPLE__
+
+#include <sys/resource.h>
+
+/**
+ * For some strange reason (at least we don't understand the reasoning)
+ * Apple by default doesn't allow linking of empty files.
+ * 
+ * Therefore we use the proprietary libc function setiopolicy_np statically
+ * to allow this operation.
+ */
+static int sane_iopolicy() {
+  return setiopolicy_np(IOPOL_TYPE_VFS_MATERIALIZE_DATALESS_FILES, 
+                        IOPOL_SCOPE_PROCESS, 
+                        IOPOL_MATERIALIZE_DATALESS_FILES_ON);
+}
+static int iopolicy_success = sane_iopolicy();
+
+#endif /* __APPLE__ */
+
+// MARK: - struct stat macros
 
 /*
  *  Permission flags in struct stat st_mode:
@@ -1074,6 +1096,17 @@ int file_close(fileptr_t *fp) {
   int ret = fclose(*fp);
   *fp = 0;
   return ret;
+}
+
+/**
+ * Sets the file modification and access time and creates the file
+ * if it is not existent.
+ */
+int file_touch(const char *fn, timeval motime, timeval atime) {
+  stat_t st;
+  if (stat_read(&st, fn)) { creat(fn, 0660); }
+  timeval tv[2] = { atime, motime };
+  return utimes(fn, tv);
 }
 
 /// Reads one line of data and returns the allocated result, trailing \n, \r

@@ -147,6 +147,40 @@ open class File: DoesLog {
     if path == "-" { fpath = (mode == "r") ? "/dev/fd/0" : "/dev/fd/1" }
     try File(fpath).open(mode: mode, closure: closure)
   }
+  
+  /**
+   * Sets the file modification and access time and creates the file
+   * if it is not existent.
+   * 
+   * - parameters:
+   *   - motime: optional modification time
+   *   - atime:  optional access time
+   *   
+   * - returns: 0 => OK, -1 => Error
+   */
+  @discardableResult
+  public func touch(motime: UsTime? = nil, atime: UsTime? = nil) -> Int {
+    let now = UsTime.now
+    let mt = (motime ?? now).time.tv
+    let at = (atime ?? now).time.tv
+    return Int(file_touch(cpath, mt, at))
+  }
+  
+  /**
+   * Sets the file modification and access time and creates the file
+   * if it is not existent.
+   * 
+   * - parameters:
+   *   - motime: optional modification time
+   *   - atime:  optional access time
+   *   
+   * - returns: 0 => OK, -1 => Error
+   */
+  @discardableResult
+  public static func touch(path: String, motime: UsTime? = nil, 
+                           atime: UsTime? = nil) -> Int {
+    File(path).touch(motime: motime, atime: atime)
+  }
 
   /// Reads one line of characters from the file, trailing \n, \r are removed.
   public func readline() -> String? {

@@ -181,6 +181,16 @@ class FileTests: XCTestCase {
     f = File(fpath)
     XCTAssert(f.exists)
     XCTAssert(f.isFile)
+    let fn = "\(d2.path)/test.empty"
+    let fn2 = "\(d2.path)/test2.empty"
+    XCTAssertFalse(File(fn).exists)
+    File.touch(path: fn)
+    XCTAssertTrue(File(fn).exists)
+    XCTAssertEqual(File(fn).size, 0)
+    XCTAssertEqual(File(fn).move(to: fn2), 0)
+    XCTAssertFalse(File(fn).exists)
+    XCTAssertTrue(File(fn2).exists)
+    XCTAssertEqual(File(fn2).size, 0)
   }
   
 } // FileTests
