@@ -348,8 +348,18 @@ open class File: DoesLog {
    * - Returns: >=0 if successful or -1 in case of Error
    */
   @discardableResult
-  public func move(to: String, isOverwrite: Bool = true) -> Int {
+  public func move(to: String, isOverwrite: Bool = true, isCheck: Bool = true)
+  -> Int {
     guard exists && isFile else { return -1 }
+    if isCheck && fs_is_case_sensitive(cpath) == 0 {
+      let lpath = path.lowercased()
+      let ldest = to.lowercased()
+      if lpath == ldest {
+        let tmpDest = "\(to).tmp"
+        move(to: tmpDest, isOverwrite: true, isCheck: false)
+        return File(tmpDest).move(to: to)
+      }
+    }
     if isOverwrite {
       let dest = File(to)
       if dest.exists { dest.remove() }

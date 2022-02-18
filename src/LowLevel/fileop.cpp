@@ -22,28 +22,19 @@
 
 #if __APPLE__
 
-#include <sys/resource.h>
-
 /**
- * For some strange reason (at least we don't understand the reasoning)
- * Apple by default doesn't allow linking of empty files.
- * 
- * Therefore we use the proprietary libc function setiopolicy_np statically
- * to allow this operation.
+ * Eg. for file move operations we need to know whether we are on a case
+ * sensitive filesystem or not. Unfortunately on MacOS the default is not 
+ * case sensitive but case preserving. 
  */
-int sane_iopolicy() {
-  return setiopolicy_np(IOPOL_TYPE_VFS_MATERIALIZE_DATALESS_FILES, 
-                        IOPOL_SCOPE_PROCESS, 
-                        IOPOL_MATERIALIZE_DATALESS_FILES_ON);
+int fs_is_case_sensitive(const char *path) {
+  int ret = pathconf(path, _PC_CASE_SENSITIVE);
+  return ret != 0;
 }
 
-int is_sane_iopolicy() {
-  int ret = getiopolicy_np(IOPOL_TYPE_VFS_MATERIALIZE_DATALESS_FILES, 
-                           IOPOL_SCOPE_PROCESS);
-  return ret == IOPOL_MATERIALIZE_DATALESS_FILES_ON;
-}
+#else // On Linux we have case sensitive FS by default
 
-static int iopolicy_success = sane_iopolicy();
+int fs_is_case_sensitive(const char *path) { return 1; }
 
 #endif /* __APPLE__ */
 
@@ -1028,8 +1019,8 @@ int file_unlink(const char *path) {
  * @param src: source file to move
  * @param dest: destination path (ehere to move to)
  *
- * @return 0: OK (file has been moved)
- * @return 1: file can't be linked,
+ * @return 0: OK (file has been moved),
+ *         1: file can't be linked,
  *        -1: Error
  */
 int file_trymove( const char *src, const char *dest) {

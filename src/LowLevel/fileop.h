@@ -22,13 +22,7 @@ typedef FILE *fileptr_t;
 
 BeginCLinkage
 
-#if __APPLE__
-
-int sane_iopolicy();
-int is_sane_iopolicy();
-
-#endif /* __APPLE__ */
-
+int fs_is_case_sensitive(const char *path);
 stat_t *stat_init(stat_t *st, mode_t mode);
 int stat_read(stat_t *st, const char *path);
 int stat_readlink(stat_t *st, const char *path);
