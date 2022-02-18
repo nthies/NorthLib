@@ -164,6 +164,16 @@
 }
 
 - (void) testFile {
+# if __APPLE__
+    int is_sane = is_sane_iopolicy();
+    printf("is_sane_iopolicy: %s\n", is_sane? "true" : "false");
+    if (!is_sane) {
+      int ret = sane_iopolicy();
+      printf("sane_iopolicy returns: %d\n", ret);
+      int is_sane = is_sane_iopolicy();
+      printf("is_sane_iopolicy: %s\n", is_sane? "true" : "false");
+    }
+# endif
   char *dir = fn_abs(".");
   XCTAssert(dir != 0);
   printf("cwd: %s\n", dir);

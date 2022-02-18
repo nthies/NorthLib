@@ -1123,7 +1123,7 @@ char *str_dequote(const char *str) {
  * - returns: static string value
  */
 const char *str_error ( int errcode ) {
-  if ( !errcode ) errcode =  errno;
+  if (errcode == -1) errcode =  errno;
   return strerror(errcode);
 }
 

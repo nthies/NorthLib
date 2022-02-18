@@ -31,11 +31,18 @@
  * Therefore we use the proprietary libc function setiopolicy_np statically
  * to allow this operation.
  */
-static int sane_iopolicy() {
+int sane_iopolicy() {
   return setiopolicy_np(IOPOL_TYPE_VFS_MATERIALIZE_DATALESS_FILES, 
                         IOPOL_SCOPE_PROCESS, 
                         IOPOL_MATERIALIZE_DATALESS_FILES_ON);
 }
+
+int is_sane_iopolicy() {
+  int ret = getiopolicy_np(IOPOL_TYPE_VFS_MATERIALIZE_DATALESS_FILES, 
+                           IOPOL_SCOPE_PROCESS);
+  return ret == IOPOL_MATERIALIZE_DATALESS_FILES_ON;
+}
+
 static int iopolicy_success = sane_iopolicy();
 
 #endif /* __APPLE__ */
