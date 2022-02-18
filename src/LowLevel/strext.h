@@ -374,6 +374,7 @@ inline char *str_heap(const char *str) { return str_heap(str, 0); }
 inline int str_cpy ( char **rdst, int n, const char *src )
   { return str_rcpy( rdst, n, src); }
 inline char **av_heap(const char *const *argv) { return av_heap(argv, 0); }
+inline const char *str_error() { return str_error(0); }
 
 #endif /* __cpluplus */
 
