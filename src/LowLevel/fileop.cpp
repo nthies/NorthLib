@@ -20,7 +20,7 @@
 
 // MARK: Apple specifica
 
-#if __APPLE__
+#ifdef _PC_CASE_SENSITIVE
 
 /**
  * Eg. for file move operations we need to know whether we are on a case
@@ -36,7 +36,7 @@ int fs_is_case_sensitive(const char *path) {
 
 int fs_is_case_sensitive(const char *path) { return 1; }
 
-#endif /* __APPLE__ */
+#endif /* _PC_CASE_SENSITIVE */
 
 // MARK: - struct stat macros
 
