@@ -485,6 +485,23 @@ class RegexprTests: XCTestCase, DoesLog {
     }
   }
   
+  func testSubstexpr() throws {
+    XCTAssertThrowsError(try Substexpr("gaga"))
+    var se = try Substexpr("/@d+/<&> #/")
+    se.count = 50
+    XCTAssertEqual(se.subst("123"), "<123> 01")
+    XCTAssertEqual(se.subst("456"), "<456> 02")
+    XCTAssertEqual(se.subst("789"), "<789> 03")
+    XCTAssertEqual(se.subst("abc"), nil)
+    XCTAssertEqual(se.subst("012"), "<012> 04")
+    se = try Substexpr("/@d+/<&> #/g")
+    se.count = 5
+    XCTAssertEqual(se.subst("123 456"), "<123> 1 <456> 1")
+    se = try Substexpr("/(@d+) (@d+)/<&1> <&2> #/g")
+    se.count = 5
+    XCTAssertEqual(se.subst("123 456"), "<123> <456> 1")
+  }
+  
   func testStringExtensions() {
     XCTAssertTrue("ab12cd" =~ "@d+")
     XCTAssertFalse("abcd" =~ "@d+")

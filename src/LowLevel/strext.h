@@ -213,6 +213,12 @@ public:
   /// substitute all matched parts with string
   char *gsubst(const char **rstr, const char *with,
                int lino = -1, int ndig = -1);
+  /// Break substitution pattern into parts and return true if valid
+  static bool is_subst_pattern(strbuff_t &pattern, strbuff_t &subst, 
+                               bool &is_global, const char *s);
+  /// Break substitution pattern into parts and return regexpr_t * and allocated
+  /// substitution string.
+  static regexpr_t *is_subst_pattern(char *&subst, bool &is_global, const char *s);
   /// Returns true if 'spec' is a valid substitution pattern
   static bool is_valid_subst(const char *spec);
   /// substitue string by sed-like /pattern/substitution/g specification
@@ -365,6 +371,7 @@ char *re_ngsubst(re_t re, const char **rstr, const char *with, int lino, int ndi
 char *re_strsubst(const char *str, const char *spec);
 char *re_nstrsubst(const char *str, const char *spec, int lino, int ndig);
 int re_is_valid_subst(const char *spec);
+int re_split_subst(const char *spec, re_t *pattern, char **subst, int *is_global);
 
 EndCLinkage
 

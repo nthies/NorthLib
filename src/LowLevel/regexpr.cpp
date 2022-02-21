@@ -247,8 +247,8 @@ char *regexpr_t::gsubst(const char **rstr, const char *with,
 
 // Interprete substitution pattern a la sed /pattern/substitution/g
 // returns true if successfully decoded
-static bool is_subst_pattern(strbuff_t &pattern, strbuff_t &subst, bool &is_global,
-                             const char *s) {
+bool regexpr_t::is_subst_pattern(strbuff_t &pattern, strbuff_t &subst,
+                                 bool &is_global, const char *s) {
   if (s && *s) {
     char delim = *s++;
     bool in_pattern = true;
@@ -273,6 +273,21 @@ static bool is_subst_pattern(strbuff_t &pattern, strbuff_t &subst, bool &is_glob
     }
   }
   return false;
+}
+
+regexpr_t *regexpr_t::is_subst_pattern(char *&subst, bool &is_global, const char *s) {
+  strbuff_t bpattern;
+  strbuff_t bsubst;
+  bool global;
+  if (is_subst_pattern(bpattern, bsubst, global, s)) {
+    auto re = new regexpr_t(bpattern.value());
+    if (re->ok()) {
+      subst = bsubst.heap();
+      is_global = global;
+      return re;
+    }
+  }
+  return 0;
 }
 
 bool regexpr_t::is_valid_subst(const char *spec) {
@@ -332,3 +347,13 @@ char *re_nstrsubst(const char *str, const char *spec, int lino, int ndig)
   { return regexpr_t::subst(str, spec, lino, ndig); }
 int re_is_valid_subst(const char *spec) 
   { return regexpr_t::is_valid_subst(spec); }
+int re_split_subst(const char *spec, re_t *pattern, char **subst, int *is_global) {
+  bool global;
+  auto re = regexpr_t::is_subst_pattern(*subst, global, spec);
+  if (re) {
+    *pattern = (re_t)re;
+    *is_global = global;
+    return 0;
+  }
+  return -1;
+}

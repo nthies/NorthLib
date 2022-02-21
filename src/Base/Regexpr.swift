@@ -87,6 +87,9 @@ open class Regexpr {
     }
   }
   
+  /// Initialize with C's re_t
+  public init(re: re_t) { self.re = re }
+  
   deinit { re_release(re) }
   
   /// Returns true if RE matches the passed String
@@ -256,9 +259,110 @@ open class Regexpr {
    * - returns: true => valid, false otherwise
    */
   public static func isValidSubst(spec: String) -> Bool {
+    Substexpr.isValid(spec: spec)
+  }
+  
+} // Regexpr
+
+/**
+ * Substexpr objects are used to perform pattern based String substitutions.
+ *
+ * The initializer is called with an sed-like substitution specification encompassing
+ * the pattern and the substitution string (eg. "/<pattern>/<substitution>/").
+ * The delimiter character ("/" in this example) may be any ASCII (not multibyte)
+ * character, so ",<pattern>,<substitution>," is also valid. If the last delimiter
+ * is followed by the character "g", a global substitution is performed. E.g.
+ * ````
+ *   let se = Substexpr("/@d+/<&>/g")
+ * ````
+ * creates a substitution expression which seaches in a given String for patterns
+ * @d+ (a sequence of digits - at least one). Each of these patterns found in the
+ * String are substituted by the same pattern enclosed in <>. E.g.
+ *  
+ * ````
+ *   se.subst("abc123def456ghi")
+ * ````
+ * yields:
+ * ````
+ *   "abc<123>def<456>ghi"
+ * ````
+ * This example uses in its substitution string so called back references (&)
+ * to the matching pattern or enclosed match groups.
+ * The following back references are supported:
+ *
+ * - &: refers to the complete matching string
+ * - &1: refers to the first pattern group
+ * - &i: refers to the i'th pattern group
+ * - \i: also refers to the i'th pattern group
+ *
+ * Optionally a single '#' in the sustitution string is substituted by the 
+ * index variable in the Substexpr object (if defined). The index is incremented
+ * after each successful substitution. Using the variables 'count' or 'ndig' 
+ * the number of 0-filled digits can be specified.
+ */
+open class Substexpr {
+  
+  /// The pattern to search for
+  var re: Regexpr!
+  /// The substitution String
+  var subst: String!
+  /// Whether to perform global substitions (ie. substitute all matches)
+  var isGlobal: Bool!
+  /// Index of substitution (for #-substitutions)
+  var index: Int = -1
+  /// Number of digits for #-substitions (will be set by 'count')
+  var ndig: Int = -1 {
+    didSet { if index == -1 { index = 1 } }
+  }
+  /// Total number of Strings to substitue (evaluates 'ndig') 
+  var count: Int? {
+    didSet {
+      if ndig == -1 { 
+        let n = Double(count!)
+        ndig = Int(n.log(base: 10)) + 1 
+      }
+    }
+  }
+  
+  /// Initialize with substitution specification (see ``Substexpr``)
+  init(_ spec: String) throws {
+    var cre: re_t?
+    var subst: UnsafeMutablePointer<CChar>?
+    var isGlobal: Int32 = 0
+    try spec.withCString { s in
+      if re_split_subst(s, &cre, &subst, &isGlobal) ==  0 {
+        defer { str_release(&subst) }
+        self.re = Regexpr(re: cre!)
+        self.subst = String(validatingUTF8: subst!)
+        self.isGlobal = isGlobal != 0
+      }
+      else { throw "\(spec): Invalid Substitution expression" }
+    }
+  }
+  
+  /// Perform the substitution and return a substituted String if the pattern
+  /// matches (see ``Substexpr``).
+  public func subst(_ str: String) -> String? {
+    let s = re.subst(str, with: subst, num: index, ndig: ndig, isGlobal: isGlobal)
+    if s != nil && index != -1 { index += 1 }
+    return s
+  }
+  
+  /**
+   * Checks whether the passed String 'spec' is a valid substitution specification.
+   * 
+   * isValid can be used to verify whether a given substitution specification
+   * as used in Substexpr.init is valid, ie. is of correct syntax.
+   * 
+   * - parameters:
+   *   - spec:  substituion specification
+   *   
+   * - returns: true => valid, false otherwise
+   */
+  public static func isValid(spec: String) -> Bool {
     spec.withCString { spec in
       return re_is_valid_subst(spec) != 0
     }
   }
-  
-} // Regexpr
+
+} // Substexpr
