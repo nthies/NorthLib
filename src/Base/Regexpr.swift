@@ -303,19 +303,19 @@ open class Regexpr {
 open class Substexpr {
   
   /// The pattern to search for
-  var re: Regexpr!
+  public var re: Regexpr!
   /// The substitution String
-  var subst: String!
+  public var subst: String!
   /// Whether to perform global substitions (ie. substitute all matches)
-  var isGlobal: Bool!
+  public var isGlobal: Bool!
   /// Index of substitution (for #-substitutions)
-  var index: Int = -1
+  public var index: Int = -1
   /// Number of digits for #-substitions (will be set by 'count')
-  var ndig: Int = -1 {
+  public var ndig: Int = -1 {
     didSet { if index == -1 { index = 1 } }
   }
   /// Total number of Strings to substitue (evaluates 'ndig') 
-  var count: Int? {
+  public var count: Int? {
     didSet {
       if ndig == -1 { 
         let n = Double(count!)
@@ -325,7 +325,7 @@ open class Substexpr {
   }
   
   /// Initialize with substitution specification (see ``Substexpr``)
-  init(_ spec: String) throws {
+  public init(_ spec: String) throws {
     var cre: re_t?
     var subst: UnsafeMutablePointer<CChar>?
     var isGlobal: Int32 = 0
