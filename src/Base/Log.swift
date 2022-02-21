@@ -158,7 +158,7 @@ public class Log {
 
   /// minimal log level (.Info by default)
   static public var minLogLevel = LogLevel.Info
-  static private var spoint = Sync()
+  static private var spoint = Serial(label: "NorthLib.Log")
   
   // head/tail of Loggers
   static private var head: Logger? = nil
@@ -176,9 +176,8 @@ public class Log {
   private init() {}
   
   /// Synchronize thread access
-  static public func sync(_ closure: @escaping () async ->())  {
-    Task.detached { await spoint.sync(closure) }
-  }
+  static public func queue(_ closure: @escaping ()->()) 
+    { spoint.queue(closure: closure) }
 
   /// isDebugClass returns true if a class of given name is to debug
   static public func isDebugClass(_ className: String?) -> Bool {
@@ -199,7 +198,7 @@ public class Log {
   /// append(logger:) appends logging destinations (derived from class Logger)
   /// to the list of loggers
   static public func append(logger: Logger... ) {
-    sync {
+    queue {
       for lg in logger {
         if let tail = self.tail { tail.append(lg) }
         else { self.head = lg }
@@ -210,7 +209,7 @@ public class Log {
   
   /// remove(logger:) removes logging destinations from the list of Loggers
   static public func remove(logger: Logger... ) {
-    sync {
+    queue {
       for lg in logger {
         if lg === head { head = lg.next }
         if lg === tail { tail = lg.prev }
@@ -223,7 +222,7 @@ public class Log {
   static public func log( _ msg: Message ) {
     guard (msg.logLevel.rawValue >= minLogLevel.rawValue) ||
           isDebugClass(msg.className) else { return }
-    sync {
+    queue {
       Message.messageCount += 1
       msg.serialNumber = Message.messageCount
       if head == nil {

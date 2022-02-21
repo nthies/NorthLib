@@ -222,7 +222,7 @@ class LogTests: XCTestCase, DoesLog {
     error("error test")
     /// sleep 1ms to give logging tasks time to log
     try! await Task.sleep(nanoseconds: 1_000_000)
-    Log.sync { [self] in
+    Log.queue { [self] in
       if let str = File(logfn).mem?.string {
         print("\nlog file content: \n\(str)")
       }
