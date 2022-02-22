@@ -326,12 +326,18 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
     }
     isOpen = toOpen
     let duration = animated ? self.duration : 0
-    UIView.animate(withDuration: duration, delay: 0, usingSpringWithDamping: 0.8,
-                   initialSpringVelocity: 0.2, options: .curveEaseOut, animations: {
+    UIView.animate(withDuration: duration,
+                   delay: 0,
+                   usingSpringWithDamping: 0.8,
+                   initialSpringVelocity: 0.2,
+                   options: .curveEaseOut,
+                   animations: {   [weak self] in
+      guard let self = self else { return }
       if self.isOpen { self.shadeView.alpha = 0.3 }
       else { self.shadeView.alpha = 0 }
       self.resetConstraints()
-    }) { _ in // completion
+    }) { [weak self] _ in // completion
+      guard let self = self else { return }
       if !self.isOpen { // remove slider
         self.active.removeSubVC(self.slider)
         self.shadeView.isHidden = true
