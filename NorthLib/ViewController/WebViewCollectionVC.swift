@@ -47,7 +47,6 @@ class OptionalWebView: OptionalView, DoesLog {
   fileprivate func createWebView() {
     self.webView = WebView(frame: .zero)
     guard let webView = self.webView else { return }
-    webView.isOpaque = false
     webView.backgroundColor = UIColor.clear
     webView.scrollView.backgroundColor = UIColor.clear
     webView.allowsBackForwardNavigationGestures = false
