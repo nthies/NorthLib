@@ -18,7 +18,7 @@ extension Memory {
     return nil
   }
   
-  /// Provide Data by moving the pointer to it
+  /// Provide Data by moving the pointer (and thereby the data) to it
   public func moveToData() -> Data? {
     defer { ptr = nil; length = 0 }
     if let p = ptr {
