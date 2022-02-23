@@ -54,7 +54,7 @@ public class DownloadStatusButton : UIButton {
     }
   }
   
-  public var cloudImage : UIImage? = UIImage(name: "icloud.and.arrow.down")
+  public var cloudImage : UIImage? = UIImage(named: "download")
   public var checkmarkImage : UIImage? = UIImage(name: "checkmark")
   
   public var buttonImage : UIImage? {
@@ -116,6 +116,8 @@ public class DownloadStatusButton : UIButton {
     self.layer.addSublayer(progressCircle)
     self.addSubview(customImageView)
     customImageView.centerY()
+    customImageView.pinWidth(23.8)
+    customImageView.contentMode = .scaleAspectFit
     pin(customImageView.right, to: self.right)
   }
 
