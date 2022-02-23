@@ -9,6 +9,17 @@ import UIKit
 import AVFoundation
 import MediaPlayer
 
+/// UIImage extension to resize an image:
+extension UIImage {
+  func resize(to size: CGSize) -> UIImage {
+    let renderer = UIGraphicsImageRenderer(size: size)
+    let image = renderer.image { _ in
+      self.draw(in: CGRect.init(origin: CGPoint.zero, size: size))
+    }
+    return image.withRenderingMode(self.renderingMode)
+  }
+}
+
 /// A very simple audio player utilizing AVPlayer
 open class AudioPlayer: NSObject, DoesLog {
   
@@ -23,11 +34,20 @@ open class AudioPlayer: NSObject, DoesLog {
     }
   }
   
-  /// title is the title of the track being played
+  /// Title of the track being played
   public var title = ""
   
-  /// album is the name of the album being played
+  /// Name of the album being played
   public var album = ""
+  
+  /// Artist of the track being played
+  public var artist = ""
+  
+  // The resized image for the lock screen player UI
+  private var resizedImage: UIImage?
+  
+  /// The image to display while playing
+  public var image: UIImage? { didSet { resizedImage = nil } }
   
   /// current playback position
   public var currentTime: CMTime {
@@ -37,6 +57,9 @@ open class AudioPlayer: NSObject, DoesLog {
   
   // the player
   private var player: AVPlayer? = nil
+  
+  // The timer updating the playing info
+  private var timer: Timer?
   
   // Are we playing a stream?
   private var isStream = false
@@ -48,8 +71,12 @@ open class AudioPlayer: NSObject, DoesLog {
   public var isPlaying: Bool { return (player?.rate ?? 0.0) > 0.001 }
   
   /// closure to call in case of error
-  public func onError(_ closure:  @escaping (String,Error)->()) { _onError = closure }
+  public func onError(closure:  ((String,Error)->())?) { _onError = closure }
   private var _onError: ((String,Error)->())?
+  
+  /// closure to call when playing has ended
+  public func onEnd(closure: ((Error?)->())?) { _onEnd = closure }
+  private var _onEnd: ((Error?)->())?
   
   // the observation object (in case of errors)
   private var observation: NSKeyValueObservation?
@@ -74,15 +101,31 @@ open class AudioPlayer: NSObject, DoesLog {
       else if item.status == .readyToPlay {}
     }
     self.player = AVPlayer(playerItem: item)
+    if #available(iOS 15.0, *) {
+      self.player?.audiovisualBackgroundPlaybackPolicy = .continuesIfPossible
+    } 
     updatePlayingInfo()
     NotificationCenter.default.addObserver(self, selector: #selector(playerHasFinished),
-                                           name: .AVPlayerItemDidPlayToEndTime, object: item)
-    NotificationCenter.default.addObserver(self, selector: #selector(playerIsInterrupted),
-                                           name: AVAudioSession.interruptionNotification, object: nil)
+      name: .AVPlayerItemDidPlayToEndTime, object: item)
+    NotificationCenter.default.addObserver(self, selector:
+      #selector(playerHasFinishedWithError(notification:)),
+      name: .AVPlayerItemFailedToPlayToEndTime, object: item)
+   NotificationCenter.default.addObserver(self, selector: #selector(playerIsInterrupted),
+      name: AVAudioSession.interruptionNotification, object: nil)
+    timer = every(seconds: 1) { [weak self] _ in self?.updatePlayingInfo() }
   }
-    
+  
   // player has finished playing medium
   @objc private func playerHasFinished() {
+    _onEnd?(nil)
+    close()
+  }
+  
+  // player has finished with error
+  @objc private func playerHasFinishedWithError(notification: Notification) {
+    let err = notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey]
+    if let err = err as? Error { _onEnd?(err) }
+    else { _onEnd?(error("Player couldn't finish successfully")) }
     close()
   }
   
@@ -115,8 +158,19 @@ open class AudioPlayer: NSObject, DoesLog {
   private func updatePlayingInfo() {
     if let player = self.player {
       var info = [String:Any]()
+      if let image = image {
+        info[MPMediaItemPropertyArtwork] =
+        MPMediaItemArtwork(boundsSize: image.size) { [weak self] s in 
+          guard let self = self else { return UIImage() }
+          if self.resizedImage == nil {
+            self.resizedImage = image.resize(to: s) 
+          }
+          return self.resizedImage ?? UIImage()
+        }
+      }
       info[MPMediaItemPropertyTitle] = title
       info[MPMediaItemPropertyAlbumTitle] = album
+      info[MPMediaItemPropertyArtist] = artist
       info[MPNowPlayingInfoPropertyIsLiveStream] = false
       info[MPMediaItemPropertyPlaybackDuration] = player.currentItem!.asset.duration.seconds
       info[MPNowPlayingInfoPropertyPlaybackRate] = player.rate
@@ -154,6 +208,8 @@ open class AudioPlayer: NSObject, DoesLog {
   /// close stops the player (if playing) and deactivates the audio session
   public func close() {
     do {
+      timer?.invalidate()
+      timer = nil
       closeRemoteCommands()
       self.stop()
       self.player = nil
@@ -205,8 +261,7 @@ open class AudioPlayer: NSObject, DoesLog {
   public override init() {
     do {
       super.init()
-      try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default,
-            options: [.mixWithOthers, .allowAirPlay])
+      try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
       try AVAudioSession.sharedInstance().setActive(true)
     }
     catch let err {
