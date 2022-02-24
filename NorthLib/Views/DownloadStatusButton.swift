@@ -72,7 +72,7 @@ public class DownloadStatusButton : UIButton {
         buttonImage = cloudImage
         progressCircle.isHidden = true
         self.titleEdgeInsets = UIEdgeInsets(top: 0, left: offset,
-                                            bottom: 0, right: 0)
+                                            bottom: 0, right: offset)
       case .process:
         buttonImage = nil
         progressCircle.isHidden = false
