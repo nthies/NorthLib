@@ -16,13 +16,14 @@ public class BorderView : UIView {}
 // MARK: - borders Helper
 ///borders Helper
 extension UIView {
+  @discardableResult
   public func addBorder(_ color:UIColor,
                  _ width:CGFloat=1.0,
-                 only: UIRectEdge? = nil){
+                 only: UIRectEdge? = nil) -> Self{
     if only == nil {
       self.layer.borderColor = color.cgColor
       self.layer.borderWidth = width
-      return
+      return self
     }
     
     removeBorders()
@@ -54,6 +55,7 @@ extension UIView {
     else if only == UIRectEdge.right {
       pin(b.right, to: self.right)
     }
+    return self
   }
   
   public func removeBorders(){
