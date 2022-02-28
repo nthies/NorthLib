@@ -1,7 +1,7 @@
 // swift-tools-version:5.5
 
 // Set isIos to false to build executables and to omit iOS-specific modules
-var isIos = false
+var isIos = true
 
 import PackageDescription
 
