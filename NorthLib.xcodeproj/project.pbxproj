@@ -78,6 +78,7 @@
 		AE7123342320E0B800B715A8 /* hashes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AE7123322320E0B800B715A8 /* hashes.cpp */; };
 		AE7123362320E64300B715A8 /* DataExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE7123352320E64300B715A8 /* DataExtensions.swift */; };
 		AE80A399244DE1920012DFFA /* CubeLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE80A398244DE1920012DFFA /* CubeLabel.swift */; };
+		AE81B3D127C7E25400016C13 /* Mail.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE81B3D027C7E25400016C13 /* Mail.swift */; };
 		AE831431265CDF40004DBF9E /* Callback.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE831430265CDF40004DBF9E /* Callback.swift */; };
 		AE86486E248E0EC0007096B4 /* PdfDoc.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE86486D248E0EC0007096B4 /* PdfDoc.swift */; };
 		AE9851352320FC7500EAC9D8 /* WebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE9851332320FC7500EAC9D8 /* WebView.swift */; };
@@ -195,6 +196,7 @@
 		AE7123322320E0B800B715A8 /* hashes.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = hashes.cpp; sourceTree = "<group>"; };
 		AE7123352320E64300B715A8 /* DataExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataExtensions.swift; sourceTree = "<group>"; };
 		AE80A398244DE1920012DFFA /* CubeLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CubeLabel.swift; sourceTree = "<group>"; };
+		AE81B3D027C7E25400016C13 /* Mail.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Mail.swift; sourceTree = "<group>"; };
 		AE831430265CDF40004DBF9E /* Callback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Callback.swift; sourceTree = "<group>"; };
 		AE86486D248E0EC0007096B4 /* PdfDoc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PdfDoc.swift; sourceTree = "<group>"; };
 		AE9851332320FC7500EAC9D8 /* WebView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebView.swift; sourceTree = "<group>"; };
@@ -365,6 +367,7 @@
 				AE98513D2320FD6500EAC9D8 /* Json.swift */,
 				AE1DA65523BDF1A7003DFE92 /* lowlevel */,
 				AE7122DA23197B4000B715A8 /* Math.swift */,
+				AE81B3D027C7E25400016C13 /* Mail.swift */,
 				AE7122DB23197B4000B715A8 /* Log.swift */,
 				AE7122DC23197B4000B715A8 /* Error.swift */,
 				AE7122DD23197B4000B715A8 /* Time.swift */,
@@ -640,6 +643,7 @@
 				AE7122F523197B4000B715A8 /* CoreGraphicsExtensions.swift in Sources */,
 				AE7122F123197B4000B715A8 /* FileLogger.swift in Sources */,
 				AE7122F323197B4000B715A8 /* StringExtensions.swift in Sources */,
+				AE81B3D127C7E25400016C13 /* Mail.swift in Sources */,
 				00E4E36B247E694C00BEEC4A /* ZoomedImageView.swift in Sources */,
 				94C84AF925FB6927000A5ACC /* GradientView.swift in Sources */,
 				C731B50A24FD301700B32AFC /* UIHelper.swift in Sources */,
