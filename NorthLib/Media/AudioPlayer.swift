@@ -164,6 +164,9 @@ open class AudioPlayer: NSObject, DoesLog {
           guard let self = self else { return UIImage() }
           if self.resizedImage == nil {
             self.resizedImage = image.resize(to: s) 
+            if self.resizedImage == nil {
+              self.error("Can't resize image from \(image.size) to \(s)")
+            }
           }
           return self.resizedImage ?? UIImage()
         }
