@@ -49,6 +49,20 @@ public func onMain(after seconds: Double = 0, closure: @escaping ()->()) {
   async(after: seconds, queue: DispatchQueue.main, closure: closure)
 }
 
+/// Ensures that the passed closure is executed in the main thread.
+/// If the current thread is already the main thread, the closure is executed immediately,
+/// otherwise it is executed asynchronously on main.
+/// - Parameter closure: closute to execute
+public func ensureMain(closure: @escaping ()->()) {
+  if Thread.isMainThread {
+    closure()
+  }
+  else {
+    async(after: 0, queue: DispatchQueue.main, closure: closure)
+  }
+}
+
+
 /// Delays execution of a closure on the main thread for a number of seconds
 public func delay(seconds: Double, closure: @escaping ()->()) {
   onMain(after: seconds, closure: closure)

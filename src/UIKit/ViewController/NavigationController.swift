@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import MessageUI
 
 public protocol HandlesEdgeSwipes {
   /// is called by NavigationController when a left/right edge swipe has been 
@@ -14,7 +15,8 @@ public protocol HandlesEdgeSwipes {
 }
 
 /// A simple UINavigationController offering left/right edge swipe detection
-open class NavigationController: UINavigationController, UIGestureRecognizerDelegate {
+open class NavigationController: UINavigationController, 
+  UIGestureRecognizerDelegate, MailingVC {
 
   // left edge pan gesture recognizer
   private lazy var edgePanLeft = UIScreenEdgePanGestureRecognizer(target: self,
@@ -93,6 +95,12 @@ open class NavigationController: UINavigationController, UIGestureRecognizerDele
       }
     }
     return true
+  }
+  
+  /// Dismiss mail composition controller when finished
+  public func mailComposeController(_ controller: MFMailComposeViewController, 
+    didFinishWith result: MFMailComposeResult, error: Error?) {
+    Mail.dismiss(controller: controller, result: result, error: error)
   }
   
 } // NavigationController

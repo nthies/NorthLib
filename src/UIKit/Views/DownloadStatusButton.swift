@@ -12,6 +12,9 @@ public enum DownloadStatusButtonState { case notStarted, process, justDone, done
 
 public class DownloadStatusButton : UIButton {
   private var lastBounds:CGRect?
+  
+  private var customImageView = UIImageView()
+  
   private lazy var progressCircle = ProgressCircle()
   
   private let iconPadding:CGFloat = 3.0
@@ -57,7 +60,7 @@ public class DownloadStatusButton : UIButton {
   public var buttonImage : UIImage? {
     didSet{
       if oldValue != buttonImage {
-        self.setImage(buttonImage, for: .normal)
+        customImageView.image = buttonImage
       }
     }
   }
@@ -91,6 +94,8 @@ public class DownloadStatusButton : UIButton {
         self.titleEdgeInsets = UIEdgeInsets(top: 0, left: offset,
                                             bottom: 0, right: offset)
     }
+    self.titleLabel?.setNeedsUpdateConstraints()
+    self.titleLabel?.updateConstraintsIfNeeded()
   }
   
   public override func tintColorDidChange() {
@@ -109,11 +114,9 @@ public class DownloadStatusButton : UIButton {
                    action: #selector(self.handleButtonPress),
                    for: .touchUpInside)
     self.layer.addSublayer(progressCircle)
-    if let imageView = self.imageView {
-      imageView.centerY()
-      pin(imageView.right, to: self.right)
-    }
-    self.semanticContentAttribute = .forceRightToLeft
+    self.addSubview(customImageView)
+    customImageView.centerY()
+    pin(customImageView.right, to: self.right)
   }
 
   @objc func handleButtonPress(){

@@ -18,11 +18,21 @@ public extension UIViewController {
         if let modal = topmostModalVc.presentedViewController {
           topmostModalVc = modal
         }
-        else{
+        else {
           return topmostModalVc
         }
       }
     }
+  }
+  
+  /// Returns the top most view controller, ie. either the root view controller
+  /// or its top most presented view controller
+  static var top: UIViewController? {
+    if let keyWindow = UIApplication.shared.windows.filter({$0.isKeyWindow}).first,
+       let root = keyWindow.rootViewController {
+      return root.topmostModalVc
+    }
+    return nil
   }
   
   /**
