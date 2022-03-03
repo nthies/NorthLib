@@ -401,6 +401,9 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
       closure(.success(nil))
     }
     else {
+      //Debug Crash enable this logging e.g. change to log
+      //Sometimes without manuell download an issue e.g. if its particularry loades last execution the app loads automatically issue files
+      // when deletins an issue in that moment we have the exception: 'Task created in a session that has been invalidated' NorthLib.HttpSession.downloadDlFile...
       debug("download: \(file.name) - doesn't exist in \(File.basename(toDir))")
       let url = "\(baseUrl)/\(file.name)"
       let toFile = File(dir: toDir, fname: file.name)
