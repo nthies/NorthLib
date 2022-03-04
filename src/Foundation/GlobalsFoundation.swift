@@ -27,7 +27,7 @@ import Foundation
 public func async(qos: DispatchQoS.QoSClass = .userInitiated, after seconds: Double = 0,
                   queue q: DispatchQueue? = nil, closure: @escaping ()->()) {
   let queue: DispatchQueue = q ?? DispatchQueue.global(qos: qos)
-  if seconds =~ 0.0 {
+  if !(seconds =~ 0.0) {
     let deadline = DispatchTime.now() + seconds
     queue.asyncAfter(deadline: deadline, execute: closure)
   }
