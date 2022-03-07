@@ -253,7 +253,7 @@ public extension UIView {
   func pinWidth(_ width: Int, priority: UILayoutPriority? = nil) -> NSLayoutConstraint { return pinWidth(CGFloat(width)) }
   
   @discardableResult
-  func pinWidth(to: LayoutDimension, dist: CGFloat = 0, factor: CGFloat = 0, priority: UILayoutPriority? = nil)
+  func pinWidth(to: LayoutDimension, dist: CGFloat = 0, factor: CGFloat = 1, priority: UILayoutPriority? = nil)
     -> NSLayoutConstraint { 
       translatesAutoresizingMaskIntoConstraints = false
       let constraint = widthAnchor.constraint(equalTo: to.anchor, 
@@ -276,7 +276,7 @@ public extension UIView {
   func pinHeight(_ height: Int, priority: UILayoutPriority? = nil) -> NSLayoutConstraint { return pinHeight(CGFloat(height), priority: priority) }
   
   @discardableResult
-  func pinHeight(to: LayoutDimension, dist: CGFloat = 0, factor: CGFloat = 0, priority: UILayoutPriority? = nil)
+  func pinHeight(to: LayoutDimension, dist: CGFloat = 0, factor: CGFloat = 1, priority: UILayoutPriority? = nil)
     -> NSLayoutConstraint { 
       translatesAutoresizingMaskIntoConstraints = false
       let constraint = heightAnchor.constraint(equalTo: to.anchor,
