@@ -246,14 +246,25 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
   @Callback<Error>
   public var whenLoadError: Callback<Error>.Store
       
+  /// Set to true when Bridge JS has been loaded
+  private var isBridgeLoaded = false
+  
+  /// Inject Bridge JS code into WebView
+  public func injectBridges() {
+    if !isBridgeLoaded {
+      self.jsexec(JSBridgeObject.js)
+      for bridge in bridgeObjects {
+        self.jsexec("var \(bridge.key) = new NativeBridge(\"\(bridge.key)\")")
+      }
+      isBridgeLoaded = true
+    }
+  }
+  
   /// Define Bridge Object
   public func addBridge(_ object: JSBridgeObject, isExec: Bool = false) {
-    if isExec {
-      if self.bridgeObjects.isEmpty { self.jsexec(JSBridgeObject.js) }
-      self.jsexec("var \(object.name) = new NativeBridge(\"\(object.name)\")")
-    }
     self.bridgeObjects[object.name] = object
     self.configuration.userContentController.add(self, name: object.name)
+    if isExec { injectBridges() }
   }
   
   /// Perform console.log and window.alert via bridge
@@ -262,6 +273,7 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
       self.jsexec("log2bridge(\(bridge.name))")
     }
   }
+  
   /// Perform console.log and window.alert via bridge
   public func log2bridge(_ bridge: JSBridgeObject) {
     self.jsexec("log2bridge(\(bridge.name))")
@@ -447,8 +459,11 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
       if from != to, to != "about:blank" {
         let content = (wv.originalUrl, URL(string: to))
         debug("link detected")
-        $whenLinkPressed.notify(sender: self, content: content)
-        decisionHandler(.cancel)
+        if $whenLinkPressed.count > 0 {
+          $whenLinkPressed.notify(sender: self, content: content)
+          decisionHandler(.cancel)
+        }
+        else { decisionHandler(.allow) }
       }
       else { decisionHandler(.allow) }
     }
@@ -456,6 +471,7 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
   
   public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
     self.errorCount = 0
+    isBridgeLoaded = false
     $whenLoaded.notify(sender: self, content: self)
   }
   
