@@ -28,7 +28,7 @@
  * case sensitive but case preserving. 
  */
 int fs_is_case_sensitive(const char *path) {
-  int ret = pathconf(path, _PC_CASE_SENSITIVE);
+  int ret = (int)pathconf(path, _PC_CASE_SENSITIVE);
   return ret != 0;
 }
 
