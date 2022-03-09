@@ -1,5 +1,4 @@
 //
-//
 // Toast.swift
 //
 // Created by Ringo Müller-Gromes on 24.07.20.
@@ -68,12 +67,8 @@ public class Toast {
     tip.alpha = 0.0
     
     DispatchQueue.main.async {
-      let appDelegate = UIApplication.shared.delegate
-      let window = appDelegate?.window
-      
-      if window == nil { return}
-      
-      window!?.addSubview(tip)
+      guard let window = UIWindow.keyWindow else { return }
+      window.addSubview(tip)
       Toast.addTip(tip)
       UIView.animate(withDuration: 1.0,
                      delay: 0,
