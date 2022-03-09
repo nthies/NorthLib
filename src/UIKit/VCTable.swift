@@ -6,7 +6,6 @@
 //
 
 import UIKit
-import NorthLib
 
 /// A view controller description
 public protocol VCDescription where Self: UIViewController {
