@@ -19,7 +19,7 @@ extension LogView {
   /// Pin view to other view
   public func pinToView(_ view: UIView) {
     pin(top, to: view.topGuide())
-    pin(bottom, to: view.bottom)
+    pin(bottom, to: view.bottomGuide())
     pin(left, to: view.left)
     pin(right, to: view.right)
   }
