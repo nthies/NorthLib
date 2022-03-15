@@ -43,13 +43,7 @@ public extension UIView {
 /// A UIView extension to check visibility of a view
 public extension UIView {
   /// Return whether view is visible somewhere on the screen
-  var isVisible: Bool {
-    if self.window != nil && !self.isHidden {
-      let rect = self.convert(self.frame, from: nil)
-      return rect.intersects(UIScreen.main.bounds)
-    } 
-    return false
-  }
+  var isVisible: Bool { self.window != nil && !self.isHidden }
 }
 
 /// A UIView extension to check if view is on top in parents view hirarchy
