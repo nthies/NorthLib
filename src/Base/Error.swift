@@ -90,25 +90,30 @@ extension DoesLog {
 extension Log {
   
   /** 
-   A Log.Error is a Log.Message that also serves as an Error and can be thrown
+   A Log.Error contains a Log.Message that also serves as an Error and can be thrown
    as an exception.
    
    A logged Error may refer to an Error that may have caused this Error. Therefore
    it may optionally refer to an Error that has occurred previously.
    */
-  open class Error: Message, Swift.Error {
+  open class Error: Swift.Error {
+    
+    var message: Message
     
     /// A previous Exception causing this Exception
     public var previous: Log.Error? = nil
     
+    /// The error description
+    public var description: String { message.toString() }
+    
     /// The localized description according to the Error protocol
-    public var localizedDescription: String { return toString() }
+    public var localizedDescription: String { description }
 
     /// Initialisation with a previous ErrorMessage
     public init( level: LogLevel, className: String?, fileName: String, funcName: String,
                  line: Int, message: String?, previous: Log.Error? ) {
-      super.init(level:level, className:className, fileName:fileName, funcName:funcName,
-                 line:line, message:message)
+      self.message = Message(level:level, className:className, fileName:fileName, funcName:funcName,
+                             line:line, message:message)
       self.previous = previous
     }
     
@@ -130,10 +135,10 @@ extension Log {
         case let e as Log.Error: emsg = e.description
         default: emsg = "\(typeName(enclosed)): \(String(describing: enclosed))"
       }
-      if let msg = self.message {
-        self.message = msg + "\n  " + "Enclosed Error: \(emsg)"
+      if let msg = self.message.message {
+        self.message.message = msg + "\n  " + "Enclosed Error: \(emsg)"
       }
-      else { self.message = "Enclosed Error: \(emsg)" }
+      else { self.message.message = "Enclosed Error: \(emsg)" }
     }
 
   } // class Log.EnclosedError
@@ -144,7 +149,7 @@ extension Log {
     function: String = #function) -> Log.Error {
     let msg = Error(level: logLevel, className: class2s(object), fileName: file, funcName: function,
                     line: line, message: message, previous: previous)
-    log(msg)
+    log(msg.message)
     return msg
   }
     
@@ -154,7 +159,7 @@ extension Log {
     function: String = #function) -> EnclosedError<T> {
     let msg = EnclosedError<T>(enclosed: error, level: logLevel, className: class2s(object), 
         fileName: file, funcName: function, line: line, message: nil, previous: previous)
-    log(msg)
+    log(msg.message)
     return msg
   }
   
@@ -164,8 +169,8 @@ extension Log {
     function: String = #function) -> Log.Error {
     let msg = Error(level: logLevel, className: class2s(object), fileName: file, funcName: function,
                     line: line, message: message, previous: previous)
-    msg.isException = true
-    log(msg)
+    msg.message.isException = true
+    log(msg.message)
     return msg
   }
   
@@ -175,8 +180,8 @@ extension Log {
     function: String = #function) -> EnclosedError<T> {
     let msg = EnclosedError<T>(enclosed: error, level: logLevel, className: class2s(object), 
       fileName: file, funcName: function, line: line, message: nil, previous: previous)
-    msg.isException = true
-    log(msg)
+    msg.message.isException = true
+    log(msg.message)
     return msg
   }
  
@@ -186,7 +191,7 @@ extension Log {
     function: String = #function) -> Log.Error {
     let msg = Error(level: logLevel, className: class2s(object), fileName: file, funcName: function,
                     line: line, message: message, previous: previous)
-    log(msg)
+    log(msg.message)
     return msg
   }
   
@@ -196,7 +201,7 @@ extension Log {
     function: String = #function) -> EnclosedError<T> {
     let msg = EnclosedError<T>(enclosed: error, level: logLevel, className: class2s(object), 
       fileName: file, funcName: function, line: line, message: nil, previous: previous)
-    log(msg)
+    log(msg.message)
     return msg
   }
   
