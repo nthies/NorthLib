@@ -1,8 +1,5 @@
 // swift-tools-version:5.5
 
-// Set isIos to false to build executables and to omit iOS-specific modules
-var isIos = true
-
 import PackageDescription
 
 #if os(Linux)
@@ -46,6 +43,28 @@ var targets: [Target] = [
     dependencies: ["NorthLowLevel"],
     path: "src/Base"
   ),
+  .target(
+    name: "NorthFoundation",
+    dependencies: ["NorthBase"],
+    path: "src/Foundation"
+  ),
+  .target(
+    name: "NorthUIKit",
+    dependencies: ["NorthFoundation"],
+    path: "src/UIKit"
+  ),
+  .target(
+    name: "NorthLib",
+    dependencies: [
+      .target(name: "NorthBase"),
+      .target(name: "NorthFoundation", condition:
+          .when(platforms: [.iOS,.macOS,.macCatalyst,.tvOS,.watchOS])),
+      .target(name: "NorthUIKit", condition:
+          .when(platforms: [.iOS,.macCatalyst,.tvOS,.watchOS])),
+    ],
+    path: "src/NorthLib",
+    linkerSettings: linkerSettings
+  ),
   .testTarget(
     name: "TestLowlevel",
     dependencies: ["NorthLowLevel"],
@@ -59,63 +78,28 @@ var targets: [Target] = [
     exclude: ["test.zip"],
     linkerSettings: linkerSettings
   ),
-]
-
-var targetsFoundation: [Target] = [
-  .target(
-    name: "NorthFoundation",
-    dependencies: ["NorthBase"],
-    path: "src/Foundation"
-  ),
   .testTarget(
     name: "TestFoundation",
-    dependencies: ["NorthFoundation"],
+    dependencies: [
+      .target(name: "NorthFoundation", condition:
+          .when(platforms: [.iOS,.macOS,.macCatalyst,.tvOS,.watchOS])),
+    ],
     path: "test/Foundation",
-    linkerSettings: linkerSettings
-  ),
-]
-
-var northDep: Target.Dependency = "NorthBase"
-
-#if canImport(Foundation)
-  targets.append(contentsOf: targetsFoundation)
-  northDep = Target.Dependency("NorthFoundation")
-#endif
-
-let targetsNorthLib: [Target] = [
-  .target(
-    name: "NorthLib",
-    dependencies: [northDep],
-    path: "src/NorthLib",
-    linkerSettings: linkerSettings
-  ),
-]
-
-let targetsNorthLibUIKit: [Target] = [
-  .target(
-    name: "NorthUIKit",
-    dependencies: ["NorthFoundation"],
-    path: "src/UIKit"
-  ),
-  .target(
-    name: "NorthLib",
-    dependencies: ["NorthUIKit"],
-    path: "src/NorthLib",
     linkerSettings: linkerSettings
   ),
   .testTarget(
     name: "TestUIKit",
-    dependencies: ["NorthUIKit"],
+    dependencies: [
+      .target(name: "NorthUIKit", condition:
+          .when(platforms: [.iOS,.macCatalyst,.tvOS,.watchOS])),
+    ],
     path: "test/UIKit",
     linkerSettings: linkerSettings
   ),
-]
-
-var executableTargets: [Target] = [
   .executableTarget(
     name: "unzip",
     dependencies: [
-      "NorthBase",
+      .target(name: "NorthBase"),
       .product(name: "ArgumentParser", package: "swift-argument-parser"),
     ],
     path: "src/unzip",
@@ -123,51 +107,28 @@ var executableTargets: [Target] = [
   ),
 ]
 
-func getTargets(isIos: Bool = true) -> [Target] {
-  if isIos { targets.append(contentsOf: targetsNorthLibUIKit) }
-  else { 
-    targets.append(contentsOf: targetsNorthLib) 
-    targets.append(contentsOf: executableTargets) 
-  }
-  return targets
-}
-
 var products: [Product] = [
   .library(
     name: "NorthLib",
     type: .static,
     targets: ["NorthLib"]
-  )
-]
-
-var executableProducts: [Product] = [
+  ),
   .executable(
     name: "unzip", 
     targets: ["unzip"]
   ),
 ]
 
-func getProducts(isIos: Bool = true) -> [Product] {
-  if !isIos { products.append(contentsOf: executableProducts) }
-  return products
-}
-
-var dependencies: [Package.Dependency] = []
-var executableDependencies: [Package.Dependency] = [
+var dependencies: [Package.Dependency] = [
   .package(url: "https://github.com/apple/swift-argument-parser", from: "1.0.0"),
 ]
-
-func getDependencies(isIos: Bool = true) -> [Package.Dependency] {
-  if !isIos { dependencies.append(contentsOf: executableDependencies) }
-  return dependencies
-}
 
 let package = Package(
   name: "NorthLib",
   defaultLocalization: "en",
   platforms: [.iOS(.v13), .macOS(.v10_15), .tvOS(.v13), .watchOS(.v6)],
-  products: getProducts(isIos: isIos),
-  dependencies: getDependencies(isIos: isIos),
-  targets: getTargets(isIos: isIos),
+  products: products,
+  dependencies: dependencies,
+  targets: targets,
   cxxLanguageStandard: .cxx20
 )

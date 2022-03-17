@@ -52,24 +52,22 @@ reside in C&lt;library&gt; directories and the above noted modules are organized
 
 ## How to build
 
-Since we couldn't find a way to determine for which platform we are going to build,
-we specify whether to build iOS modules or not by a variable in _Package.swift_ 
-(near the top of the file):
+To build the NorthLib library use:
 ````
-  var isIos = true
+  swift build --product NorthLib
 ````
-Keep this variable to true to build the library for use in Xcode and iOS apps. 
-Set it to false to build for MacOS or Linux:
+or to build the optimized release version:
 ````
-  swift build # build library and unzip utility with debugging information
-  swift build --show-bin-path # show where libNorthLib.a and unzip are located
-  swift build -c release # build release version
+  swift build -c release --product NorthLib
+````
+The _unzip_ utility is built using: 
+  swift build -c release --product unzip
 ````
 
 ## How to use
 
-Add the dependency to NorthLib either to your Package.swift or to your Xcode 
-project and link to libc++ and libz, eg. in Package.swift add:
+Add the dependency to the product NorthLib either to your Package.swift or to 
+your Xcode project and link to libc++ and libz, eg. in Package.swift add:
 ````
   linkerSettings: [.linkedLibrary("z"), .linkedLibrary("c++")] 
 ````
