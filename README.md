@@ -35,9 +35,6 @@ the following modules are available:
   re-exports all symbols from these modules, similar to how UIKit re-exports the
   symbols from Foundation.
   
-- unzip<br/>
-  Is an executable based on NorthBase to test the zip stream unpacker.
-  
 ## File-Tree
 
 The source files are grouped under the _src_ subdirectory. C library wrappers 
@@ -47,7 +44,6 @@ reside in C&lt;library&gt; directories and the above noted modules are organized
   Base       -> NorthBase sources
   Foundation -> NorthFoundation sources
   UIKit      -> NorthUIKit sources
-  unzip      -> unzip test utility
 ````
 
 ## How to build
@@ -59,9 +55,6 @@ To build the NorthLib library use:
 or to build the optimized release version:
 ````
   swift build -c release --product NorthLib
-````
-The _unzip_ utility is built using: 
-  swift build -c release --product unzip
 ````
 
 ## How to use

@@ -96,15 +96,6 @@ var targets: [Target] = [
     path: "test/UIKit",
     linkerSettings: linkerSettings
   ),
-  .executableTarget(
-    name: "unzip",
-    dependencies: [
-      .target(name: "NorthBase"),
-      .product(name: "ArgumentParser", package: "swift-argument-parser"),
-    ],
-    path: "src/unzip",
-    linkerSettings: linkerSettings
-  ),
 ]
 
 var products: [Product] = [
@@ -112,10 +103,6 @@ var products: [Product] = [
     name: "NorthLib",
     type: .static,
     targets: ["NorthLib"]
-  ),
-  .executable(
-    name: "unzip", 
-    targets: ["unzip"]
   ),
 ]
 
