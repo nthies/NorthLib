@@ -67,7 +67,7 @@ static char *decode_special(const char *s) {
           case 'n': *d++ = '\n'; dlen--; break;
           case 'r': *d++ = '\r'; dlen--; break;
           case 't': *d++ = '\t'; dlen--; break;
-          default:  *d++ = *s; dlen--; break;
+          default:  *d++ = *(s-1); *d++ = *s; dlen--; break;
         }
       } else { *d++ = *s; dlen--; }
       s++;
