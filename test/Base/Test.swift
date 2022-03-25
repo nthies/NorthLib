@@ -503,6 +503,9 @@ class RegexprTests: XCTestCase, DoesLog {
     se = try Substexpr(#"/^(.*) (\(Num.*\))$/\2 \1/"#)
     XCTAssertEqual(se.subst("abc (Num 255)"), "(Num 255) abc")
     XCTAssertEqual(se.subst("def (Num 256)"), "(Num 256) def")
+    se = try Substexpr("/@d+/<&> (###)/")
+    se.index = 11
+    XCTAssertEqual(se.subst("123 456"), "<123> (011) 456")
   }
   
   func testStringExtensions() {

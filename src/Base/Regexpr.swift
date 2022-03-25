@@ -295,10 +295,11 @@ open class Regexpr {
  * - &i: refers to the i'th pattern group
  * - \i: also refers to the i'th pattern group
  *
- * Optionally a single '#' in the sustitution string is substituted by the 
+ * Optionally a sequence of '#' in the sustitution string is substituted by the
  * index variable in the Substexpr object (if defined). The index is incremented
  * after each successful substitution. Using the variables 'count' or 'ndig' 
- * the number of 0-filled digits can be specified.
+ * the number of 0-filled digits can be specified. If 'count' or 'ndig' are not
+ * defined the number of '#'-chars defines the minimal number of digits substituted.
  */
 open class Substexpr {
   
