@@ -210,7 +210,7 @@ bool regexpr_t::subst(strbuff_t &buff, const char **rstr, const char *with,
         char tmp[101];
         int nhash = 0;
         do { p++; nhash++; } while (*p == '#');
-        if (ndig <= 0) ndig = nhash;
+        if (nhash > 1) ndig = nhash;
         if (ndig > 0) snprintf(tmp, 100, "%0*d", ndig, lino);
         else snprintf(tmp, 100, "%d", lino);
         buff.cat(tmp);
