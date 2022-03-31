@@ -58,6 +58,14 @@ public extension Array {
     return self.indices.contains(index) ? self[index] : nil
   }
   
+  ///Safe acces to Array Items by Index returns null if Index did not exist, allows reverse index
+  func valueAt(_ index : Int, allowReverseSearch: Bool) -> Element?{
+    if allowReverseSearch {
+      return valueAt(index < 0 ? self.count - 1 + index : index)
+    }
+    return valueAt(index)
+  }
+  
 } // Array
 
 extension Array where Element == String {
