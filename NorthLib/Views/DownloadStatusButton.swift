@@ -54,7 +54,7 @@ public class DownloadStatusButton : UIButton {
     }
   }
   
-  public var cloudImage : UIImage? = UIImage(name: "icloud.and.arrow.down")
+  public var cloudImage : UIImage? = UIImage(named: "download")
   public var checkmarkImage : UIImage? = UIImage(name: "checkmark")
   
   public var buttonImage : UIImage? {
@@ -72,7 +72,7 @@ public class DownloadStatusButton : UIButton {
         buttonImage = cloudImage
         progressCircle.isHidden = true
         self.titleEdgeInsets = UIEdgeInsets(top: 0, left: offset,
-                                            bottom: 0, right: 0)
+                                            bottom: 0, right: offset)
       case .process:
         buttonImage = nil
         progressCircle.isHidden = false
@@ -116,6 +116,8 @@ public class DownloadStatusButton : UIButton {
     self.layer.addSublayer(progressCircle)
     self.addSubview(customImageView)
     customImageView.centerY()
+    customImageView.pinWidth(23.8)
+    customImageView.contentMode = .scaleAspectFit
     pin(customImageView.right, to: self.right)
   }
 

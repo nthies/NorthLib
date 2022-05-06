@@ -313,6 +313,11 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
   
   // Scroll to the cell at position index
   open func scrollto(_ idx: Int, animated: Bool = false) {
+    guard idx < self.count else {
+      debug("prevent crash")
+      return
+    }
+    
     if idx != _index {
       debug("scrolling to: \(idx)")
       _index = idx

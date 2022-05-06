@@ -1205,27 +1205,27 @@ open class ImportView: ExportView {
   }
 }
 
+/**
+  ButtonView displaying an Image.
+*/
 // MARK: - ImageView
 @IBDesignable
 open class ImageView: ButtonView {
+
   open var imageView = UIImageView()
-  open var useAbsoluteImageLayout = false
-  open var useExternalImageSetup = false
-  
+  public var pinAspect = true
   private var aspectConstraint: NSLayoutConstraint?
   private var widthConstraint: NSLayoutConstraint?
-  private var yAxisImageConstraint: NSLayoutConstraint?
   
   open var image: UIImage? {
     get { imageView.image }
     set (img) {
       imageView.image = img
-      if useExternalImageSetup { return }
       aspectConstraint?.isActive = false
-      if let img = img {
+      if let img = img, pinAspect {
         aspectConstraint = imageView.pinAspect(ratio: img.size.width/img.size.height)
-        imageView.tintColor = strokeColor
       }
+      imageView.tintColor = strokeColor //is ignored if no image
     }
   }
   
@@ -1257,23 +1257,19 @@ open class ImageView: ButtonView {
   override open func setup() {
     super.setup()
     addSubview(imageView)
+//    self.addBorder(.blue, 0.2)
+//    self.imageView.addBorder(.green, 0.2)
     pin(imageView.centerX, to: self.centerX)
-    yAxisImageConstraint = pin(imageView.centerY, to: self.centerY)
+    pin(imageView.centerY, to: self.centerY)
   }
     
   override open func layoutSubviews() {
     super.layoutSubviews()
-    yAxisImageConstraint?.constant = vinset
-    if useExternalImageSetup { return }
-    let w
-    = useAbsoluteImageLayout
-    ? bounds.size.width - 2*hinset
-    : bounds.size.width * (1-2*hinset)
+    let w = bounds.size.width * (1-2*hinset)
     widthConstraint?.isActive = false
     widthConstraint = imageView.pinWidth(w)
   }
 } // class ImageView
-
 
 /**
   ButtonView drawing text into a UILabel that just fits the bounds minus insets.
