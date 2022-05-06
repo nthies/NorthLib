@@ -257,7 +257,7 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
     _count -= 1
     if collectionViewInitialized {
       if let i = _index, i >= idx { 
-        if _count > 0 { _index = i - 1 }
+        if _count > 0 { _index = max(i-1, 0) }
         else { _index = nil }
       }
       let ipath = IndexPath(item: idx, section: 0)
