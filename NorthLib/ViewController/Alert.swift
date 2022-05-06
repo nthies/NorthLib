@@ -65,9 +65,6 @@ open class Alert {
       for action in actions {
         alert.addAction(action)
       }
-      //present even if there is still a modal View presented
-      Log.log("Show Alert with Title: \(title ?? "-") and Message: \(message) AlreadyPresenting? \(UIViewController.top()?.presentedViewController != nil)")
-      
       let target = presentationController ?? UIViewController.top()
       target?.present(alert, animated: true, completion: nil)
     }
