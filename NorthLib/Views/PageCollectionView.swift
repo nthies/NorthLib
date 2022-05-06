@@ -197,13 +197,20 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
   }
   
   /// Returns the optional view at a given index (if that view is visible)
-  open func optionalView(at idx: Int) -> OptionalView? {
-    if let cell = cellForItem(at: IndexPath(item: idx, section: 0)) as? PageCell {
+  open func optionalView(at oidx: Int? = nil) -> OptionalView? {
+    let idx: Int? = oidx ?? _index
+    if let idx = idx,
+       let cell = cellForItem(at: IndexPath(item: idx, section: 0)) as? PageCell {
       return cell.page
     }
     else { return nil }
   }
   
+  /// Returns the view at a given index (if that view is visible)
+  open func view(at idx: Int? = nil) -> UIView? {
+    optionalView(at: idx)?.activeView
+  }
+ 
   public func fixScrollPosition(toIndex: Int?=nil){
     guard let idx = toIndex ?? index else { return }
     //debug("fixScrollPosition to idx: \(idx)")
