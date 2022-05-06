@@ -91,7 +91,7 @@ open class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
   }
   
   public override func didReceiveMemoryWarning() {
-    print("☠️☠️☠️\nRECIVE MEMORY WARNING\n☠️☠️☠️☠️\nPdfPagesCollectionVC->didReceiveMemoryWarning\n   ")
+    print("☠️☠️☠️\nRECEIVE MEMORY WARNING\n☠️☠️☠️☠️\nPdfPagesCollectionVC->didReceiveMemoryWarning\n   ")
   }
 
   open override func setupViewProvider(){
