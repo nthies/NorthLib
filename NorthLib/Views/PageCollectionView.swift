@@ -242,8 +242,29 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
   open func insert(at idx: Int) {
     _count += 1
     if collectionViewInitialized {
+      if let i = _index {
+        if i >= idx { _index = i + 1 }
+      }
+      else { _index = 0 }
       let ipath = IndexPath(item: idx, section: 0)
       insertItems(at: [ipath])
+      callOnDisplay(idx: _index!, oview: optionalView(at: _index!))
+    }
+  }
+  
+  /// Delete a page at a given index
+  open func delete(at idx: Int) {
+    _count -= 1
+    if collectionViewInitialized {
+      if let i = _index, i >= idx { 
+        if _count > 0 { _index = i - 1 }
+        else { _index = nil }
+      }
+      let ipath = IndexPath(item: idx, section: 0)
+      deleteItems(at: [ipath])
+      if let i = _index {
+        callOnDisplay(idx: i, oview: optionalView(at: i))
+      }
     }
   }
   
