@@ -562,7 +562,7 @@ open class ButtonedWebView: UIView {
   /// The label acting as a button
   public lazy var buttonLabel = LabelButton(bwv: self)
   /// The X-Button (may be used to close the webview)
-  public lazy var xButton = Button<CircledXView>()
+  public var xButton:ButtonControl
   /// Distance between button and bottom as well as button and webview
   public var buttonMargin: CGFloat = 8 { didSet { adaptLayoutConstraints() } }
   private var isButtonVisible = false
@@ -609,13 +609,15 @@ open class ButtonedWebView: UIView {
     pin(buttonLabel.centerX, to: self.centerX)
     pin(xButton.right, to: self.right, dist: -15)
     pin(xButton.top, to: self.topGuide(), dist: 5)
-    xButton.pinHeight(35)
-    xButton.pinWidth(35)
-    xButton.color = .black
-    xButton.buttonView.isCircle = true
-    xButton.buttonView.circleColor = UIColor.rgb(0xdddddd)
-    xButton.buttonView.color = UIColor.rgb(0x707070)
-    xButton.buttonView.innerCircleFactor = 0.5
+    if let xButton = xButton as? Button<CircledXView> {
+      xButton.pinHeight(35)
+      xButton.pinWidth(35)
+      xButton.color = .black
+      xButton.buttonView.isCircle = true
+      xButton.buttonView.circleColor = UIColor.rgb(0xdddddd)
+      xButton.buttonView.color = UIColor.rgb(0x707070)
+      xButton.buttonView.innerCircleFactor = 0.5
+    }
     xButton.isHidden = true
     xButton.onPress { [weak self] _ in
       guard let self = self else { return }
@@ -638,15 +640,23 @@ open class ButtonedWebView: UIView {
   }
   
   public override init(frame: CGRect) {
+    self.xButton = Button<CircledXView>()
     super.init(frame: frame)
     setup()
   }
   
   public required init?(coder: NSCoder) {
+    self.xButton = Button<CircledXView>()
     super.init(coder: coder)
     setup()
   }
   
+  public init(customXButton:ButtonControl) {
+    self.xButton = customXButton
+    super.init(frame: .zero)
+    setup()
+  }
+    
   public override func layoutSubviews() {
     adaptLayoutConstraints()
   }

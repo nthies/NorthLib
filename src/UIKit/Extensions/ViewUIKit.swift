@@ -40,6 +40,18 @@ public extension UIView {
   }
 }
 
+/// A UIView extension to change subview order
+public extension UIView {
+  /// Returns Self for chaining
+  @discardableResult
+  func bringToFront() -> Self {
+    if let sv = self.superview {
+      sv.bringSubviewToFront(self)
+    }
+    return self
+  }
+}
+
 /// A UIView extension to check visibility of a view
 public extension UIView {
   /// Return whether view is visible somewhere on the screen

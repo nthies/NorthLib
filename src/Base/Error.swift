@@ -7,7 +7,7 @@
 
 extension Result {
   /// error() is similar to get() and returns the Failure value if available
-  public func error() -> Failure? { 
+  public func error() -> Failure? {
     if case .failure(let err) = self { return err }
     else { return nil }
   }
@@ -27,14 +27,14 @@ extension Result {
 
 extension DoesLog {
   
-  @discardableResult  
+  @discardableResult
   public func error(_ msg: String? = nil, file: String = #file, line: Int = #line,
                     function: String = #function) -> Log.Error {
     return Log.error(msg, object: self, file: file, line: line, function: function)
   }
   
-  @discardableResult  
-  public func check(_ value: Bool, _ msg: String? = nil, file: String = #file, 
+  @discardableResult
+  public func check(_ value: Bool, _ msg: String? = nil, file: String = #file,
                     line: Int = #line, function: String = #function) -> Bool {
     var ret = false
     if value { ret = true }
@@ -59,7 +59,7 @@ extension DoesLog {
     return Log.error(error, object: self, file: file, line: line, function: function)
   }
   
-  @discardableResult  
+  @discardableResult
   public func fatal(_ msg: String? = nil, file: String = #file, line: Int = #line,
                     function: String = #function) -> Log.Error {
     return Log.fatal(msg, object: self, file: file, line: line, function: function)
@@ -71,7 +71,7 @@ extension DoesLog {
     return Log.fatal(error, object: self, file: file, line: line, function: function)
   }
   
-  @discardableResult  
+  @discardableResult
   public func exception(_ msg: String? = nil, file: String = #file, line: Int = #line,
                         function: String = #function) -> Log.Error {
     return Log.exception(msg, object: self, file: file, line: line, function: function)
@@ -90,6 +90,7 @@ extension DoesLog {
 extension Log {
   
   /** 
+>>>>>>> old/beta:NorthLib/General/Error.swift
    A Log.Error contains a Log.Message that also serves as an Error and can be thrown
    as an exception.
    
@@ -124,7 +125,7 @@ extension Log {
     /// The enclosed Error
     public var enclosed: T
     
-    public init(enclosed: T, level: LogLevel, className: String?, fileName: String, 
+    public init(enclosed: T, level: LogLevel, className: String?, fileName: String,
                 funcName: String, line: Int, message: String?, previous: Log.Error?) {
       self.enclosed = enclosed
       super.init(level:level, className:className, fileName:fileName, funcName:funcName,
@@ -145,7 +146,7 @@ extension Log {
     
   @discardableResult
   public static func error(_ message: String? = nil, previous: Log.Error? = nil, object: Any? = nil,
-    logLevel: LogLevel = .Error, file: String = #file, line: Int = #line, 
+    logLevel: LogLevel = .Error, file: String = #file, line: Int = #line,
     function: String = #function) -> Log.Error {
     let msg = Error(level: logLevel, className: class2s(object), fileName: file, funcName: function,
                     line: line, message: message, previous: previous)

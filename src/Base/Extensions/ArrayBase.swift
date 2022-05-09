@@ -60,6 +60,14 @@ public extension Array {
     guard self.indices.contains(index) else { throw "Array index out of bounds" }
     return self[index]
   }
+
+  ///Safe acces to Array Items by Index returns null if Index did not exist, allows reverse index
+  func valueAt(_ index : Int, allowReverseSearch: Bool) -> Element?{
+    if allowReverseSearch {
+      return valueAt(index < 0 ? self.count - 1 + index : index)
+    }
+    return valueAt(index)
+  }
   
 } // Array
 

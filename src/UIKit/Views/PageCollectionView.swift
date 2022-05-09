@@ -197,13 +197,20 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
   }
   
   /// Returns the optional view at a given index (if that view is visible)
-  open func optionalView(at idx: Int) -> OptionalView? {
-    if let cell = cellForItem(at: IndexPath(item: idx, section: 0)) as? PageCell {
+  open func optionalView(at oidx: Int? = nil) -> OptionalView? {
+    let idx: Int? = oidx ?? _index
+    if let idx = idx,
+       let cell = cellForItem(at: IndexPath(item: idx, section: 0)) as? PageCell {
       return cell.page
     }
     else { return nil }
   }
   
+  /// Returns the view at a given index (if that view is visible)
+  open func view(at idx: Int? = nil) -> UIView? {
+    optionalView(at: idx)?.activeView
+  }
+ 
   public func fixScrollPosition(toIndex: Int?=nil){
     guard let idx = toIndex ?? index else { return }
     //debug("fixScrollPosition to idx: \(idx)")
@@ -242,8 +249,29 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
   open func insert(at idx: Int) {
     _count += 1
     if collectionViewInitialized {
+      if let i = _index {
+        if i >= idx { _index = i + 1 }
+      }
+      else { _index = 0 }
       let ipath = IndexPath(item: idx, section: 0)
       insertItems(at: [ipath])
+      callOnDisplay(idx: _index!, oview: optionalView(at: _index!))
+    }
+  }
+  
+  /// Delete a page at a given index
+  open func delete(at idx: Int) {
+    _count -= 1
+    if collectionViewInitialized {
+      if let i = _index, i >= idx { 
+        if _count > 0 { _index = max(i-1, 0) }
+        else { _index = nil }
+      }
+      let ipath = IndexPath(item: idx, section: 0)
+      deleteItems(at: [ipath])
+      if let i = _index {
+        callOnDisplay(idx: i, oview: optionalView(at: i))
+      }
     }
   }
   
@@ -292,6 +320,11 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
   
   // Scroll to the cell at position index
   open func scrollto(_ idx: Int, animated: Bool = false) {
+    guard idx < self.count else {
+      debug("prevent crash")
+      return
+    }
+    
     if idx != _index {
       debug("scrolling to: \(idx)")
       _index = idx
