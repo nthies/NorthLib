@@ -60,6 +60,19 @@ class StringTests: XCTestCase {
     }
   }
   
+  func testXmlEscape() {
+    var tmp = "<>&'\""
+    var escaped = tmp.xmlEscaped()
+    XCTAssertEqual(escaped, "&lt;&gt;&amp;'\"")
+    escaped = tmp.xmlEscaped(isAttribute: true)
+    XCTAssertEqual(escaped, "&lt;&gt;&amp;&apos;&quot;")
+    tmp = "<abc>def'ghi\"jkl&mno"
+    escaped = tmp.xmlEscaped()
+    XCTAssertEqual(escaped, "&lt;abc&gt;def'ghi\"jkl&amp;mno")
+    escaped = tmp.xmlEscaped(isAttribute: true)
+    XCTAssertEqual(escaped, "&lt;abc&gt;def&apos;ghi&quot;jkl&amp;mno")
+  }
+  
 } // StringTests
 
 class MathTests: XCTestCase {

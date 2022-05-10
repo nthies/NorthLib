@@ -74,6 +74,16 @@ public extension String {
     str_release(&tmp)
     return ret
   }
+
+  /// Escape XML special characters. Set isAttribute to true if the
+  /// String should be used as an XML attribute.
+  func xmlEscaped(isAttribute: Bool = false) -> String {
+    let is_attribute: Int32 = isAttribute ? 1 : 0
+    var tmp = withCString { str_xmlescape($0, is_attribute) }
+    let ret = String(cString: tmp!)
+    str_release(&tmp)
+    return ret
+  }
   
   /// Append Character to String
   @discardableResult

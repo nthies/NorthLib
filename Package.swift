@@ -107,7 +107,6 @@ var products: [Product] = [
 ]
 
 var dependencies: [Package.Dependency] = [
-  .package(url: "https://github.com/apple/swift-argument-parser", from: "1.0.0"),
 ]
 
 let package = Package(

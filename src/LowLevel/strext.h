@@ -270,6 +270,8 @@ void str_release ( char **str );
 char *str_slice ( const char *str, int from, int to );
 const char *str_chr (  const char *s, char c );
 const char *str_rchr (  const char *s, char c );
+int str_rxmlescape(char **dest, int blen, const char *src, int is_attribute);
+char *str_xmlescape(const char *str, int is_attribute);
 const char *str_pbrk (  const char *s1,  const char *s2 );
 int str_ccmp (  const char *s1,  const char *s2, char delim );
 int str_cmp (  const char *s1,  const char *s2 );
