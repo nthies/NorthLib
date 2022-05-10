@@ -71,6 +71,16 @@ public extension String {
     str_release(&tmp)
     return ret
   }
+  
+  /// Escape XML special characters. Set isAttribute to true if the
+  /// String should be used as an XML attribute.
+  func xmlEscaped(isAttribute: Bool = false) -> String {
+    let is_attribute: Int32 = isAttribute ? 1 : 0
+    var tmp = str_xmlescape(cstr, is_attribute)
+    let ret = String(cString: tmp!)
+    str_release(&tmp)
+    return ret
+  }
 
   /**
    Return UILabel that is just large enough to encompass the actual String
