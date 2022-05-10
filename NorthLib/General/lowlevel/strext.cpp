@@ -991,6 +991,93 @@ char *str_quote(const char *str) {
   return 0;
 }
  
+
+/*
+ *  str_rxmlescape produces a string from 'str' where XML special characters
+ *  are escaped. 
+ *  
+ *  This transformation may be used inside XML attributes and inside text elements.
+ *  The following characters are substituted:
+ *
+ *       < : &lt;
+ *       > : &gt;
+ *       & : &amp;
+ *
+ *  If is_attribute == true, the following additional transformations are performed:
+ *
+ *       " : &quot;
+ *       ' : &apos;
+ *
+ *  After copying *buff is positioned to the terminating \0.
+ */
+int str_rxmlescape(char **dest, int blen, const char *src, int is_attribute) {
+  int ret =  0;
+  if ( dest && *dest && src && ( blen > 0 ) ) {
+    char *d =  *dest;
+    const char *s =  src;
+    int l =  blen;
+    while ( *s && (l > 0) ) {
+      switch ( *s ) {
+        case '<':  
+          l -= str_rcpy(&d, l, "&lt;"); s++;
+          continue;
+        case '>':
+          l -= str_rcpy(&d, l, "&gt;"); s++;
+          continue;
+        case '&': 
+          l -= str_rcpy(&d, l, "&amp;"); s++;
+          continue;
+        case '\'':
+          if (!is_attribute) break;
+          l -= str_rcpy(&d, l, "&apos;"); s++;
+          continue;
+        case '"':
+          if (!is_attribute) break;
+          l -= str_rcpy(&d, l, "&quot;"); s++;
+          continue;
+      }
+      *d++ = *s++; l--;
+    }
+    *d =  '\0';
+    ret =  (int) ( d - *dest );
+    *dest =  d;
+  }
+  return ret;
+}
+
+// Evaluate xmlescape buffer size
+static int xmlescape_buffsize(const char *s, int is_attribute) {
+  int ret = 0;
+  while (*s) {
+    switch (*s++) {
+      case '<':
+      case '>': ret += 4; break;
+      case '&': ret += 5; break;
+      case '\'':
+      case '"': 
+        if (is_attribute) ret += 6; 
+        else ret++;
+        break;
+      default:  ret++; break;
+    }
+  }
+  return ret;
+}
+ 
+/// str_xmlescape returns an allocated string with XML special characters
+/// escaped. Refer to 'str_rxmlescape'.
+char *str_xmlescape(const char *str, int is_attribute) {
+  if ( str ) {
+    int len = xmlescape_buffsize(str, is_attribute) + 1;
+    char *news =  (char *) malloc ( len );
+    if ( news ) {
+      char *p =  news;
+      str_rxmlescape ( &p, len, str, is_attribute );
+      return news;
+  } }
+  return 0;
+}
+
 #define _ord(v) ( isdigit(v)? ( (v) - '0' ) : 10 + ( toupper(v) - 'A' ) )
 
 /**
