@@ -30,7 +30,7 @@ extension Log {
     public static var tmpLogfile: String = "\(Dir.tmpPath)/default.log"
     
     /// The FileLogger must be initialized with a filename
-    public init(_ fname: String?) {
+    public init(_ fname: String? = nil) {
       let fn = fname ?? FileLogger.tmpLogfile
       if file_open(&fp, fn, "w") == 0 {
         self.filename = fn
