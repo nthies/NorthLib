@@ -10,10 +10,9 @@ import UIKit
 
 public extension Defaults {
   /// Let Defaults.singleton add a scope of the current Device name
-  static var singleton: Defaults = {
+  func addDevice() {
     let defaults = Defaults()
     defaults.addScope(Device.singleton.description)
-    return defaults
-  }()
+  }
 }
 
