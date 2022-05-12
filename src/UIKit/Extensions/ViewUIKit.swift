@@ -68,6 +68,16 @@ public extension UIView {
   }
 }
 
+/// A UIView extension to process Layout Cycle
+public extension UIView {
+  func doLayout(){
+    self.setNeedsUpdateConstraints()
+    self.setNeedsLayout()
+    self.updateConstraintsIfNeeded()
+    self.layoutIfNeeded()
+  }
+}
+
 /// A UIView extension to show/hide views animated
 public extension UIView {
   func showAnimated(duration:CGFloat=0.3, completion: (()->())? = nil){
@@ -104,13 +114,13 @@ public extension UIView {
   /// - Parameter dist: dist to pin between wrapper and self
   /// - Returns: wrapper
   @discardableResult
-  func wrapper(_ insets: UIEdgeInsets) -> UIView {
+  func wrapper(_ insets: UIEdgeInsets, priority: UILayoutPriority? = nil) -> UIView {
     let wrapper = UIView()
     wrapper.addSubview(self)
-    pin(self.left, to: wrapper.left, dist: insets.left)
-    pin(self.right, to: wrapper.right, dist: insets.right)
-    pin(self.top, to: wrapper.top, dist: insets.top)
-    pin(self.bottom, to: wrapper.bottom, dist: insets.bottom)
+    pin(self.left, to: wrapper.left, dist: insets.left, priority: priority)
+    pin(self.right, to: wrapper.right, dist: insets.right, priority: priority)
+    pin(self.top, to: wrapper.top, dist: insets.top, priority: priority)
+    pin(self.bottom, to: wrapper.bottom, dist: insets.bottom, priority: priority)
     return wrapper
   }
 }
@@ -307,9 +317,9 @@ public extension UIView {
     return constraint
   }
   
-  static func animate(seconds: Double, delay: Double = 0, closure: @escaping ()->()) {
-    UIView.animate(withDuration: seconds, delay: delay, options: .curveEaseOut, 
-                   animations: closure, completion: nil)  
+  static func animate(seconds: Double, delay: Double = 0, closure: @escaping ()->(), completion: ((Bool) -> Void)? = nil) {
+    UIView.animate(withDuration: seconds, delay: delay, options: .curveEaseOut,
+                   animations: closure, completion: completion)
   }
   
   /// Centers x axis to superviews x axis
@@ -322,10 +332,10 @@ public extension UIView {
   
   /// Centers y axis to superviews y axis
   @discardableResult
-  func centerY(_ priority: UILayoutPriority? = nil) -> NSLayoutConstraint? {
+  func centerY(dist: CGFloat = 0, _ priority: UILayoutPriority? = nil) -> NSLayoutConstraint? {
     translatesAutoresizingMaskIntoConstraints = false
     guard let sv = self.superview else { return nil }
-    return pin(self.centerY, to: sv.centerY, priority: priority)
+    return pin(self.centerY, to: sv.centerY, dist: dist, priority: priority)
   }
   
   /// Centers  axis to superviews  axis
@@ -400,7 +410,17 @@ public typealias tblrConstrains = (
   right: NSLayoutConstraint?)
 
 // MARK: - pinnAll Helper
-///borders Helper
+
+@discardableResult
+public func pin(_ view: UIView, to: UIView, insets: UIEdgeInsets, exclude: UIRectEdge? = nil) -> tblrConstrains {
+  var top:NSLayoutConstraint?, left:NSLayoutConstraint?, bottom:NSLayoutConstraint?, right:NSLayoutConstraint?
+  exclude != UIRectEdge.top ? top = pin(view.top, to: to.top, dist: insets.top) : nil
+  exclude != UIRectEdge.left ? left = pin(view.left, to: to.left, dist: insets.left) : nil
+  exclude != UIRectEdge.right ? right = pin(view.right, to: to.right, dist: insets.right) : nil
+  exclude != UIRectEdge.bottom ? bottom = pin(view.bottom, to: to.bottom, dist: insets.bottom) : nil
+  return (top, bottom, left, right)
+}
+
 /// Pin all edges, except one of one view to the edges of another view's safe layout guide
 @discardableResult
 public func pin(_ view: UIView, to: UIView, dist: CGFloat = 0, exclude: UIRectEdge) -> tblrConstrains {
@@ -409,6 +429,16 @@ public func pin(_ view: UIView, to: UIView, dist: CGFloat = 0, exclude: UIRectEd
   exclude != UIRectEdge.left ? left = pin(view.left, to: to.left, dist: dist) : nil
   exclude != UIRectEdge.right ? right = pin(view.right, to: to.right, dist: -dist) : nil
   exclude != UIRectEdge.bottom ? bottom = pin(view.bottom, to: to.bottom, dist: -dist) : nil
+  return (top, bottom, left, right)
+}
+
+@discardableResult
+public func pin(_ view: UIView, toSafe: UIView, insets: UIEdgeInsets, exclude: UIRectEdge? = nil) -> tblrConstrains {
+  var top:NSLayoutConstraint?, left:NSLayoutConstraint?, bottom:NSLayoutConstraint?, right:NSLayoutConstraint?
+  exclude != UIRectEdge.top ? top = pin(view.top, to: toSafe.topGuide(), dist: insets.top) : nil
+  exclude != UIRectEdge.left ? left = pin(view.left, to: toSafe.leftGuide(), dist: insets.left) : nil
+  exclude != UIRectEdge.right ? right = pin(view.right, to: toSafe.rightGuide(), dist: insets.right) : nil
+  exclude != UIRectEdge.bottom ? bottom = pin(view.bottom, to: toSafe.bottomGuide(), dist: insets.bottom) : nil
   return (top, bottom, left, right)
 }
 

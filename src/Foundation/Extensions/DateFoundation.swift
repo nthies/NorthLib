@@ -40,6 +40,31 @@ public extension Date {
     self = Calendar.current.date(byAdding: .day, value: days, to: self)!
   }
   
+  var startOfDay: Date {
+          return Calendar.current.startOfDay(for: self)
+      }
+
+  var endOfDay: Date? {
+    var components = DateComponents()
+    components.day = 1
+    components.second = -1
+    return Calendar.current.date(byAdding: components, to: startOfDay)
+  }
+  
+  var startOfMonth: Date? {
+    let components = Calendar.current.dateComponents([.year, .month], from: startOfDay)
+    return Calendar.current.date(from: components)
+  }
+  
+  
+  var endOfMonth: Date? {
+    guard let startOfMonth = startOfMonth else {
+      return nil
+    }
+    return Calendar.current.date(byAdding: DateComponents(month: 1, second: -1),
+                                 to: startOfMonth)
+  }
+  
   /// Check if an given Date exists and time Interval is smaller than given timeInterval
   /// - Parameters:
   ///   - date: date to compare with now

@@ -293,6 +293,19 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
   @Callback<CGFloat>
   public var whenDragged: Callback<CGFloat>.Store
   
+  /// The closures to call when content is scrolling
+  /// The closures get the content arg scrollOffset: CGFloat
+  @Callback<CGFloat>
+  public var scrollViewDidScroll: Callback<CGFloat>.Store
+  
+  /// The closures to call when end dragging
+  @Callback<CGFloat>
+  public var scrollViewDidEndDragging: Callback<CGFloat>.Store
+  
+  /// The closures to call when begindragging
+  @Callback<CGFloat>
+  public var scrollViewWillBeginDragging: Callback<CGFloat>.Store
+  
   /// Define closures to call when the end of the web content will become
   /// visible, the content arg is atEnd: Bool.
   @Callback<Bool>
@@ -423,6 +436,10 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
 //
   public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
     startDragging = scrollView.contentOffset.y
+    if $scrollViewWillBeginDragging.needsNotification {
+      $scrollViewWillBeginDragging.notify(sender: self, content: scrollView.contentOffset.y)
+    }
+
   }
 
   public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
@@ -437,6 +454,16 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
     if $whenDragged.needsNotification {
       let ratio = scrollView.contentOffset.y / scrollView.contentSize.height
       $whenDragged.notify(sender: self, content: ratio)
+    }
+    if $scrollViewDidEndDragging.needsNotification {
+      $scrollViewDidEndDragging.notify(sender: self, content: scrollView.contentOffset.y)
+    }
+
+  }
+  
+  public func scrollViewDidScroll(_ scrollView: UIScrollView) {
+    if $scrollViewDidScroll.needsNotification {
+      $scrollViewDidScroll.notify(sender: self, content: scrollView.contentOffset.y)
     }
   }
   

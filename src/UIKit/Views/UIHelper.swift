@@ -13,9 +13,29 @@ import UIKit
 /// Just to detect by Classname for borders Helper
 public class BorderView : UIView {}
 
+
 // MARK: - borders Helper
 ///borders Helper
 extension UIView {
+  
+  @discardableResult
+  public func addBorderView(_ color:UIColor,
+                            _ width:CGFloat=1.0,
+                            edge: UIRectEdge,
+                            insets: UIEdgeInsets = .zero) -> UIView{
+    let v = UIView()
+    v.backgroundColor = color
+    switch edge {
+      case .right, .left:
+        v.pinWidth(width)
+      default:
+        v.pinHeight(width)
+    }
+    self.addSubview(v)
+    pin(v, to: self, insets: insets, exclude: edge.opposite)
+    return v
+  }
+  
   @discardableResult
   public func addBorder(_ color:UIColor,
                  _ width:CGFloat=1.0,
@@ -67,6 +87,18 @@ extension UIView {
     }
   }
 }
+
+fileprivate extension UIRectEdge {
+  var opposite: UIRectEdge {
+    switch self {
+      case .left: return .right
+      case .right: return .left
+      case .bottom: return .top
+      default: return .bottom
+    }
+  }
+}
+
 
 // MARK: - frame Helper
 extension UIView {

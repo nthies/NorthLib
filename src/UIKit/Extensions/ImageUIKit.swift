@@ -107,3 +107,24 @@ extension UIImage {
     return CGFloat((10*cgimg.height * cgimg.bytesPerRow)/(1024*1024))/10;
   }
 }
+
+extension UIImage {
+  public func imageWithInsets(_ insets: UIEdgeInsets,
+                              scale: CGFloat = UIScreen.main.scale,
+                              tintColor: UIColor? = nil) -> UIImage? {
+    let size = CGSize(width: self.size.width + insets.left + insets.right,
+                      height: self.size.height + insets.top + insets.bottom)
+    UIGraphicsBeginImageContextWithOptions(size, false, scale)
+    let origin = CGPoint(x: insets.left, y: insets.top)
+    if let color = tintColor {
+      color.set()
+      self.withRenderingMode(.alwaysTemplate).draw(at: origin)
+    }
+    else {
+      self.draw(at: origin)
+    }
+    let newImage = UIGraphicsGetImageFromCurrentImageContext()
+    UIGraphicsEndImageContext()
+    return newImage
+  }
+}

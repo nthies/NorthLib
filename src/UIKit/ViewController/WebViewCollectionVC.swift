@@ -114,6 +114,19 @@ open class WebViewCollectionVC: PageCollectionVC {
   @Callback<Bool>
   public var atEndOfContent: Callback<Bool>.Store
   
+  /// The closures to call when content is scrolling
+  /// The closures get the content arg scrollOffset: CGFloat
+  @Callback<CGFloat>
+  public var scrollViewDidScroll: Callback<CGFloat>.Store
+  
+  /// The closures to call when end dragging
+  @Callback<CGFloat>
+  public var scrollViewDidEndDragging: Callback<CGFloat>.Store
+  
+  /// The closures to call when begindragging
+  @Callback<CGFloat>
+  public var scrollViewWillBeginDragging: Callback<CGFloat>.Store
+  
   /// reload contents of current WebView
   open func reload() {
     if let wv = currentWebView { wv.reload() }
@@ -206,6 +219,17 @@ open class WebViewCollectionVC: PageCollectionVC {
       webView.atEndOfContent { [weak self] isAtEnd in
         self?.$atEndOfContent.notify(sender: self, content: isAtEnd)
       }
+    }
+    webView.scrollViewWillBeginDragging { [weak self] ratio in
+      self?.$scrollViewWillBeginDragging.notify(sender: self, content: ratio)
+    }
+    
+    webView.scrollViewDidEndDragging { [weak self] ratio in
+      self?.$scrollViewDidEndDragging.notify(sender: self, content: ratio)
+    }
+    
+    webView.scrollViewDidScroll {  [weak self] ratio in
+      self?.$scrollViewDidScroll.notify(sender: self, content: ratio)
     }
   }
     

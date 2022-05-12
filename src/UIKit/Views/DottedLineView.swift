@@ -21,7 +21,8 @@ import UIKit
    * lineWidth:    width of the stroked line (0)
  */
 open class DottedLineView: UIView {
-  
+  /// default line and dots height
+  public static let DottedLineDefaultHeight = CGFloat(2.4)
   /// draw horizontal line
   open var isHorizontal = true
   /// the color to fill the dots with (black)

@@ -127,6 +127,11 @@ extension Dir {
       in: .userDomainMask, appropriateFor: nil, create: true).path
   }
   
+  /// returns the searchResults directory
+  public static var searchResultsPath: String {
+    return Dir.appSupportPath.appending("/tmp-searchresults")
+  }
+  
   /// returns the path to the home directory
   public static var homePath: String {
     return NSHomeDirectory()
@@ -155,6 +160,11 @@ extension Dir {
   /// returns the home directory
   public static var home: Dir {
     return Dir(Dir.homePath)
+  }
+  
+  /// returns the searchResults directory
+  public static var searchResults: Dir {
+    return Dir(Dir.searchResultsPath)
   }
   
   /// returns a list of files in the inbox
