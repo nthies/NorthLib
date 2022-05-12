@@ -170,14 +170,6 @@ open class App {
     return info["CFBundleVersion"] as! String
   }
     
-  // TODO: - Move to upcomming TazReader package (@Ringo)
-  /// List of upcomming Features
-  /// showBottomTilesAnimation is a ConfigVariable
-  public enum Feature { 
-    #warning("TODO: Move as extension into TazReader Package")
-    case PDFEXPORT, INTERNALBROWSER, SEARCH_CONTEXTMENU 
-  }
-  
   /// Bundle identifier of currently running app
   public static var bundleIdentifier: String {
     return info["CFBundleIdentifier"] as! String
