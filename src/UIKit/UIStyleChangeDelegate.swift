@@ -10,7 +10,7 @@ import UIKit
 
 public let globalStylesChangedNotification = "globalStylesChanged"
 
-public protocol UIStyleChangeDelegate where Self: UIResponder {
+public protocol UIStyleChangeDelegate where Self: NSObject {
   
   
   /// Function to be called to apply Styles, put your updateable Style Stuff here
