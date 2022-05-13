@@ -490,3 +490,9 @@ public class Label: UILabel, Touchable {
   public var tapRecognizer = TapRecognizer()
 }
 
+public class HidingLabel: Label {
+  public override func layoutSubviews() {
+    super.layoutSubviews()
+    self.isHidden = bounds.size.width < intrinsicContentSize.width
+  }
+}
