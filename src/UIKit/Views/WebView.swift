@@ -211,7 +211,7 @@ extension WKNavigationAction: ToString {
   
 }
 
-open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
+open class WebView: WKWebView, WKScriptMessageHandler,
                     WKNavigationDelegate, WKUIDelegate {
 
   /// JS NativeBridge objects
@@ -278,51 +278,6 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
   public func log2bridge(_ bridge: JSBridgeObject) {
     self.jsexec("log2bridge(\(bridge.name))")
   }
-
-  /// The closures to call when content scrolled more than scrollRatio
-  /// The closures get the content arg scrollRatio: CGFloat
-  @Callback<CGFloat>
-  public var whenScrolled: Callback<CGFloat>.Store
-  
-  /// The minimum scroll ratio
-  public var minScrollRatio: CGFloat = 0
-  
-  /// The closure to call when some dragging (scrolling with finger down) has been done
-  /// The closures get the content arg scrollRatio: CGFloat which is the number of
-  /// points scrolled down divided by the content's height
-  @Callback<CGFloat>
-  public var whenDragged: Callback<CGFloat>.Store
-  
-  /// The closures to call when content is scrolling
-  /// The closures get the content arg scrollOffset: CGFloat
-  @Callback<CGFloat>
-  public var scrollViewDidScroll: Callback<CGFloat>.Store
-  
-  /// The closures to call when end dragging
-  @Callback<CGFloat>
-  public var scrollViewDidEndDragging: Callback<CGFloat>.Store
-  
-  /// The closures to call when begindragging
-  @Callback<CGFloat>
-  public var scrollViewWillBeginDragging: Callback<CGFloat>.Store
-  
-  /// Define closures to call when the end of the web content will become
-  /// visible, the content arg is atEnd: Bool.
-  @Callback<Bool>
-  public var atEndOfContent: Callback<Bool>.Store
-  
-  /// Returns true if the end of the content is visible
-  /// (in vertical direction)
-  public var isAtEndOfContent: Bool {
-    return isAtEndOfContent(offset: scrollView.contentOffset.y)
-  }
-
-  /// Returns true if at a given offset the end of the content is visible
-  /// (in vertical direction)
-  public func isAtEndOfContent(offset: CGFloat) -> Bool {
-    let end = scrollView.contentSize.height
-    return (offset + bounds.size.height) >= end
-  }
   
   /// jsexec executes the passed string as JavaScript expression using
   /// evaluateJavaScript, if a closure is given, it is only called when
@@ -384,9 +339,12 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
     return loadHTMLString(html, baseURL: baseUrl)
   }
   
+  public private(set) var scrollDelegate = WebViewScrollDelegate()
+  
   public func setup() {
     self.navigationDelegate = self
     self.uiDelegate = self
+    self.scrollView.delegate = scrollDelegate
   }
   
   override public init(frame: CGRect, configuration: WKWebViewConfiguration? = nil) {
@@ -416,64 +374,6 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
                                     didReceive message: WKScriptMessage) {
     if let jsCall = try? JSCall( message ) {
       call( jsCall)
-    }
-  }
-
-  // MARK: - UIScrollViewDelegate protocol
-    
-  // content y offset at start of dragging
-  private var startDragging: CGFloat?
-
-//    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-//      if let sd = startDragging {
-//        if scrollView.isDragging {
-//          let scrolled = sd-scrollView.contentOffset.y
-//          let ratio = scrolled / scrollView.bounds.size.height
-//          //debug("scrolled: \(scrolled), ratio = \(ratio)")
-//        }
-//      }
-//  }
-//
-  public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-    startDragging = scrollView.contentOffset.y
-    if $scrollViewWillBeginDragging.needsNotification {
-      $scrollViewWillBeginDragging.notify(sender: self, content: scrollView.contentOffset.y)
-    }
-
-  }
-
-  public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
-    if let sd = startDragging, $whenScrolled.needsNotification {
-      let scrolled = sd - scrollView.contentOffset.y
-      let ratio = scrolled / scrollView.bounds.size.height
-      if abs(ratio) >= minScrollRatio {
-        $whenScrolled.notify(sender: self, content: ratio)
-      }
-    }
-    startDragging = nil
-    if $whenDragged.needsNotification {
-      let ratio = scrollView.contentOffset.y / scrollView.contentSize.height
-      $whenDragged.notify(sender: self, content: ratio)
-    }
-    if $scrollViewDidEndDragging.needsNotification {
-      $scrollViewDidEndDragging.notify(sender: self, content: scrollView.contentOffset.y)
-    }
-
-  }
-  
-  public func scrollViewDidScroll(_ scrollView: UIScrollView) {
-    if $scrollViewDidScroll.needsNotification {
-      $scrollViewDidScroll.notify(sender: self, content: scrollView.contentOffset.y)
-    }
-  }
-  
-  // When dragging stops, check whether the end of content is visible  
-  public func scrollViewWillEndDragging(_ scrollView: UIScrollView, 
-    withVelocity velocity: CGPoint, 
-    targetContentOffset: UnsafeMutablePointer<CGPoint>) {
-    if $atEndOfContent.needsNotification {
-      let offset = targetContentOffset.pointee.y
-      $atEndOfContent.notify(sender: self, content: isAtEndOfContent(offset: offset))
     }
   }
 
@@ -545,6 +445,100 @@ open class WebView: WKWebView, WKScriptMessageHandler, UIScrollViewDelegate,
   }
   
 } // class WebView
+
+// MARK: - UIScrollViewDelegate protocol
+public class WebViewScrollDelegate: NSObject, UIScrollViewDelegate{
+    
+  // content y offset at start of dragging
+  private var startDragging: CGFloat?
+  
+  /// The closures to call when content scrolled more than scrollRatio
+  /// The closures get the content arg scrollRatio: CGFloat
+  @Callback<CGFloat>
+  public var whenScrolled: Callback<CGFloat>.Store
+  
+  /// The minimum scroll ratio
+  public var minScrollRatio: CGFloat = 0
+  
+  /// The closure to call when some dragging (scrolling with finger down) has been done
+  /// The closures get the content arg scrollRatio: CGFloat which is the number of
+  /// points scrolled down divided by the content's height
+  @Callback<CGFloat>
+  public var whenDragged: Callback<CGFloat>.Store
+  
+  /// The closures to call when content is scrolling
+  /// The closures get the content arg scrollOffset: CGFloat
+  @Callback<CGFloat>
+  public var scrollViewDidScroll: Callback<CGFloat>.Store
+  
+  /// The closures to call when end dragging
+  @Callback<CGFloat>
+  public var scrollViewDidEndDragging: Callback<CGFloat>.Store
+  
+  /// The closures to call when begindragging
+  @Callback<CGFloat>
+  public var scrollViewWillBeginDragging: Callback<CGFloat>.Store
+  
+  /// Define closures to call when the end of the web content will become
+  /// visible, the content arg is atEnd: Bool.
+  @Callback<Bool>
+  public var atEndOfContent: Callback<Bool>.Store
+  
+  
+  public func scrollViewDidScroll(_ scrollView: UIScrollView) {
+    if $scrollViewDidScroll.needsNotification {
+      $scrollViewDidScroll.notify(sender: self, content: scrollView.contentOffset.y)
+    }
+  }
+  
+  public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+    startDragging = scrollView.contentOffset.y
+    if $scrollViewWillBeginDragging.needsNotification {
+      $scrollViewWillBeginDragging.notify(sender: self, content: scrollView.contentOffset.y)
+    }
+    
+  }
+  
+  public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+    if let sd = startDragging, $whenScrolled.needsNotification {
+      let scrolled = sd - scrollView.contentOffset.y
+      let ratio = scrolled / scrollView.bounds.size.height
+      if abs(ratio) >= minScrollRatio {
+        $whenScrolled.notify(sender: self, content: ratio)
+      }
+    }
+    startDragging = nil
+    if $whenDragged.needsNotification {
+      let ratio = scrollView.contentOffset.y / scrollView.contentSize.height
+      $whenDragged.notify(sender: self, content: ratio)
+    }
+    if $scrollViewDidEndDragging.needsNotification {
+      $scrollViewDidEndDragging.notify(sender: self, content: scrollView.contentOffset.y)
+    }
+    
+  }
+  
+  // When dragging stops, check whether the end of content is visible
+  public func scrollViewWillEndDragging(_ scrollView: UIScrollView,
+                                        withVelocity velocity: CGPoint,
+                                        targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+    if $atEndOfContent.needsNotification {
+      let offset = targetContentOffset.pointee.y
+      $atEndOfContent.notify(sender: self,
+                             content: isAtEndOfContent(scrollView: scrollView,
+                                                       offset: offset))
+    }
+  }
+  
+  /// Returns true if at a given offset the end of the content is visible
+  /// (in vertical direction)
+  public func isAtEndOfContent(scrollView: UIScrollView, offset: CGFloat) -> Bool {
+    let end = scrollView.contentSize.height
+    return (offset + scrollView.bounds.size.height) >= end
+  }
+  
+}
+
 
 /**
  An embedded WebView with a button at the bottom which is displayed when the 
@@ -653,7 +647,7 @@ open class ButtonedWebView: UIView {
     $onX.whenActivated { [weak self] isActive in
       self?.xButton.isHidden = !isActive
     }
-    webView.atEndOfContent { [weak self] isAtEnd in
+    webView.scrollDelegate.atEndOfContent { [weak self] isAtEnd in
       guard let self = self else { return }
       if self.isButtonVisible != isAtEnd {
         self.isButtonVisible = isAtEnd

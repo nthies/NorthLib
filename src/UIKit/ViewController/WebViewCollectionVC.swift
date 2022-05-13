@@ -52,7 +52,7 @@ class OptionalWebView: OptionalView, DoesLog {
     webView.allowsBackForwardNavigationGestures = false
     webView.scrollView.isDirectionalLockEnabled = true
     webView.scrollView.showsHorizontalScrollIndicator = false
-    webView.minScrollRatio = 0.01
+    webView.scrollDelegate.minScrollRatio = 0.01
     webView.baseDir = baseDir
     webView.whenLoaded { [weak self] _ in
       self?.isAvailable = true
@@ -212,23 +212,23 @@ open class WebViewCollectionVC: PageCollectionVC {
     webView.whenLoaded { [weak self] _ in
       self?.$whenLoaded.notify(sender: self)
     }
-    webView.whenScrolled { [weak self] ratio in
+    webView.scrollDelegate.whenScrolled { [weak self] ratio in
       self?.$whenScrolled.notify(sender: self, content: ratio)
     }
     if $atEndOfContent.count > 0 {
-      webView.atEndOfContent { [weak self] isAtEnd in
+      webView.scrollDelegate.atEndOfContent { [weak self] isAtEnd in
         self?.$atEndOfContent.notify(sender: self, content: isAtEnd)
       }
     }
-    webView.scrollViewWillBeginDragging { [weak self] ratio in
+    webView.scrollDelegate.scrollViewWillBeginDragging { [weak self] ratio in
       self?.$scrollViewWillBeginDragging.notify(sender: self, content: ratio)
     }
     
-    webView.scrollViewDidEndDragging { [weak self] ratio in
+    webView.scrollDelegate.scrollViewDidEndDragging { [weak self] ratio in
       self?.$scrollViewDidEndDragging.notify(sender: self, content: ratio)
     }
     
-    webView.scrollViewDidScroll {  [weak self] ratio in
+    webView.scrollDelegate.scrollViewDidScroll {  [weak self] ratio in
       self?.$scrollViewDidScroll.notify(sender: self, content: ratio)
     }
   }
