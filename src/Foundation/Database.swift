@@ -16,12 +16,14 @@ open class Database: DoesLog, ToString {
   /// name of data model
   public var modelName: String
   
-  /// URL of model
-  public lazy var modelURL = 
-    Bundle.main.url(forResource: modelName, withExtension: "mom")!
+  /// actual version of App model
+  public var newModelVersion = 1
+  
+  /// current version of stored DB model
+  public var oldModelVersion = 1
   
   /// the model object
-  public lazy var model = NSManagedObjectModel(contentsOf: modelURL)!
+  public lazy var model = try! getModel()
   
   /// the persistent store coordinator
   public lazy var coordinator = NSPersistentStoreCoordinator(managedObjectModel: model)
@@ -38,7 +40,27 @@ open class Database: DoesLog, ToString {
   /// path of database with given database name
   public static func dbPath(name: String) -> String
     { return Database.dbDir + "/\(name).sqlite" }
-  
+
+  /// Load model from model dictionary (if available) or from single model
+  /// file. Evaluate model version from the model's 'versionIdentifiers' 
+  /// property which is expected to be a single integer number.
+  private func getModel() throws -> NSManagedObjectModel { 
+    let murl = Bundle.main.url(forResource: modelName, withExtension: "momd") ??
+        Bundle.main.url(forResource: modelName, withExtension: "mom")
+    guard let murl = murl else {
+      throw fatal("Can't find Core Data model for \(modelName)")
+    }
+    guard let model = NSManagedObjectModel(contentsOf: murl) else {
+      throw fatal("Can't read Core Data model for \(modelName)")
+    }
+    for v in model.versionIdentifiers {
+      if let s = v as? String, let mver = Int(s), mver > self.newModelVersion {
+        self.newModelVersion = mver
+      }
+    }
+    return model
+  }
+ 
   /// returns true if a database with given name exists
   public static func exists(name: String) -> Bool {
     File(Database.dbPath(name: name)).exists
@@ -61,11 +83,17 @@ open class Database: DoesLog, ToString {
   /// managed object context of database
   public var context: NSManagedObjectContext?
   
-  /// create/open database once
+  /// Callback/Notification to send on version change
+  @Callback
+  public var onVersionChange: Callback<Void>.Store
+  
+  /// create/open database once and set oldModelVersion and newModelVersion
+  /// from the model read and user defaults.
   private func openOnce(closure: @escaping (Error?)->()) {
     self.context = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
     self.context?.persistentStoreCoordinator = coordinator
     let path = Database.dbPath(name: name)
+    let isNew = !File(path).exists
     Dir(Database.dbDir).create()
     let dbURL = URL(fileURLWithPath: path)
     let queue = DispatchQueue.global(qos: .userInteractive)
@@ -77,7 +105,20 @@ open class Database: DoesLog, ToString {
                        NSInferMappingModelAutomaticallyOption: true]
         self.persistentStore = try self.coordinator.addPersistentStore(ofType:
           NSSQLiteStoreType, configurationName: nil, at: dbURL, options: options)
-        DispatchQueue.main.sync { closure(nil) }
+        DispatchQueue.main.sync { 
+          let dfl = Defaults.singleton
+          let vkey = "\(self.modelName)Version"
+          if let s = dfl[vkey], let ver = Int(s) {
+            self.oldModelVersion = ver
+          }
+          else if isNew { self.oldModelVersion = 0 }
+          else { self.oldModelVersion = 1 }
+          if self.newModelVersion != self.oldModelVersion {
+            self.$onVersionChange.notify(sender: self)
+          }
+          dfl[vkey] = "\(self.newModelVersion)"
+          closure(nil) 
+        }
       }
       catch let err {
         closure(self.error(err))
