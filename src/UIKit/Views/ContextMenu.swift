@@ -35,28 +35,8 @@ open class ContextMenu: NSObject, UIContextMenuInteractionDelegate {
     willSet {
       if menu.count == 0 {
         view.isUserInteractionEnabled = true   
-        if #available(iOS 13.0, *) {
-          let menuInteraction = UIContextMenuInteraction(delegate: self)
-          view.addInteraction(menuInteraction)      
-        }
-        else {
-          let longTouch = UILongPressGestureRecognizer(target: self, 
-                            action: #selector(actionMenuTapped))
-          longTouch.numberOfTouchesRequired = 1
-          view.addGestureRecognizer(longTouch)
-        }
-      }      
-    }
-  }
-  
-  @objc func actionMenuTapped(_ sender: UIGestureRecognizer) {
-    if open { return } else { open = true }
-    var actionMenu: [UIAlertAction] = []
-    for m in menu {
-      actionMenu += Alert.action(m.title, closure: m.closure)
-    }
-    Alert.actionSheet(actions: actionMenu) { [weak self] in
-      self?.open = false
+        view.addInteraction(UIContextMenuInteraction(delegate: self))
+      }
     }
   }
   
@@ -66,7 +46,6 @@ open class ContextMenu: NSObject, UIContextMenuInteractionDelegate {
     menu += (title: title, icon: icon, closure: closure)
   }
   
-  @available(iOS 13.0, *)
   fileprivate func createContextMenu() -> UIMenu {
     let menuItems = menu.map { m in
       UIAction(title: m.title, image: UIImage(systemName: m.icon)) {_ in m.closure(m.title) }
