@@ -235,13 +235,6 @@ extension UIImage {
   /// - Parameter name: the image name
   /// - Returns: UIImage related to `name`.
   public convenience init?(name:String) {
-    if #available(iOS 13.0, *){
-      self.init(systemName: name)
-    }
-    else{
-      ///Symbol Names with a dot like eye.slash cannot be loaded from asset catalog
-      let name = name.replacingOccurrences(of: ".", with: "_")
-      self.init(named: name)
-    }
+    self.init(systemName: name)
   }
 }

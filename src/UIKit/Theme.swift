@@ -20,10 +20,7 @@ public class Theme {
   var name: String?
   
   public static var isLight: Bool { 
-    if #available(iOS 13.0, *) {
-      return UITraitCollection.current.userInterfaceStyle == .light 
-    }
-    else { return true }
+    return UITraitCollection.current.userInterfaceStyle == .light
   }
   public static var isDark: Bool { !isLight }
 

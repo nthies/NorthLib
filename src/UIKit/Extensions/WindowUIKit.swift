@@ -12,11 +12,7 @@ public extension UIWindow {
 
   /// Returns the key window
   static var keyWindow: UIWindow? {
-    let app = UIApplication.shared
-    if #available(iOS 13, *) {
-      return app.windows.first { $0.isKeyWindow }
-    }
-    else { return app.keyWindow }
+    return UIApplication.shared.windows.first { $0.isKeyWindow }
   }
   
   /// Returns the root view controller
@@ -30,18 +26,12 @@ public extension UIWindow {
   
   /// Returns the top inset of the window (ie. nodge area)
   static var topInset: CGFloat {
-    if #available(iOS 11.0, *) {
-      if let window = keyWindow { return window.safeAreaInsets.top }
-    }
-    return 0
+    return keyWindow?.safeAreaInsets.top ?? 0
   }
   
   /// Returns the bottom inset of the window
   static var bottomInset: CGFloat {
-    if #available(iOS 11.0, *) {
-      if let window = keyWindow { return window.safeAreaInsets.bottom }
-    }
-    return 0
+    return keyWindow?.safeAreaInsets.bottom ?? 0
   }
   
   /// Returns the max inset for all edges
@@ -68,10 +58,7 @@ public extension UIWindow {
   
   /// Returns safe area Insets inset of the window
   static var safeInsets: UIEdgeInsets {
-    if #available(iOS 11.0, *) {
-      if let window = keyWindow { return window.safeAreaInsets }
-    }
-    return .zero
+    return keyWindow?.safeAreaInsets ?? .zero
   }
   
   /// Returns size the key window otherwise screen size

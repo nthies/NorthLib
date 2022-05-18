@@ -531,13 +531,9 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
   public func urlSession(_ session: URLSession, task: URLSessionTask, 
                          didFinishCollecting metrics: URLSessionTaskMetrics) {
     let tid = task.taskIdentifier
-    if #available(iOS 13.0, *) {
-      let sent = metrics.transactionMetrics[0].countOfRequestBodyBytesSent
-      let received = metrics.transactionMetrics[0].countOfResponseBodyBytesReceived
-      debug("Task \(tid): Task metrics received - \(sent) bytes sent, \(received) bytes received")
-    } else {
-      debug("Task \(tid): Task metrics received")
-    }
+    let sent = metrics.transactionMetrics[0].countOfRequestBodyBytesSent
+    let received = metrics.transactionMetrics[0].countOfResponseBodyBytesReceived
+    debug("Task \(tid): Task metrics received - \(sent) bytes sent, \(received) bytes received")
   }
   
   // MARK: - URLSessionDownloadDelegate Protocol

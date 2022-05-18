@@ -115,11 +115,8 @@ public extension ZoomedImageViewSpec {
   
   /// Setup the spinner
   func setupSpinner() {
-    if #available(iOS 13, *) {
-      spinner.style = .large
-      spinner.color = .white
-    }
-    else { spinner.style = .whiteLarge }
+    spinner.style = .large
+    spinner.color = .white
     spinner.hidesWhenStopped = true
     addSubview(spinner)
     pin(spinner.centerX, to: self.centerX)

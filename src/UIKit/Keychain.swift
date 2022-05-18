@@ -44,12 +44,9 @@ public final class Keychain: KVStore, Singleton {
     
     // Log error from Keychain DB
     private func handleError(_ status: OSStatus) {
-      if status != errSecSuccess {
-        if #available(iOS 11.3, *) {
-          if let str = SecCopyErrorMessageString(status, nil) { error("\(str)") }
-        } else {
-          error("Can't access keychain: Error \(status)")
-        }
+      if status != errSecSuccess,
+         let str = SecCopyErrorMessageString(status, nil) {
+        error("\(str)")
       }
     }
     
