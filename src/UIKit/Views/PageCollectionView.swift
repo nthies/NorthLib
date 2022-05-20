@@ -98,19 +98,19 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
       if let provider = pcv.provider {
         let page = provider(idx, self.page)
         self.page = page
+        page.whenAvailable { [weak self] in
+          if let view = page.mainView {
+            self?.addView(view, doRotate: pcv.scrollFromLeftToRight)
+          }
+        }
         if page.isAvailable {
           if let view = page.mainView {
             addView(view, doRotate: pcv.scrollFromLeftToRight)
           }
         }
         else {
-          if !page.willBeAvailable, let view = page.waitingView {
+          if let view = page.waitingView {
             addView(view, doRotate: pcv.scrollFromLeftToRight)
-          }
-          page.whenAvailable { [weak self] in
-            if let view = page.mainView {
-              self?.addView(view, doRotate: pcv.scrollFromLeftToRight)
-            }
           }
         }
       }

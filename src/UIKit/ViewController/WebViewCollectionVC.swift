@@ -28,17 +28,15 @@ class OptionalWebView: OptionalView, DoesLog {
   @SingleCallback
   public var whenAvailable: Callback<Void>.Store
   
-  var isAvailable = false
-  var willBeAvailable: Bool { url.isAvailable }
+  var isAvailable: Bool { url.isAvailable }
   func loadView() {
     if url.isAvailable { webView?.load(url: url.url) }
   }
   
   fileprivate func urlChanged() {
-    isAvailable = false
     if let webView = self.webView { webView.stopLoading() }
     else { createWebView() }
-    if url.isAvailable { loadView() }
+    if isAvailable { loadView() }
     else {
       url.whenAvailable { [weak self] in self?.loadView() }
     }
@@ -55,7 +53,6 @@ class OptionalWebView: OptionalView, DoesLog {
     webView.scrollDelegate.minScrollRatio = 0.01
     webView.baseDir = baseDir
     webView.whenLoaded { [weak self] _ in
-      self?.isAvailable = true
       self?.$whenAvailable.notify(sender: self)
     }
   }

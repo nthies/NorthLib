@@ -61,8 +61,6 @@ public protocol OptionalView {
   var waitingView: UIView? { get }
   /// Returns true if the *real* view (mainView) is available
   var isAvailable: Bool { get }
-  /// Returns true if the *real* view (mainView) will be available shortly
-  var willBeAvailable: Bool { get }
   /// Defines a closure to call when *mainView* becomes available
   var whenAvailable: Callback<Void>.Store { get }
   /// Load the *mainView's* contents
@@ -72,7 +70,6 @@ public protocol OptionalView {
 public extension OptionalView {
   /// Returns the view that should currently be displayed
   var activeView: UIView { return isAvailable ? mainView! : (waitingView ?? UndefinedView()) }
-  var willBeAvailable: Bool { isAvailable }
 }
 
 /// Common Views can be optional
