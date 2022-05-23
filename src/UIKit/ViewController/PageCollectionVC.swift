@@ -17,7 +17,6 @@ open class PageCollectionVC: UIViewController {
   
   /// The Layout object determining the size of the cells
   open var cvLayout: UICollectionViewFlowLayout!
-  open var pinTopAnchor: LayoutAnchorY?{ didSet { pinTop() } }
 
   /// A closure providing the optional views to display
   open var provider: ((Int, OptionalView?)->OptionalView)? = nil
@@ -67,12 +66,7 @@ open class PageCollectionVC: UIViewController {
   private func pinTop() {
     topConstraint?.isActive = false
     guard let collectionView = collectionView else { return }
-    
-    if let a = pinTopAnchor, a.view.superview == self.view {
-      topConstraint =
-      pin(collectionView.top, to: a)
-    }
-    else if pinTopToSafeArea {
+    if pinTopToSafeArea {
       topConstraint = pin(collectionView.top, to: self.view.topGuide())
     }
     else { topConstraint = pin(collectionView.top, to: self.view.top) }

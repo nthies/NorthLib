@@ -329,17 +329,7 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
       debug("scrolling to: \(idx)")
       _index = idx
       let ipath = IndexPath(item: idx, section: 0)
-      ///Bugfix SectionVC did not change section from 0 to new index if header pinned to collectionView
-      ///@see: UICollectionView scrollToItem broken on iOS14
-      /// https://developer.apple.com/forums/thread/663156?answerId=647268022#647268022
-      if !animated && self.isPagingEnabled {
-        self.isPagingEnabled = false
-        self.scrollToItem(at: ipath, at: .centeredHorizontally, animated: animated)
-        self.isPagingEnabled = true
-      }
-      else {
-        self.scrollToItem(at: ipath, at: .centeredHorizontally, animated: animated)
-      }
+      scrollToItem(at: ipath, at: .centeredHorizontally, animated: animated)
     }
   }
 
