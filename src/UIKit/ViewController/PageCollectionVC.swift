@@ -24,6 +24,8 @@ open class PageCollectionVC: UIViewController {
   /// inset from top/bottom/left/right as factor to min(width,height)
   open var inset = 0.025
   
+  open var topInset: CGFloat = 0.0{ didSet { pinTop() } }
+  
   public var invalidateLayoutNeededOnViewWillAppear:Bool = false
   
   // The raw cell size (without bounds)
@@ -65,11 +67,12 @@ open class PageCollectionVC: UIViewController {
   // Pin top of collectionView
   private func pinTop() {
     topConstraint?.isActive = false
+    print("pcv#d1 pinTop withInset: \(topInset)")
     guard let collectionView = collectionView else { return }
     if pinTopToSafeArea {
-      topConstraint = pin(collectionView.top, to: self.view.topGuide())
+      topConstraint = pin(collectionView.top, to: self.view.topGuide(), dist: topInset)
     }
-    else { topConstraint = pin(collectionView.top, to: self.view.top) }
+    else { topConstraint = pin(collectionView.top, to: self.view.top, dist: topInset) }
   }
   
   // Pin bottom of collectionView
