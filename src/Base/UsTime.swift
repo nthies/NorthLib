@@ -185,6 +185,13 @@ open class UsTime: Comparable, DoesLog, ToString {
     defer { str_release(&str) }
     return String(validatingUTF8: str!)!
   }
+  
+  /// Converts UsTime to "YYYY-MM-DD hh:mm:ss"
+  public func toShort() -> String {
+    var str = str_tm2short(&(values.tmval))
+    defer { str_release(&str) }
+    return String(validatingUTF8: str!)!
+  }
  
   /// Returns the current time
   public static var now: UsTime { UsTime() }
