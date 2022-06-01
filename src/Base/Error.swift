@@ -5,6 +5,8 @@
 //  Copyright © 2019 Norbert Thies. All rights reserved.
 //
 
+import NorthLowLevel
+
 extension Result {
   /// error() is similar to get() and returns the Failure value if available
   public func error() -> Failure? {
@@ -31,6 +33,16 @@ extension DoesLog {
   public func error(_ msg: String? = nil, file: String = #file, line: Int = #line,
                     function: String = #function) -> Log.Error {
     return Log.error(msg, object: self, file: file, line: line, function: function)
+  }
+ 
+  @discardableResult
+  public func serror(_ msg: String? = nil, file: String = #file, line: Int = #line,
+                     function: String = #function) -> Log.Error {
+    var tmp: String
+    let serr = "System Error: \(String(cString: str_error(-1)!))"
+    if let s = msg { tmp = "\(s)\n  \(serr)" }
+    else { tmp = serr }
+    return Log.error(tmp, object: self, file: file, line: line, function: function)
   }
   
   @discardableResult
@@ -90,7 +102,6 @@ extension DoesLog {
 extension Log {
   
   /** 
->>>>>>> old/beta:NorthLib/General/Error.swift
    A Log.Error contains a Log.Message that also serves as an Error and can be thrown
    as an exception.
    
