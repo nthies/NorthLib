@@ -20,10 +20,10 @@ public class Toast {
   }
   
   // MARK: Public
-  public static func show(_ text: String, _ type: ToastType = .info) {
+  public static func show(_ text: String, _ type: ToastType = .info, _ window: UIWindow? = nil) {
     if !Thread.isMainThread {
       onMainAfter {
-        Self.show(text,type)
+        Self.show(text,type, window)
       }
       return;
     }
@@ -67,7 +67,10 @@ public class Toast {
     tip.alpha = 0.0
     
     DispatchQueue.main.async {
-      guard let window = UIWindow.keyWindow else { return }
+      guard let window = window ?? UIWindow.keyWindow else {
+        Log.log("cannot show Toast with type: \(type) and message: \(text), have now targetWindow!")
+        return
+      }
       window.addSubview(tip)
       Toast.addTip(tip)
       UIView.animate(withDuration: 1.0,
