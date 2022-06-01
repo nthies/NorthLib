@@ -21,6 +21,37 @@
 - (void) tearDown {
 }
 
+double dist ( double d1, double d2 ) {
+  double ret =  d1 - d2;
+  return (ret < 0.0)? -ret : ret;
+}
+
+- (void) testFloat {
+  double d; int i;
+  XCTAssert(flt_exponent(1.234) == 1);
+  d = flt_mantissa(1.234, 10, &i);
+  XCTAssert(i == 1);
+  XCTAssert(dist(d, 0.1234) < 0.0001);
+  d = flt_mantissa ( 0.456e10, 10, &i );
+  XCTAssert(i == 10);
+  XCTAssert(dist(d, 0.456) < 0.001);
+  d = flt_mantissa ( 0.0456e10, 10, &i );
+  XCTAssert(i == 9);
+  XCTAssert(dist(d, 0.456) < 0.001);
+  d = flt_mantissa ( 0.456e-10, 10, &i );
+  XCTAssert(i == -10);
+  XCTAssert(dist(d, 0.456) < 0.001);
+  d = flt_mantissa ( 0.0456e-10, 10, &i );
+  XCTAssert(i == -11);
+  XCTAssert(dist(d, 0.456) < 0.001);
+  d = flt_mantissa ( 4.56e-10, 10, &i );
+  XCTAssert(i == -9);
+  XCTAssert(dist(d, 0.456) < 0.001);
+  d = flt_mantissa ( 1.234e10, 16, &i );
+  XCTAssert(i == 9);
+  XCTAssert(dist(d, 0.179571) < 0.001);
+}
+
 - (void) testString {
   char buff1[1001], buff2[1001];
   mem_set(buff1, 'A', 1000);
