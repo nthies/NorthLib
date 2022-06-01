@@ -131,7 +131,7 @@ int mapfile_t:: map ( const char *fn, const char *mode, unsigned long len ) {
       if ( omode & MF_WRITE ) ofl =  O_RDWR;
       else ofl =  O_RDONLY;
     else ofl =  O_WRONLY;
-    ofl |=  O_CREAT;
+    if (omode & MF_WRITE) ofl |=  O_CREAT;
     int fd =  open ( fn, ofl, 0666 );
     if ( fd >= 0 ) {
       if ( !map ( fd, len ) ) {
