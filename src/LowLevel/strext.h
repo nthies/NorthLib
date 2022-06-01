@@ -300,6 +300,7 @@ int str_rroman2i ( const char **rstr );
 int str_roman2i ( const char *str );
 char *str_mexpand(const char *, str_matchfunc_t *, str_updatefunc_t *, void *);
 char *str_tm2iso(struct tm *t, int usec);
+char *str_tm2short(struct tm *t);
 const char *uts_sysname();
 const char *uts_nodename();
 const char *uts_release();
