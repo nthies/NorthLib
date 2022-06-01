@@ -12,3 +12,4 @@
 #include "../mapfile.h"
 #include "../zip.h"
 #include "../tzdata.h"
+#include "../numeric.h"
