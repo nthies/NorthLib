@@ -31,7 +31,8 @@ class mapfile_t {
     int remap ( unsigned long len = (unsigned long) -1 );
     int maptmp ( void );
     int sync ( int is_wait = 1 );
-    mapfile_t ( const char *fn ) { init (); map ( fn ); }
+    mapfile_t ( const char *fn, const char *mode = "rw" )
+      { init (); map ( fn, mode ); }
     mapfile_t ( void ) { init (); }
     ~mapfile_t () { unmap (); }
     int ok ( void ) const;
