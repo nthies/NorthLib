@@ -1533,6 +1533,23 @@ char *str_tm2iso(struct tm *t, int usec) {
   return str_heap(buff);
 }
 
+/**
+ * Returns an allocated string referencing the passed struct tm time data.
+ * 
+ * This function converts a struct tm to a string in short ISO format, which
+ * is "dd,hh:mm:ss
+ * 
+ * @param t    struct tm pointer as returned from 'localtime'
+ *
+ * @return allocated string in short ISO8601 format
+ */
+char *str_tm2short(struct tm *t) {
+  char buff[101];
+  snprintf(buff, 100, "%02d,%02d:%02d:%02d", t->tm_mday, t->tm_hour, 
+           t->tm_min, t->tm_sec);
+  return str_heap(buff);
+}
+
 // The struct utsname singleton
 static struct utsname _utsname, *_utsnamep = 0;
 
