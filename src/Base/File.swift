@@ -8,16 +8,16 @@
 import NorthLowLevel
 
 /// Rudimentary wrapper around elementary file operations
-open class File: DoesLog {
+open class File: ToString, DoesLog {
   
-  fileprivate var hasStat: Bool { return getStat() != nil }
+  fileprivate var hasStat: Bool { return readStat() != nil }
   fileprivate var _status: stat_t?
   fileprivate var fp: fileptr_t? = nil
 
   /// File status
   public var status: stat_t? { 
-    get { return getStat() }
-    set { if let st = newValue { _status = st; stat_write(&_status!, cpath) } }
+    get { return readStat() }
+    set { if let st = newValue { _status = st; writeStat() } }
   }
 
   /// Pathname as C String
@@ -55,6 +55,20 @@ open class File: DoesLog {
     }
     set (mem) { if let mem = mem { open(mode: "w") { f in f.write(mem: mem) } } }
   }
+  
+  /// File mode (eg. file permissions)
+  public var mode: Int64 {
+    get {
+      guard hasStat else { return 0 }
+      return Int64(stat_mode(&_status!)) 
+    }
+    set {
+      if hasStat {
+        stat_setmode(&_status!, UInt32(newValue))
+        writeStat()
+      }
+    }
+  }
 
   /// File modification time as #seconds since 01/01/1970 00:00:00 UTC
   public var mtime: Int64 {
@@ -65,7 +79,7 @@ open class File: DoesLog {
     set {
       if hasStat { 
         stat_setmtime(&_status!, time_t(newValue)) 
-        stat_write(&_status!, cpath)
+        writeStat()
       }
     }
   }
@@ -91,12 +105,23 @@ open class File: DoesLog {
   }
 
   @discardableResult
-  fileprivate func getStat() -> stat_t? { 
+  fileprivate func readLstat() -> stat_t? { 
+    var tmp = stat_t()
+    if stat_readlink(&tmp, cpath) != 0 { serror(path) }
+    return tmp
+  }
+  
+  @discardableResult
+  fileprivate func readStat() -> stat_t? { 
     if _status == nil {
       var tmp = stat_t()
       if stat_read(&tmp, cpath) == 0 { self._status = tmp }
     }
     return _status
+  }
+
+  fileprivate func writeStat() {
+    if stat_write(&_status!, cpath) != 0 { serror(path) }
   }
   
   /// A File has to be initialized with a filename
@@ -181,6 +206,17 @@ open class File: DoesLog {
                            atime: UsTime? = nil) -> Int {
     File(path).touch(motime: motime, atime: atime)
   }
+  
+  /**
+   * Sets the file mode (permissions) à la chmod(1).
+   */
+  public func chmod(_ mode: String) throws {
+    guard hasStat else { throw serror("\(path): No file status available") }
+    let old = status!.st_mode
+    let new = mode.withCString { s in stat_a2mode(old, s, 0) }
+    guard new != -1 else { throw error("\(mode): Invalid mode string") }
+    self.mode = Int64(new)
+  }
 
   /// Reads one line of characters from the file, trailing \n, \r are removed.
   public func readline() -> String? {
@@ -256,7 +292,11 @@ open class File: DoesLog {
   public var isFile: Bool { return hasStat && (stat_isfile(&_status!) != 0) }
   
   /// Returns true if File exists (is accessible) and is a symbolic link
-  public var isLink: Bool { return hasStat && (stat_islink(&_status!) != 0) }
+  public var isLink: Bool { 
+    guard exists else { return false }
+    var st = readLstat()
+    return stat_islink(&st!) != 0
+  }
   
   /// Returns the basename of a given pathname
   public var basename: String {
@@ -424,6 +464,20 @@ open class File: DoesLog {
   public static func extname(_ fn: String) -> String? {
     return File(fn).extname
   }
+  
+  /// Returns an ls -l similar description
+  public func toString() -> String {
+    guard exists else { return "\(path): doesn't exist" }
+    var modes = stat_modestring(status!.st_mode)
+    defer { str_release(&modes) }
+    let m = String(validatingUTF8: modes!)!
+    var s = "\(size)"
+    if s.count < 10 { s = s.indent(by: 10-s.count) }
+    let t = UsTime(mtime).toShort()
+    var ret = "\(m) \(s) \(t) \(basename)"
+    if isLink { ret += " -> \(readlink() ?? "[not found]")" }
+    return ret
+  }
 
 } // File
 
@@ -455,6 +509,15 @@ open class Dir: File {
     guard exists else { return [] }
     if let cont = dir_content(cpath) { return Array<String>(cont) }
     else { return [] }
+  }
+  
+  /// Returns a directory listing à la ls
+  public func list() -> String {
+    var ret: String = ""
+    for f in contents() {
+      ret += "\(File("\(path)/\(f)").toString())\n"
+    }
+    return ret
   }
   
   /// Scans for files and returns an array of absolute pathnames.
