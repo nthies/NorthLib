@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <ctype.h>
 #include <utime.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -259,8 +260,13 @@ int stat_gmode(stat_t *st) { return _stat_gmode(*st); }
 /// stat_wmode returns the world (others) mode portion of 'st's mode field.
 int stat_wmode(stat_t *st) { return _stat_wmode(*st); }
 
- /// stat_mode returns the file permissions.
- int stat_mode(stat_t *st) { return _stat_wmode(*st); }
+/// stat_mode returns the file permissions.
+int stat_mode(stat_t *st) { return _stat_mode(*st); }
+
+/// stat_setmode sets the file permissions
+void stat_setmode(stat_t *st, unsigned newmode) {
+  st->st_mode = (st->st_mode & ~S_MBITS) | (newmode & S_MBITS); 
+}
 
 /// stat_mtime simply returns the modification time
 time_t stat_mtime(stat_t *st) { return st->st_mtime; }
@@ -318,6 +324,309 @@ int stat_istype(stat_t *st, const char *mode) {
   }
   if ( is_negate ) ret =  !ret;
   return ret? 1 : 0;
+}
+
+/* 
+ *  stat_rgetref is used to scan *rstr for
+ a filename and to write
+ *  the filename's stat structure to *st.
+ *
+ *  rstr has to obey the following syntax:
+ *
+ *    refname :  [ "@" ] filename [ stoplist | white_space ]
+ *
+ *  After scanning *rstr is positioned to the first char not belonging to
+ *  'filename'.
+ *
+ *  @Returns 0 => OK, -1 otherwise
+ */
+
+int stat_rgetref (stat_t *st, const char **rstr, const char *stoplist ) {
+  if ( st && rstr && *rstr && **rstr ) {
+    char fn [257];
+    char *d =  fn;
+    const char *str = *rstr;
+    if ( *str == '@' ) str++;
+    while ( *++str && !isspace ( *str ) && 
+            ( stoplist && !str_chr ( stoplist, *str ) ) ) 
+      *d++ =  *str;
+    *d =  '\0';
+    *rstr =  str;
+    if ( *fn ) return ::stat ( fn, st );
+  }
+  return -1;
+}
+
+int stat_getref(struct stat *st, const char *str, const char *stoplist) 
+  { return stat_rgetref (st, &str, stoplist); }
+
+#define  CHMOD_SETUID    1
+#define  CHMOD_SETVTX    2
+#define  CHMOD_MLOCK     4
+#define  CHMOD_DIRX      8
+
+#define  M_X   (S_IXUSR | S_IXGRP | S_IXOTH | S_IFDIR)
+
+#define  CHMOD_U       16
+#define  CHMOD_G       32
+#define  CHMOD_O       64
+#define  CHMOD_A       (CHMOD_U | CHMOD_G | CHMOD_O)
+
+static mode_t _assign ( unsigned who, mode_t m, mode_t nmode, unsigned fl,
+                        int umask ) {
+  if ( (who & CHMOD_A) == CHMOD_A ) m &=  ~(S_ISGID | S_ISVTX);
+  if ( who & CHMOD_U ) {
+    m &=  ~S_ISUID;
+    m &= ~( 07 << 6 ); 
+    m |=  ( nmode << 6 ) & ~umask;
+    if ( fl & CHMOD_SETUID ) m |=  S_ISUID & ~umask;
+    if ( ( fl & CHMOD_DIRX ) && ( m & M_X ) ) m |=  S_IXUSR & ~umask;
+  }
+  if ( who & CHMOD_G ) {
+    m &=  ~S_ISGID;
+    m &= ~( 07 << 3 ); 
+    m |=  ( nmode << 3 ) & ~umask;
+    if ( fl & CHMOD_SETUID ) m |=  S_ISGID & ~umask;
+    if ( ( fl & CHMOD_DIRX ) && ( m & M_X ) ) m |=  S_IXGRP & ~umask;
+  }
+  if ( who & CHMOD_O ) {
+    m &= ~07; 
+    m |=  nmode & ~umask; 
+    if ( ( fl & CHMOD_DIRX ) && ( m & M_X ) ) m |=  S_IXOTH & ~umask;
+  }
+  if ( fl & CHMOD_MLOCK ) { m &= ~S_IXGRP; m |=  S_ISGID & ~umask; }
+  if ( fl & CHMOD_SETVTX ) m |=  S_ISVTX & ~umask;
+  return m;
+}
+
+static mode_t _add ( unsigned who, mode_t m, mode_t nmode, unsigned fl,
+                     int umask ) {
+  if ( who & CHMOD_U ) {
+    m |=  ( nmode << 6 ) & ~umask;
+    if ( fl & CHMOD_SETUID ) m |=  S_ISUID & ~umask;
+    if ( ( fl & CHMOD_DIRX ) && ( m & M_X ) ) m |=  S_IXUSR & ~umask;
+  }
+  if ( who & CHMOD_G ) {
+    m |=  ( nmode << 3 ) & ~umask;
+    if ( fl & CHMOD_SETUID ) m |=  S_ISGID & ~umask;
+    if ( ( fl & CHMOD_DIRX ) && ( m & M_X ) ) m |=  S_IXGRP & ~umask;
+  }
+  if ( who & CHMOD_O ) {
+    m |=  nmode & ~umask; 
+    if ( ( fl & CHMOD_DIRX ) && ( m & M_X ) ) m |=  S_IXOTH & ~umask;
+  }
+  if ( fl & CHMOD_MLOCK ) { m &= ~S_IXGRP; m |=  S_ISGID & ~umask; }
+  if ( fl & CHMOD_SETVTX ) m |=  S_ISVTX & ~umask;
+  return m;
+}
+
+static mode_t _remove ( unsigned who, mode_t m, mode_t nmode, unsigned fl,
+                        int umask ) {
+  if ( who & CHMOD_U ) {
+    m &=  ~( ( nmode << 6 ) & ~umask );
+    if ( fl & CHMOD_SETUID ) m &=  ~( S_ISUID & ~umask );
+    if ( ( fl & CHMOD_DIRX ) && ( m & M_X ) ) m &=  ~( S_IXUSR & ~umask );
+  }
+  if ( who & CHMOD_G ) {
+    m &=  ~( ( nmode << 3 ) & ~umask );
+    if ( fl & CHMOD_SETUID ) m &=  ~( S_ISGID & ~umask );
+    if ( ( fl & CHMOD_DIRX ) && ( m & M_X ) ) m &=  ~( S_IXGRP & ~umask );
+  }
+  if ( who & CHMOD_O ) {
+    m &=  ~( nmode & ~umask ); 
+    if ( ( fl & CHMOD_DIRX ) && ( m & M_X ) ) m &=  ~( S_IXOTH & ~umask );
+  }
+  if ( fl & CHMOD_MLOCK ) m &=  ~( S_ISGID & ~umask );
+  if ( fl & CHMOD_SETVTX ) m &=  ~( S_ISVTX & ~umask );
+  return m;
+}
+
+static int _who ( const char **pamode, int *pumask ) {
+  unsigned who =  0;
+  const char *amode =  *pamode;
+  while ( *amode ) {
+    switch ( *amode ) {
+      case 'u':  who |=  CHMOD_U; amode++; continue;
+      case 'g':  who |=  CHMOD_G; amode++; continue;
+      case 'o':  who |=  CHMOD_O; amode++; continue;
+      case 'a':  who |=  CHMOD_U | CHMOD_G | CHMOD_O; amode++; continue;
+      default :  break;
+    }
+    break;
+  }
+  *pamode =  amode;
+  if ( who ) *pumask =  0;
+  return who? who : ( CHMOD_U | CHMOD_G | CHMOD_O );
+}
+
+static mode_t get_amode ( const char **pamode, mode_t m, int umask ) {
+  if ( **pamode == '@' ) {
+    struct stat st;
+    if ( !stat_rgetref ( &st, pamode, "," ) ) return st.st_mode;
+    else return (mode_t) -1;
+  }
+  else {
+    const char *amode =  *pamode;
+    int who = _who ( &amode, &umask ), isop = 1;
+    while ( isop ) {
+      char op;
+      mode_t nmode =  0;
+      unsigned fl = 0;
+      isop =  0;
+      switch ( *amode ) {
+        case '+': case '-': case '=': op =  *(amode++); break;
+        default: *pamode =  amode; return (mode_t) -1;
+      }
+      while ( *amode && ( *amode != ',' ) ) {
+        switch ( *amode ) {
+          case 'r' :  nmode |=  04; break;
+          case 'w' :  nmode |=  02; break;
+          case 'x' :  nmode |=  01; break;
+          case 'X' :  fl |=  CHMOD_DIRX; break;
+          case 's' :  fl |=  CHMOD_SETUID; break;
+          case 't' :  fl |=  CHMOD_SETVTX; break;
+          case 'l' :  fl |=  CHMOD_MLOCK; break;
+          case 'u' :  nmode |=  (m >> 6) & 07; break;
+          case 'g' :  nmode |=  (m >> 3) & 07; break;
+          case 'o' :  nmode |=  m & 07; break;
+          case '+': case '-': case '=': isop =  1; break;
+          default: *pamode =  amode; return (mode_t) -1;
+        }
+        if ( isop ) break;
+        else amode ++;
+      }
+      switch ( op ) {
+        case '=' :  m = _assign ( who, m, nmode, fl, umask ); break;
+        case '+' :  m = _add ( who, m, nmode, fl, umask ); break;
+        case '-' :  m = _remove ( who, m, nmode, fl, umask ); break;
+    } }
+    *pamode =  amode;
+    return m;
+} }
+
+mode_t stat_ra2mode (mode_t m, const char **ramode, int umask) {
+  mode_t ret =  (mode_t) -1;
+  if ( ramode && *ramode ) {
+    str_skip_white ( ramode, 0 );
+    const char *amode =  *ramode;
+    if ( amode && *amode ) {
+      if ( isdigit ( *amode ) ) {
+        unsigned long val;
+        str_ra2l ( &val, &amode, 8 );
+        ret =  (mode_t) val;
+      }
+      else {
+        do {
+          if ( *amode == ',' ) { amode++; str_skip_white ( &amode, 0 ); }
+          m =  get_amode ( &amode, m, umask );
+          if ( m == (mode_t) -1 ) break;
+          str_skip_white ( &amode, 0 );
+        }
+        while ( *amode == ',' );
+        ret =  m;
+      }
+      *ramode =  amode;
+  } }
+  return ret;
+}
+
+/*
+ *  stat_a2mode is used to set the file access permission mode to a value 
+ *  derived from 'amode'. 'amode' must obey following syntax:
+ *
+ *      amode      =  absmode | ( symmode { "," symmode } ).
+ *      absmode    =  octal_number.
+ *      symmode    =  ( { who } action { action } ) | ( "@" filename ).
+ *      action     =  operator { permission }.
+ *      who        =  "u" |    # change owners permissions (user) #
+ *                    "g" |    # change group permissions #
+ *                    "o" |    # change other's (world's) permissions #
+ *                    "a".     # change all permissions #
+ *      operator   =  "+" |    # add permissions #
+ *                    "-" |    # take away permissions #
+ *                    "=".     # set permissions exact #
+ *      permission =  "r" |    # read permission #
+ *                    "w" |    # write permission #
+ *                    "x" |    # execute permission #
+ *                    "X" |    # execute permission only if the file
+ *                               is a directory or any other execute
+ *                               permissions are available #
+ *                    "l" |    # mandatory file locking (<=> g-x,g+s) #
+ *                    "s" |    # set uid or set gid on execution #
+ *                    "t" |    # sticky: save text #
+ *                    "u" |    # take perm. from user (owner) mode #
+ *                    "g" |    # take perm. from group mode #
+ *                    "o".     # take perm. from others mode #
+ *
+ *  If 'who' is left unspecified it defaults to "a". If no permission 
+ *  is specified with operator "=", all permissions of 'who' are removed,
+ *  ie. amode = "=" removes all permissions!
+ *  Special directory modes:
+ *       sticky bit:  if set a file in this directory may only be removed
+ *                    or renamed if the user has write permission to the
+ *                    directory and either
+ *                      o owns the file 
+ *                      o owns the directory
+ *                      o is the superuser
+ *       set gid bit: when creating a file in that directory, the group id
+ *                    of that file is set to the group id of the directory.
+ *
+ *  Remark: white space in between is not allowed.
+ *  
+ *  The function 'stat_ra2mode' is implemented anlogue but amode is of type
+ *  const char ** and will be positioned to the first char after the mode 
+ *  string.
+ */
+
+mode_t stat_a2mode (mode_t m, const char *amode, int umask) {
+  return stat_ra2mode ( m, &amode, umask );
+}
+
+/*
+ *  stat_mode2a is used to format a file mode a la 'ls' and to write
+ *  the ascii representation to 'buff'. The mode string is 10 chars long
+ *  (plus the terminating zero byte).
+ */
+
+int stat_mode2a (char *buff, int len, mode_t mode) {
+  if ( buff ) {
+    char tmp [21];
+    mode_t m =  mode & S_IFMT;
+    str_chcpy ( tmp, 20, '-', 10 );
+    if ( m == S_IFIFO ) tmp [0] =  'p';
+    else if ( m == S_IFCHR ) tmp [0] =  'c';
+    else if ( m == S_IFBLK ) tmp [0] =  'b';
+    else if ( m == S_IFSOCK ) tmp [0] =  's';
+    else if ( m == S_IFDIR ) tmp [0] =  'd';
+    else if ( m == S_IFLNK ) tmp [0] =  'l';
+    if ( mode & S_IRUSR ) tmp [1] =  'r';
+    if ( mode & S_IWUSR ) tmp [2] =  'w';
+    if ( mode & S_ISUID ) 
+      if ( mode & S_IXUSR ) tmp [3] =  's';
+      else tmp [3] =  'S';
+    else if ( mode & S_IXUSR ) tmp [3] =  'x';
+    if ( mode & S_IRGRP ) tmp [4] =  'r';
+    if ( mode & S_IWGRP ) tmp [5] =  'w';
+    if ( mode & S_ISGID ) 
+      if ( mode & S_IXGRP ) tmp [6] =  's';
+      else tmp [6] =  'S';
+    else if ( mode & S_IXGRP ) tmp [6] =  'x';
+    if ( mode & S_IROTH ) tmp [7] =  'r';
+    if ( mode & S_IWOTH ) tmp [8] =  'w';
+    if ( mode & S_ISVTX ) 
+      if ( mode & S_IXOTH ) tmp [9] =  't';
+      else tmp [9] =  'T';
+    else if ( mode & S_IXOTH ) tmp [9] =  'x';
+    return str_cpy ( buff, len, tmp );
+  }
+  return 0;
+}
+
+/// stat_modestring returns the allocated result of stat_mode2a.
+char *stat_modestring(mode_t mode) {
+  char *ret = (char *) calloc(12, sizeof(char));
+  if (ret) { stat_mode2a(ret, 11, mode); }
+  return ret;
 }
 
 // MARK: - File name handling functions
@@ -972,10 +1281,9 @@ int fn_resolvelink(char *from, int flen, char *to, int tlen,
  */
 int file_link(const char *from, const char *to) {
   char buff[1000];
-  if ( fn_linkpath(buff, 1000, from, to) > 0 ) {
-    return symlink(buff, to);
-  }
-  return -1;
+  if ( (fn_linkpath(buff, 1000, from, to) > 0) && 
+       (symlink(buff, to) == 0) ) return 0; 
+  return symlink(from, to);
 }
 
 /**
@@ -1048,7 +1356,7 @@ long file_copy(const char *src, const char *dest) {
        !stat_isfile(&tmp) ||
        (stat_readlink(&tmp, dest) == 0)
      ) return -1;
-  mapfile_t msrc(src), mdest(dest);
+  mapfile_t msrc(src, "r"), mdest(dest, "rw");
   if ( msrc.ok() && mdest.ok() ) {
     mdest.resize(msrc.size());
     mem_cpy(mdest.data(), msrc.data(), msrc.size());

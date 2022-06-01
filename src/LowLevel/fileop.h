@@ -40,12 +40,16 @@ int stat_umode(stat_t *st);
 int stat_gmode(stat_t *st);
 int stat_wmode(stat_t *st);
 int stat_mode(stat_t *st);
+void stat_setmode(stat_t *st, unsigned newmode);
 time_t stat_mtime(stat_t *st);
 void stat_setmtime(stat_t *st, time_t mtime);
 time_t stat_atime(stat_t *st);
 void stat_setatime(stat_t *st, time_t atime);
 time_t stat_ctime(stat_t *st);
 int stat_istype(stat_t *st, const char *mode);
+mode_t stat_a2mode(mode_t m, const char *amode, int umask);
+int stat_mode2a (char *buff, int len, mode_t mode);
+char *stat_modestring(mode_t mode);
 
 int fn_mkpathname(char *buff, int len, const char *dir, const char *fn);
 int fn_base(char *buff, int len, const char *fn);
