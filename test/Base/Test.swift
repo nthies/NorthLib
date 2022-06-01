@@ -210,6 +210,9 @@ class FileTests: XCTestCase {
     XCTAssertTrue(File(fn).exists)
     File(fn).move(to: fn2)
     XCTAssertTrue(File(fn2).exists)
+    print(d.list())
+    print(d1.list())
+    print(d2.list())
   }
   
 } // FileTests
