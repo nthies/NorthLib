@@ -26,10 +26,12 @@ public extension UIFont {
     return register(data: File(path).data)
   }
   
-  /// Get font from file with extension ".ttf" in main Bundle
-  static func register(name: String) -> String? {
-    guard let path = Bundle.main.path(forResource: name, ofType: "ttf") 
-      else { return nil }
+  /// Get font from file in main Bundle
+  static func register(name: String, type: String = "ttf", subDir: String? = nil) -> String? {
+    guard let path = Bundle.main.path(forResource: name, ofType: type, inDirectory: subDir)
+      else {
+      return nil
+    }
     return register(path: path)
   }
 
