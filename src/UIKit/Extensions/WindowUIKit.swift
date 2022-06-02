@@ -12,8 +12,7 @@ public extension UIWindow {
 
   /// Returns the key window
   static var keyWindow: UIWindow? {
-    let window = UIApplication.shared.windows.first{ $0.isKeyWindow }
-    return window ?? UIApplication.shared.windows.first
+    return UIApplication.shared.windows.first{ $0.isKeyWindow } ?? UIApplication.shared.windows.first
   }
   
   /// Returns the root view controller
