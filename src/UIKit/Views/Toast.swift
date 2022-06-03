@@ -67,7 +67,9 @@ public class Toast {
     tip.alpha = 0.0
     
     DispatchQueue.main.async {
-      guard let window = window ?? UIWindow.keyWindow else {
+      guard let window = window
+              ?? UIWindow.keyWindow
+              ?? UIApplication.shared.windows.first else {
         Log.log("cannot show Toast with type: \(type) and message: \(text), have now targetWindow!")
         return
       }
