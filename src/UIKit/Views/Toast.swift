@@ -20,15 +20,15 @@ public class Toast {
   }
   
   // MARK: Public
-  public static func show(_ text: String, _ type: ToastType = .info, _ window: UIWindow? = nil) {
+  public static func show(_ text: String, _ type: ToastType = .info, _ window: UIWindow? = nil, minDuration:Double = 2.0, onTap:(()->())? = nil) {
     if !Thread.isMainThread {
       onMainAfter {
-        Self.show(text,type, window)
+        Self.show(text,type, window, minDuration: minDuration, onTap: onTap)
       }
       return;
     }
     let dist : CGFloat = 10 //|-Screen-10-AlertBG-10-Text-10-AlertBG-10-Screen-|
-    let duration = 2 + text.count/40
+    let duration = minDuration + Double(text.count)/40.0
     var appFrame = CGRect(origin: .zero, size: UIWindow.size)
     let tip = UIView(frame: appFrame)
     
@@ -52,7 +52,6 @@ public class Toast {
                       y: appFrame.size.height/2 - lbFrame.size.height/2 - 80,
                       width: lbFrame.size.width + dist*2,
                       height: lbFrame.size.height + dist*2)
-    
     tip.frame = appFrame
     switch type {
       case .alert:
@@ -63,7 +62,21 @@ public class Toast {
     }
     
     tip.layer.cornerRadius = 3
-    tip.isUserInteractionEnabled = false
+    
+    if let tr = onTap {
+      tip.isUserInteractionEnabled = true
+      tip.onTapping { _ in
+        tr()
+        tip.hideAnimated(duration: 1.0) {
+          Toast.removeTip(tip)
+        }
+      }
+    }
+    else {
+      tip.isUserInteractionEnabled = false
+    }
+    
+    
     tip.alpha = 0.0
     
     DispatchQueue.main.async {
@@ -73,22 +86,19 @@ public class Toast {
         Log.log("cannot show Toast with type: \(type) and message: \(text), have now targetWindow!")
         return
       }
+      
       window.addSubview(tip)
+      
       Toast.addTip(tip)
       UIView.animate(withDuration: 1.0,
-                     delay: 0,
-                     options: UIView.AnimationOptions.curveEaseInOut,
                      animations: {
                       tip.alpha = 1.0
-      }, completion: { (_) in
-        UIView.animate(withDuration: 1.0,
-                       delay: TimeInterval(duration),
-                       options: UIView.AnimationOptions.curveEaseInOut,
-                       animations: {
-                        tip.alpha = 0.0
-        }, completion: { (_) in
-          Toast.removeTip(tip)
-        })
+      }, completion: { _ in
+        onMainAfter(duration) {
+          tip.hideAnimated(duration: 1.0) {
+            Toast.removeTip(tip)
+          }
+        }
       })
     }
   }
@@ -125,5 +135,4 @@ public class Toast {
     }
     tipToRemove.removeFromSuperview()
   }
-  
 }
