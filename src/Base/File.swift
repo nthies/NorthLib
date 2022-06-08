@@ -341,6 +341,22 @@ open class File: ToString, DoesLog {
     }
     else { return nil }
   }
+  
+  /// Returns true if the current file is newer than 'other'
+  /// (ie. self.mtime > other.mtime).
+  public func isNewer(than other: File) -> Bool {
+    guard exists else { return false }
+    guard other.exists else { return true }
+    return self.mtime > other.mtime
+  }
+  
+  /// Returns true if the current file is older than 'other'
+  /// (ie. self.mtime < other.mtime).
+  public func isOlder(than other: File) -> Bool {
+    guard exists else { return false }
+    guard other.exists else { return false }
+    return self.mtime < other.mtime
+  }
 
   /// Links the file to an existing file 'to' (beeing an absolute path)
   /// (ie. makes self a symbolic link)
@@ -374,6 +390,13 @@ open class File: ToString, DoesLog {
       return Int(nbytes)
     }
     return ret
+  }
+  
+  /// Like copy but copies only if self.mtime > to.mtime.
+  @discardableResult
+  public func copyIfNewer(to: String, isOverwrite: Bool = true) -> Int {
+    if isNewer(than: File(to)) { return copy(to: to) } 
+    return 0
   }
   
   /**
