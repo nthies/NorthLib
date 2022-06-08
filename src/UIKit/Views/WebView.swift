@@ -413,7 +413,8 @@ open class WebView: WKWebView, WKScriptMessageHandler,
     else {
       // debug("Load error after \(errorCount) retries:\n  \(err)")
       onMain(after: 0.1 * 2**errorCount) { [weak self] in
-        self?.reloadFromOrigin()
+        guard let url = self?.originalUrl else { return }
+        self?.load(URLRequest(url: url))
       }
       errorCount += 1
     }

@@ -171,14 +171,6 @@ open class WebViewCollectionVC: PageCollectionVC {
     }
   }
   
-  public var webviewInsets: UIEdgeInsets = .zero {
-    didSet {
-      optionalWebViews.forEach{
-        $0.webView?.scrollView.contentInset = self.webviewInsets
-      }
-    }
-  }
-  
   open override func viewDidLoad() {
     super.viewDidLoad()
     self.view.backgroundColor = UIColor.white
@@ -187,18 +179,17 @@ open class WebViewCollectionVC: PageCollectionVC {
       guard let self = self else { return UIView() }
       if let ov = oview as? OptionalWebView {
         ov.webView?.scrollView.indicatorStyle = self.indicatorStyle
-        ov.webView?.scrollView.contentInset = self.webviewInsets
         ov.url = self.urls[index]
         return ov
       }
       else { 
         let owv = OptionalWebView(url: self.urls[index], baseDir: self.baseDir)
+        owv.webView?.scrollView.scrollIndicatorInsets = UIEdgeInsets(top: 58, left: 0, bottom: 50, right: 0)
         self.initWebView(oView: owv)
         self.optionalWebViews.append(owv)
         if let bridge = self.bridge {
           owv.webView?.addBridge(bridge)
           owv.webView?.scrollView.indicatorStyle = self.indicatorStyle
-          owv.webView?.scrollView.contentInset = self.webviewInsets
           if self.isBridgeLogging { owv.webView?.log2bridge(bridge) }
         }
         return owv
