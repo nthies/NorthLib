@@ -259,7 +259,7 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
                         closure: @escaping(HttpJob)->()) {
     let job = HttpJob(task: task, filename: filename, closure: closure)
     debug("New HTTP Job \(job.tid) created: \(job.url ?? "[undefined URL]")")
-    syncQueue.sync {
+    syncQueue.sync {//crash: simulator 16.6.
       jobs[job.tid] = job
     }
     job.task.resume()
