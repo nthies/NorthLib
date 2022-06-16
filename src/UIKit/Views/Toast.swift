@@ -38,7 +38,7 @@ public class Toast {
                          height: dist*2)
     
     let label = UILabel(frame: lbFrame)
-    label.text = text
+    label.htmlText = text
     label.numberOfLines = 0
     label.textAlignment = .center
     label.textColor = UIColor.white
