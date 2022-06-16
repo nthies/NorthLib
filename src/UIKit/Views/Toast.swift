@@ -20,10 +20,10 @@ public class Toast {
   }
   
   // MARK: Public
-  public static func show(_ text: String, _ type: ToastType = .info, _ window: UIWindow? = nil, minDuration:Double = 2.0, onTap:(()->())? = nil) {
+  public static func show(_ text: String, _ type: ToastType = .info, _ window: UIWindow? = nil, minDuration:Double = 2.0, completion:((Bool)->())? = nil) {
     if !Thread.isMainThread {
       onMainAfter {
-        Self.show(text,type, window, minDuration: minDuration, onTap: onTap)
+        Self.show(text,type, window, minDuration: minDuration, completion: completion)
       }
       return;
     }
@@ -63,10 +63,10 @@ public class Toast {
     
     tip.layer.cornerRadius = 3
     
-    if let tr = onTap {
+    if let tr = completion {
       tip.isUserInteractionEnabled = true
       tip.onTapping { _ in
-        tr()
+        tr(true)
         tip.hideAnimated(duration: 1.0) {
           Toast.removeTip(tip)
         }
@@ -95,6 +95,7 @@ public class Toast {
                       tip.alpha = 1.0
       }, completion: { _ in
         onMainAfter(duration) {
+          completion?(false)
           tip.hideAnimated(duration: 1.0) {
             Toast.removeTip(tip)
           }
