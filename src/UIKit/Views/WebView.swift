@@ -22,6 +22,8 @@ open class JSCall: DoesLog, ToString {
   public var args: [Any]?
   /// WebView object receiving the call
   public weak var webView: WebView?
+  // number of callbacks called
+  private var callbackNumber = 0
   
   /// A new JSCall object is created using a WKScriptMessage
   public init(_ msg: WKScriptMessage) throws {
@@ -39,12 +41,14 @@ open class JSCall: DoesLog, ToString {
   }
   
   /// Call back to JS
-  public func callback(arg: Any) {
-    if let callbackIndex = self.callback {
+  public func callback(arg: Any, isMultiple: Bool = false) {
+    if let callbackIndex = self.callback,
+      isMultiple || callbackNumber == 0 {
       let dict: [String:Any] = ["callback": callbackIndex, "result": arg]
       let callbackJson = dict.json
       let execString = "\(self.objectName).callback(\(callbackJson))"
       webView?.jsexec(execString, closure: nil)
+      callbackNumber += 1
     }
   }
   
@@ -286,7 +290,8 @@ open class WebView: WKWebView, WKScriptMessageHandler,
     self.evaluateJavaScript(expr) {
       [weak self] (retval, error) in
       if let err = error {
-        self?.error("JavaScript error: " + err.localizedDescription)
+        self?.error("JavaScript error: " + err.localizedDescription +
+          "\n  in: '\(expr)'")
       }
       else {
         if let callback = closure {
