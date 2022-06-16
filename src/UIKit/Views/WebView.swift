@@ -22,8 +22,8 @@ open class JSCall: DoesLog, ToString {
   public var args: [Any]?
   /// WebView object receiving the call
   public weak var webView: WebView?
-  // number of callbacks called
-  private var callbackNumber = 0
+  // should callback be called delayed
+  public var delayCallback = false
   
   /// A new JSCall object is created using a WKScriptMessage
   public init(_ msg: WKScriptMessage) throws {
@@ -41,14 +41,13 @@ open class JSCall: DoesLog, ToString {
   }
   
   /// Call back to JS
-  public func callback(arg: Any, isMultiple: Bool = false) {
+  public func callback(arg: Any, isDelayed: Bool = false) {
     if let callbackIndex = self.callback,
-      isMultiple || callbackNumber == 0 {
+      !delayCallback || isDelayed {
       let dict: [String:Any] = ["callback": callbackIndex, "result": arg]
       let callbackJson = dict.json
       let execString = "\(self.objectName).callback(\(callbackJson))"
       webView?.jsexec(execString, closure: nil)
-      callbackNumber += 1
     }
   }
   
