@@ -22,6 +22,8 @@ open class JSCall: DoesLog, ToString {
   public var args: [Any]?
   /// WebView object receiving the call
   public weak var webView: WebView?
+  // should callback be called delayed
+  public var delayCallback = false
   
   /// A new JSCall object is created using a WKScriptMessage
   public init(_ msg: WKScriptMessage) throws {
@@ -39,8 +41,9 @@ open class JSCall: DoesLog, ToString {
   }
   
   /// Call back to JS
-  public func callback(arg: Any) {
-    if let callbackIndex = self.callback {
+  public func callback(arg: Any, isDelayed: Bool = false) {
+    if let callbackIndex = self.callback,
+      !delayCallback || isDelayed {
       let dict: [String:Any] = ["callback": callbackIndex, "result": arg]
       let callbackJson = dict.json
       let execString = "\(self.objectName).callback(\(callbackJson))"
@@ -286,7 +289,8 @@ open class WebView: WKWebView, WKScriptMessageHandler,
     self.evaluateJavaScript(expr) {
       [weak self] (retval, error) in
       if let err = error {
-        self?.error("JavaScript error: " + err.localizedDescription)
+        self?.error("JavaScript error: " + err.localizedDescription +
+          "\n  in: '\(expr)'")
       }
       else {
         if let callback = closure {
