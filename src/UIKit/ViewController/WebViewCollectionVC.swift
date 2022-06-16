@@ -89,8 +89,6 @@ open class WebViewCollectionVC: PageCollectionVC {
   
   /// The bridge (if any) to use for JS interaction
   public var bridge: JSBridgeObject?
-  /// Set to true if JS logging should be bridged
-  public var isBridgeLogging = false
   
   public var currentWebView: WebView? { return currentView?.activeView as? WebView }
   public var indicatorStyle:  UIScrollView.IndicatorStyle = .default
@@ -190,7 +188,6 @@ open class WebViewCollectionVC: PageCollectionVC {
         if let bridge = self.bridge {
           owv.webView?.addBridge(bridge)
           owv.webView?.scrollView.indicatorStyle = self.indicatorStyle
-          if self.isBridgeLogging { owv.webView?.log2bridge(bridge) }
         }
         return owv
       }
