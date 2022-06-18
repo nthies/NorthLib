@@ -162,10 +162,15 @@ open class WebViewCollectionVC: PageCollectionVC {
   
   var optionalWebViews:[OptionalWebView] = []
   
+  /// Overwrite if necessary (eg. to inject JS instead of reloading)
+  open func needsReload(webView: WebView) -> Bool { true }
+  
   open func reloadAllWebViews(){
-    optionalWebViews.forEach{
-      $0.webView?.reload()
-      $0.webView?.scrollView.indicatorStyle = indicatorStyle
+    optionalWebViews.forEach {
+      if let wv = $0.webView {
+        if needsReload(webView: wv) { wv.reload() }
+        wv.scrollView.indicatorStyle = indicatorStyle
+      }
     }
   }
   
