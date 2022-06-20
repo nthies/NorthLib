@@ -255,11 +255,18 @@ open class WebView: WKWebView, WKScriptMessageHandler,
   /// Inject Bridge JS code into WebView
   public func injectBridges() {
     if !isBridgeLoaded {
-      self.jsexec(JSBridgeObject.js)
-      for bridge in bridgeObjects {
-        self.jsexec("var \(bridge.key) = new NativeBridge(\"\(bridge.key)\")")
+      Task {
+        do {
+          try await jsexec(JSBridgeObject.js)
+          for bridge in bridgeObjects {
+            try await jsexec("var \(bridge.key) = new NativeBridge(\"\(bridge.key)\")")
+          }
+          isBridgeLoaded = true
+        }
+        catch {
+          self.error("Can't inject JS Bridges:\n  \(error)")
+        }
       }
-      isBridgeLoaded = true
     }
   }
   
@@ -297,6 +304,24 @@ open class WebView: WKWebView, WKScriptMessageHandler,
           callback(retval)
         }
       }
+    }
+  }
+  
+  /// jsexec executes the passed string as JavaScript expression using
+  /// evaluateJavaScript.
+  @discardableResult
+  public func jsexec(_ expr: String) async throws -> Any? {
+    let ret: Result<Any?,Error> = await withCheckedContinuation { continuation in
+      evaluateJavaScript(expr) { (retval, err) in
+        var result: Result<Any?,Error>
+        if err != nil { result = .failure(err!) }
+        else { result = .success(retval) }
+        continuation.resume(returning: result)
+      }
+    }
+    if let val = ret.value() { return val }
+    else {
+      throw error("JavaScript error: \(ret.error()!)\n  in: '\(expr)'")
     }
   }
   
