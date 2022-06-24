@@ -20,7 +20,8 @@ public class Toast {
   }
   
   // MARK: Public
-  public static func show(_ text: String, _ type: ToastType = .info, _ window: UIWindow? = nil, minDuration:Double = 2.0, completion:((Bool)->())? = nil) {
+  public static func show(_ text: String, _ type: ToastType = .info, _ window: UIWindow? = nil,
+                          minDuration:Double = 2.0, completion:((Bool)->())? = nil) {
     if !Thread.isMainThread {
       onMainAfter {
         Self.show(text,type, window, minDuration: minDuration, completion: completion)
@@ -58,7 +59,7 @@ public class Toast {
         tip.backgroundColor = Toast.sharedInstance.alertBackgroundColor
       case .info: fallthrough
       default:
-        tip.backgroundColor = UIColor(displayP3Red: 0.1, green: 0.1, blue: 0.1, alpha: 0.9)
+        tip.backgroundColor = UIColor(displayP3Red: 0.2, green: 0.2, blue: 0.2, alpha: 0.9)
     }
     
     tip.layer.cornerRadius = 3
@@ -66,8 +67,8 @@ public class Toast {
     if let tr = completion {
       tip.isUserInteractionEnabled = true
       tip.onTapping { _ in
-        tr(true)
         tip.hideAnimated(duration: 1.0) {
+          tr(true)
           Toast.removeTip(tip)
         }
       }
@@ -95,8 +96,8 @@ public class Toast {
                       tip.alpha = 1.0
       }, completion: { _ in
         onMainAfter(duration) {
-          completion?(false)
           tip.hideAnimated(duration: 1.0) {
+            completion?(false)
             Toast.removeTip(tip)
           }
         }
