@@ -234,6 +234,16 @@ open class WebView: WKWebView, WKScriptMessageHandler,
   /// Max. number of ongoing errors
   private let maxErrorCount = 5
   
+  deinit { log("\(self)")}
+  
+  public func release(){
+    self.whenAvailable { _ in }
+    //self.configuration.userContentController.removeAllScriptMessageHandlers()//iOS14
+    for obj in bridgeObjects {
+      self.configuration.userContentController.removeScriptMessageHandler(forName: obj.key)
+    }
+  }
+  
   /// The closures to call when content has been loaded
   @Callback<WebView>
   public var whenLoaded: Callback<WebView>.Store
