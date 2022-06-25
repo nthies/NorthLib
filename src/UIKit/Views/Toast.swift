@@ -64,17 +64,12 @@ public class Toast {
     
     tip.layer.cornerRadius = 3
     
-    if let tr = completion {
-      tip.isUserInteractionEnabled = true
-      tip.onTapping { _ in
-        tip.hideAnimated(duration: 1.0) {
-          tr(true)
-          Toast.removeTip(tip)
-        }
+    tip.isUserInteractionEnabled = true
+    tip.onTapping { _ in
+      tip.hideAnimated(duration: 1.0) {
+        completion?(true)
+        Toast.removeTip(tip)
       }
-    }
-    else {
-      tip.isUserInteractionEnabled = false
     }
     
     
@@ -91,12 +86,12 @@ public class Toast {
       window.addSubview(tip)
       
       Toast.addTip(tip)
-      UIView.animate(withDuration: 1.0,
+      UIView.animate(withDuration: 0.5,
                      animations: {
                       tip.alpha = 1.0
       }, completion: { _ in
         onMainAfter(duration) {
-          tip.hideAnimated(duration: 1.0) {
+          tip.hideAnimated(duration: 0.5) {
             completion?(false)
             Toast.removeTip(tip)
           }
