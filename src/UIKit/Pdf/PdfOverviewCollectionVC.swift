@@ -20,7 +20,7 @@ public class PdfOverviewCollectionVC : UICollectionViewController, CanRotate{
   private let topGradient = VerticalGradientView()
   
   /// Define the menu to display on long touch of a MomentView
-  public var menuItems: [(title: String, icon: String, closure: (String)->())] = [] 
+  public var menuItems: [(title: String, icon: String, closure: (Any?)->())] = [] 
   public var cellLabelFont:UIFont? = UIFont.systemFont(ofSize: 11)
   public var titleCellLabelFont:UIFont? = UIFont.systemFont(ofSize: 11)
   public var cellLabelLinesCount = 0
