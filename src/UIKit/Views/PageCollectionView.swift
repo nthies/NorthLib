@@ -264,7 +264,9 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
     _count -= 1
     if collectionViewInitialized {
       if let i = _index, i >= idx { 
-        if _count > 0 { _index = max(i-1, 0) }
+        if _count > 0 { 
+          if(i != _count-1) { _index = max(i-1, 0) }
+        }
         else { _index = nil }
       }
       let ipath = IndexPath(item: idx, section: 0)
@@ -349,7 +351,7 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
     if let cell = collectionView.dequeueReusableCell(withReuseIdentifier: 
       PageCollectionView.reuseIdent, for: indexPath) as? PageCell {
       let itemIndex = indexPath.item
-      //debug("index \(itemIndex) requested in cell \(address(cell))")
+      debug("index \(itemIndex) requested in cell \(address(cell))")
       cell.update(pcv: self, idx: itemIndex)
       initialize(itemIndex)
       return cell
