@@ -265,13 +265,14 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
     if collectionViewInitialized {
       if let i = _index, i >= idx { 
         if _count > 0 { 
-          if(i != _count-1) { _index = max(i-1, 0) }
+          if(i == _count) { _index = max(i-1, 0) }
         }
         else { _index = nil }
       }
       let ipath = IndexPath(item: idx, section: 0)
       deleteItems(at: [ipath])
       if let i = _index {
+        debug("Item \(idx) deleted, next index: \(i)")
         callOnDisplay(idx: i, oview: optionalView(at: i))
       }
     }
