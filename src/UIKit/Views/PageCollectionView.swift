@@ -272,7 +272,7 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
       let ipath = IndexPath(item: idx, section: 0)
       deleteItems(at: [ipath])
       if let i = _index {
-        debug("Item \(idx) deleted, next index: \(i)")
+//        debug("Item \(idx) deleted, next index: \(i)")
         callOnDisplay(idx: i, oview: optionalView(at: i))
       }
     }
