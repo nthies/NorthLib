@@ -33,6 +33,11 @@ class OptionalWebView: OptionalView, DoesLog {
     if url.isAvailable { webView?.load(url: url.url) }
   }
   
+  func release(){
+    self.$whenAvailable.removeAll()
+    self.webView?.release()
+  }
+  
   fileprivate func urlChanged() {
     if let webView = self.webView { webView.stopLoading() }
     else { createWebView() }
@@ -162,6 +167,8 @@ open class WebViewCollectionVC: PageCollectionVC {
   
   var optionalWebViews:[OptionalWebView] = []
   
+  open func release(){ optionalWebViews.forEach{$0.release()}}
+  
   /// Overwrite if necessary (eg. to inject JS instead of reloading)
   open func needsReload(webView: WebView) -> Bool { true }
   
@@ -203,9 +210,9 @@ open class WebViewCollectionVC: PageCollectionVC {
   
   func initWebView(oView: OptionalWebView) {
     guard let webView = oView.webView else { return }
+    let url = webView.originalUrl?.lastPathComponent ?? "[undefined URL]"
     webView.whenLoadError { [weak self] err in
-      guard let self = self else { return }
-      self.error("WebView Load Error on \"\(webView.originalUrl?.lastPathComponent ?? "[undefined URL]")\":\n  \(err.description)")
+      self?.error("WebView Load Error on \"\(url)\":\n  \(err.description)")
     }
     webView.whenLinkPressed { [weak self] arg in
       self?.$whenLinkPressed.notify(sender: self, content: arg)
