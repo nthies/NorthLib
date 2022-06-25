@@ -260,7 +260,7 @@ extension ZoomedImageView{
 extension ZoomedImageView{
   public func addMenuItem(title: String,
                           icon: String,
-                          closure: @escaping (String) -> ()) {
+                          closure: @escaping (Any?) -> ()) {
     menu.addMenuItem(title: title, icon: icon, closure: closure)
   }
 }
