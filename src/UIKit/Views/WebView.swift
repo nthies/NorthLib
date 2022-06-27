@@ -194,24 +194,27 @@ open class JSBridgeObject: DoesLog {
   
 } // class JSBridgeObject
 
-extension WKNavigationAction: ToString {
-  
-  public func navtype2a() -> String {
-    switch self.navigationType {
-    case .backForward:     return "backForward"
-    case .formResubmitted: return "formResubmitted"
-    case .formSubmitted:   return "formSubmitted"
-    case .linkActivated:   return "linkActivated"
-    case .other:           return "other"
-    case .reload:          return "reload"
-    default:               return "[undefined]"
+
+/// Get String representation of WKNavigationType
+extension WKNavigationType: ToString {
+  public func toString() -> String {
+    switch self {
+      case .linkActivated:   return "linkActivated"
+      case .formSubmitted:   return "formSubmitted"
+      case .backForward:     return "backForward"
+      case .reload:          return "reload"
+      case .formResubmitted: return "formResubmitted"
+      case .other:           return "other"
+      default:               return "undefined"
     }
   }
-  
+}
+
+/// Get String representation of WKNavigationAction
+extension WKNavigationAction: ToString {
   public func toString() -> String {
-    return "WebView Navigation: \(navtype2a())\n  \(request.toString())"
+    "\(navigationType.toString()): \(File.basename(request.description))"
   }
-  
 }
 
 open class WebView: WKWebView, WKScriptMessageHandler,
@@ -408,6 +411,15 @@ open class WebView: WKWebView, WKScriptMessageHandler,
     createPDF { res in closure(res.value()) }
   }
   
+  private func nav2a(webView: WKWebView, nav: WKNavigationAction) -> String {
+    if let wv = webView as? WebView {
+      let url = wv.url?.lastPathComponent ?? "[undefined url]"
+      let orig = wv.originalUrl?.lastPathComponent ?? "[undefined url]"
+      return "\(url) (orig \(orig)): \(nav.toString())"
+    }  
+    else { return "[not a WebView]" }
+  }
+  
   // MARK: - WKScriptMessageHandler protocol
   public func userContentController(_ userContentController: WKUserContentController,
                                     didReceive message: WKScriptMessage) {
@@ -415,16 +427,16 @@ open class WebView: WKWebView, WKScriptMessageHandler,
       call( jsCall)
     }
   }
-
+  
   // MARK: - WKNavigationDelegate protocol
   public func webView(_ webView: WKWebView, decidePolicyFor nav: WKNavigationAction,
                       decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+//    debug(nav2a(webView: webView, nav: nav))
     if let wv = webView as? WebView {
       let from = wv.originalUrl?.absoluteString
       let to = nav.request.description
-      if from != to, to != "about:blank" {
+      if nav.navigationType == .linkActivated, from != to, to != "about:blank" {
         let content = (wv.originalUrl, URL(string: to))
-        debug("link detected")
         if $whenLinkPressed.count > 0 {
           $whenLinkPressed.notify(sender: self, content: content)
           decisionHandler(.cancel)
@@ -450,7 +462,7 @@ open class WebView: WKWebView, WKScriptMessageHandler,
       errorCount = 0
     }
     else {
-      // debug("Load error after \(errorCount) retries:\n  \(err)")
+      debug("Load error after \(errorCount) retries:\n  \(err)")
       onMain(after: 0.1 * 2**errorCount) { [weak self] in
         guard let url = self?.originalUrl else { return }
         self?.load(URLRequest(url: url))

@@ -22,6 +22,8 @@ open class ContextMenu: NSObject, UIContextMenuInteractionDelegate {
   /// prevent multiple appeariance of menu in iOS 12
   /// disabling the long Tap Gesture Recognizer did not worked
   private var open: Bool = false
+  /// The argument to pass to menu item closures
+  public var argument: Any? = nil
   
   /// Initialize with a view on which to define the context menu  
   public init(view: UIView, smoothPreviewForImage: Bool = false) {
@@ -31,7 +33,7 @@ open class ContextMenu: NSObject, UIContextMenuInteractionDelegate {
   }
   
   /// Define the menu to display on long touch
-  public var menu: [(title: String, icon: String, closure: (String)->())] = [] {
+  public var menu: [(title: String, icon: String, closure: (Any?)->())] = [] {
     willSet {
       if menu.count == 0 {
         view.isUserInteractionEnabled = true   
@@ -42,13 +44,15 @@ open class ContextMenu: NSObject, UIContextMenuInteractionDelegate {
   
   /// Add an additional menu item
   public func addMenuItem(title: String, icon: String, 
-                          closure: @escaping (String)->()) {
+                          closure: @escaping (Any?)->()) {
     menu += (title: title, icon: icon, closure: closure)
   }
   
   fileprivate func createContextMenu() -> UIMenu {
     let menuItems = menu.map { m in
-      UIAction(title: m.title, image: UIImage(systemName: m.icon)) {_ in m.closure(m.title) }
+      UIAction(title: m.title, image: UIImage(systemName: m.icon)) { [weak self] _ in 
+        m.closure(self?.argument) 
+      }
     }
     return UIMenu(title: "", children: menuItems)
   }

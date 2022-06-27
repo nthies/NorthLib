@@ -20,7 +20,7 @@ open class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
     whenScrolledHandler = (minRatio, closure)
   }
   
-  public var menuItems: [(title: String, icon: String, closure: (String)->())] = []
+  public var menuItems: [(title: String, icon: String, closure: (Any?)->())] = []
     
   public var pdfModel : PdfModel? {
     didSet{
