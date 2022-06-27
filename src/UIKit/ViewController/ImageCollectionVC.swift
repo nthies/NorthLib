@@ -31,6 +31,8 @@ open class ImageCollectionVC: PageCollectionVC, ImageCollectionVCSpec {
     }
   }
   
+  deinit { debug("\(self)") }
+  
   // MARK: Life Cycle
   open override func viewDidLoad() {
     super.viewDidLoad()
@@ -101,8 +103,8 @@ open class ImageCollectionVC: PageCollectionVC, ImageCollectionVCSpec {
       }
       else {
         let ziv = ZoomedImageView(optionalImage: strongSelf.images[index])
-        ziv.onTap { (oimg, x, y) in
-          strongSelf.zoomedImageViewTapped(oimg, x, y)
+        ziv.onTap { [weak self] (oimg, x, y) in
+          self?.zoomedImageViewTapped(oimg, x, y)
         }
         return ziv
       }

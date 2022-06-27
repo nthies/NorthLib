@@ -55,6 +55,7 @@ extension OptionalImageItem{
 // MARK: - ZoomedImageView
 open class ZoomedImageView: UIView, ZoomedImageViewSpec {
   
+  deinit { debug("\(self)") }
   public static var isDebug = true
   var isDebugLogging: Bool { Self.isDebug }
   
@@ -180,7 +181,8 @@ extension ZoomedImageView{
     setupSpinner()
     setupDoubleTapGestureRecognizer()
     updateImage()
-    orientationClosure?.onOrientationChange(closure: {
+    orientationClosure?.onOrientationChange(closure: {[weak self] in
+      guard let self = self else { return }
       let sv = self.scrollView //local name for shorten usage
       let wasMinZoom = sv.zoomScale == sv.minimumZoomScale
       self.updateMinimumZoomScale()
@@ -447,8 +449,9 @@ extension ZoomedImageView: UIScrollViewDelegate{
       let closure = onHighResImgNeededClosure {
       guard let _optionalImage = optionalImage else { return }
       self.highResImgRequested = true
-      closure(_optionalImage, { success in
-        if success, let img = _optionalImage.image {
+      closure(_optionalImage, { [weak self] success in
+        guard let self = self, let oi = self.optionalImage else { return }
+        if success, let img = oi.image {
           self.updateImagewithHighResImage(img)
         }
         self.highResImgRequested = false

@@ -219,11 +219,11 @@ public class Overlay: NSObject, OverlaySpec, UIGestureRecognizerDelegate {
     overlayView?.addSubview(targetSnapshot)
     shadeView?.alpha = 0.0
     overlayView?.isHidden = false
-    UIView.animate(withDuration: openDuration, animations: {
+    UIView.animate(withDuration: openDuration, animations: {[weak self] in
       if fromBottom {
         targetSnapshot.frame.origin.y = 0
       }
-      self.shadeView?.alpha = CGFloat(self.maxAlpha)
+      self?.shadeView?.alpha = self?.maxAlpha ?? 0.8
       targetSnapshot.alpha = 1.0
     }) { (success) in
       self.overlayVC.view.isHidden = false
