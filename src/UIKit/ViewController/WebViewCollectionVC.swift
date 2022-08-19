@@ -224,10 +224,8 @@ open class WebViewCollectionVC: PageCollectionVC {
     webView.scrollDelegate.whenScrolled { [weak self] ratio in
       self?.$whenScrolled.notify(sender: self, content: ratio)
     }
-    if $atEndOfContent.count > 0 {
-      webView.scrollDelegate.atEndOfContent { [weak self] isAtEnd in
-        self?.$atEndOfContent.notify(sender: self, content: isAtEnd)
-      }
+    webView.scrollDelegate.atEndOfContent { [weak self] isAtEnd in
+      self?.$atEndOfContent.notify(sender: self, content: isAtEnd)
     }
     webView.scrollDelegate.scrollViewWillBeginDragging { [weak self] ratio in
       self?.$scrollViewWillBeginDragging.notify(sender: self, content: ratio)
