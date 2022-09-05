@@ -251,7 +251,9 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
   
   /// Return Job for given task ID
   public func job(_ tid: Int) -> HttpJob? {
-    syncQueue.sync { jobs[tid] }
+    syncQueue.sync { [weak self] in
+      self?.jobs[tid]
+    }
   }
   
   /// Create a new HTTPJob with given task
@@ -259,9 +261,10 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
                         closure: @escaping(HttpJob)->()) {
     let job = HttpJob(task: task, filename: filename, closure: closure)
     debug("New HTTP Job \(job.tid) created: \(job.url ?? "[undefined URL]")")
-    syncQueue.sync {//crash: simulator 16.6. +2
+    syncQueue.sync { [weak self] in
+      //crash: simulator 16.6. +2
       //reproduceable on simulator, not reproduceable on 4 devices
-      jobs[job.tid] = job
+      self?.jobs[job.tid] = job
     }
     job.task.resume()
   }
@@ -269,9 +272,9 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
   /// Close a job with given task ID
   public func closeJob(tid: Int, error: Error? = nil, fileReceived: URL? = nil) {
     var job: HttpJob?
-    syncQueue.sync {
-      job = jobs[tid]
-      jobs[tid] = nil
+    syncQueue.sync {[weak self] in
+      job = self?.jobs[tid]
+      self?.jobs[tid] = nil
     }
     if let job = job {
       debug("Closing HTTP Job \(job.tid): \(job.url ?? "[undefined URL]")")
