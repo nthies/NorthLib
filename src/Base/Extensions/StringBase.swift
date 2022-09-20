@@ -8,6 +8,7 @@
 //
 
 import NorthLowLevel
+import Foundation
 
 /// String conforms to Error and can thus be thrown:
 extension String: Error {}
@@ -73,6 +74,11 @@ public extension String {
     let ret = String(cString: tmp!)
     str_release(&tmp)
     return ret
+  }
+  
+  /// Remove leading and trailing white space
+  var lastPathComponent: String? {
+    return (self as NSString).lastPathComponent
   }
 
   /// Escape XML special characters. Set isAttribute to true if the
