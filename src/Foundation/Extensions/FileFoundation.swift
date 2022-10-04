@@ -63,7 +63,10 @@ extension File {
   public var data: Data { 
     get {
       guard exists && isFile else { return Data() }
-      return try! Data(contentsOf: url) 
+      let data = try? Data(contentsOf: url)
+      if let data = data { return data }
+      log("return data failed prevented crash!")
+      return Data()
     }
     set (data) { try! data.write(to: url) }
   }
