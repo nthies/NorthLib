@@ -435,7 +435,7 @@ open class WebView: WKWebView, WKScriptMessageHandler,
     if let wv = webView as? WebView {
       let from = wv.originalUrl?.absoluteString
       let to = nav.request.description
-      if nav.navigationType == .linkActivated, from != to, to != "about:blank" {
+      if from != to, to != "about:blank" {
         let content = (wv.originalUrl, URL(string: to))
         if $whenLinkPressed.count > 0 {
           $whenLinkPressed.notify(sender: self, content: content)
