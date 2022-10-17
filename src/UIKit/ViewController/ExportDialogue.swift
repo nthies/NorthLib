@@ -15,6 +15,9 @@ open class ExportDialogue<T>: NSObject, UIActivityItemSource {
   var altText: String?
   /// A String describing the item (ie used as Subject in eMails
   var subject: String?
+  /// Link to share
+  var onlineLink: String?
+
   
   public func activityViewControllerPlaceholderItem(_ activityViewController: UIActivityViewController) -> Any {
     if let item = item { return item }
@@ -22,7 +25,10 @@ open class ExportDialogue<T>: NSObject, UIActivityItemSource {
   }
   
   public func activityViewController(_ activityViewController: UIActivityViewController, itemForActivityType activityType: UIActivity.ActivityType?) -> Any? {
-    if let item = item {
+    if activityType == OpenInSafari.OpenInSafariActivity, let link = self.onlineLink {
+      return URL(string: link)
+    }
+    else if let item = item {
       if let activityType = activityType,
          let altText = altText {
         switch activityType {
@@ -43,20 +49,66 @@ open class ExportDialogue<T>: NSObject, UIActivityItemSource {
   }
   
   /// Create export dialogue
-  public func present(item: T, altText: String?, view: UIView? = nil,
+  public func present(item: T, altText: String?, onlineLink: String?, view: UIView? = nil,
                       subject: String? = nil) {
+    let customItem = OpenInSafari(title: "In Safari öffnen",
+                                  image: UIImage(systemName: "safari")  ) { sharedItems in
+      guard let url = sharedItems[0] as? URL else { return }
+      UIApplication.shared.open(url)
+    }
     self.item = item
     self.altText = altText
+    self.onlineLink = onlineLink
     self.subject = subject
     let aController = UIActivityViewController(activityItems: [self],
-      applicationActivities: nil)
+      applicationActivities: [customItem])
     aController.presentAt(view)
   }
   
   /// Create export dialogue
-  public func present(item: T, view: UIView? = nil, subject: String? = nil) {
-    present(item: item, altText: nil, view: view, subject: subject)
+  public func present(item: T, view: UIView? = nil, subject: String? = nil, onlineLink: String? = nil) {
+    present(item: item, altText: nil, onlineLink: onlineLink, view: view, subject: subject)
   }
 
 } // ExportDialogue
 
+fileprivate class OpenInSafari: UIActivity {
+  
+  static var OpenInSafariActivity:UIActivity.ActivityType = UIActivity.ActivityType(rawValue: "de.taz.open.in.safari")
+  
+  var _activityTitle: String
+  var _activityImage: UIImage?
+  var activityItems = [Any]()
+  var action: ([Any]) -> Void
+  
+  init(title: String, image: UIImage?, performAction: @escaping ([Any]) -> Void) {
+    _activityTitle = title
+    _activityImage = image
+    action = performAction
+    super.init()
+  }
+  override var activityTitle: String? {
+    return _activityTitle
+  }
+  
+  override var activityImage: UIImage? {
+    return _activityImage
+  }
+  override var activityType: UIActivity.ActivityType {
+    return OpenInSafari.OpenInSafariActivity
+  }
+  
+  override class var activityCategory: UIActivity.Category {
+    return .action
+  }
+  override func canPerform(withActivityItems activityItems: [Any]) -> Bool {
+    return true
+  }
+  override func prepare(withActivityItems activityItems: [Any]) {
+    self.activityItems = activityItems
+  }
+  override func perform() {
+    action(activityItems)
+    activityDidFinish(true)
+  }
+}
