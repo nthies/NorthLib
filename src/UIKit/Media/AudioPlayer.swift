@@ -265,7 +265,7 @@ open class AudioPlayer: NSObject, DoesLog {
     do {
       super.init()
       try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
-      try AVAudioSession.sharedInstance().setActive(true)
+//      try AVAudioSession.sharedInstance().setActive(true) //Stops Background Audio Playback e.g. from Apple Music on enter Issue
     }
     catch let err {
       error(err)
