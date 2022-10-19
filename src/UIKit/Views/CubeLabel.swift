@@ -77,6 +77,10 @@ open class CrossfadeLabel : CubeLabel {
   private var newestText : String?
   lazy var newLabel = UILabel()
   
+  /// Define text and scroll direction
+  public func setText(_ text: String?)
+    { effectTransition(text: text) }
+  
   private func resetNewLabelForReuse(){
     newLabel.alpha = 0.0
     newLabel.frame = self.frame
@@ -86,7 +90,7 @@ open class CrossfadeLabel : CubeLabel {
     newLabel.backgroundColor != self.backgroundColor ? newLabel.backgroundColor = self.backgroundColor : nil
   }
   
-  override fileprivate func effectTransition( text: String?, isUp: Bool = true ) {
+  fileprivate func effectTransition( text: String?) {
     if (self.superText == nil) || (text == nil) { self.superText = text; return }
     guard !inAnimation else { newestText = text; return }
     inAnimation = true
