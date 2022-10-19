@@ -250,10 +250,13 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
     _count += 1
     if collectionViewInitialized {
       if let i = _index {
-        if i >= idx { _index = i + 1 }
+        if i > idx { _index = i + 1 }
       }
       else { _index = 0 }
       let ipath = IndexPath(item: idx, section: 0)
+      ///**WARNING** Inserting elements before the current index moves the focus to this item
+      ///no matter if flag remembersLastFocusedIndexPath is set
+      ///ensure index set correctly
       insertItems(at: [ipath])
       callOnDisplay(idx: _index!, oview: optionalView(at: _index!))
     }
