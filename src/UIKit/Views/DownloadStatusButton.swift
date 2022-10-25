@@ -10,18 +10,35 @@ import UIKit
 
 public enum DownloadStatusButtonState { case notStarted, process, justDone, done, waiting }
 
-public class DownloadStatusButton : UIButton {
-  private var lastBounds:CGRect?
+public class DownloadStatusButton : UIView {
   
-  private var customImageView = UIImageView()
+  //The Circle a UIView with CALayer and Animation
+  private var progressCircle = ProgressCircleWrapper()
+  //the icon e.g. for a cloud or checkmark icon
+  private var imageView = UIImageView()
+  //the label for text to display
+  public private(set) var label = UILabel()
+  //wrapper for progress circle and image view, just one is displayed at a time
+  public private(set) var statusWrapper = UIView()
   
-  private lazy var progressCircle = ProgressCircle()
+  private let imageSize:CGSize = CGSize(width: 22, height: 22)
+  private var cloudImageSize:CGSize = CGSize(width: 25, height: 25)
+  private var checkmarkImageSize:CGSize = CGSize(width: 22, height: 22)
   
-  private let iconPadding:CGFloat = 3.0
-  private let verticalPadding:CGFloat = 6.0
+  private let circleSize:CGSize = CGSize(width: 22, height: 22)
 
-  public var startHandler : (()->())?
-  public var stopHandler : (()->())?
+  private let circleOffsetY:CGFloat = 0.0
+  private let imageOffsetY:CGFloat = 0.0
+  private var cloudImageOffsetY : CGFloat = 3.0
+  private var checkmarkImageOffsetY : CGFloat = 0.0
+
+  private var cloudImage : UIImage? = UIImage(named: "download")
+  private var checkmarkImage : UIImage? = UIImage(name: "checkmark")
+
+  private var imageOffsetConstraint: NSLayoutConstraint?
+  private var imageSizeWConstraint: NSLayoutConstraint?
+  private var imageSizeHConstraint: NSLayoutConstraint?
+
   public var downloadState: DownloadStatusButtonState = .notStarted {
     didSet{
       if oldValue == downloadState { return }
@@ -45,8 +62,6 @@ public class DownloadStatusButton : UIButton {
           downloadState = .justDone; update()
           onMainAfter(2.0) { [weak self] in
             self?.downloadState = .done
-//            self?.startHandler = nil
-//            self?.stopHandler = nil HAVE NO STOP DOWNLOAD OPTION YET!
             self?.update()
           }
         }
@@ -54,74 +69,109 @@ public class DownloadStatusButton : UIButton {
     }
   }
   
-  public var cloudImage : UIImage? = UIImage(named: "download")
-  public var checkmarkImage : UIImage? = UIImage(name: "checkmark")
-  
-  public var buttonImage : UIImage? {
+  public var image : UIImage? {
     didSet{
-      if oldValue != buttonImage {
-        customImageView.image = buttonImage
+      if oldValue != image {
+        imageView.image = image
+        switch image {
+          case cloudImage:
+            imageOffsetConstraint?.constant = cloudImageOffsetY
+            imageSizeWConstraint?.constant = cloudImageSize.width
+            imageSizeHConstraint?.constant = cloudImageSize.height
+          case checkmarkImage:
+            imageOffsetConstraint?.constant = checkmarkImageOffsetY
+            imageSizeWConstraint?.constant = checkmarkImageSize.width
+            imageSizeHConstraint?.constant = checkmarkImageSize.height
+          default:
+            imageOffsetConstraint?.constant = imageOffsetY
+            imageSizeWConstraint?.constant = imageSize.width
+            imageSizeHConstraint?.constant = imageSize.height
+        }
       }
     }
   }
   
   func update() {
-    let offset = progressCircle.bounds.width + 2*iconPadding
     switch downloadState {
       case .notStarted:
-        buttonImage = cloudImage
+        image = cloudImage
         progressCircle.isHidden = true
-        self.titleEdgeInsets = UIEdgeInsets(top: 0, left: offset,
-                                            bottom: 0, right: offset)
       case .process:
-        buttonImage = nil
+        image = nil
         progressCircle.isHidden = false
-        self.titleEdgeInsets = UIEdgeInsets(top: 0, left: offset,
-                                            bottom: 0, right: offset)
         //Center Label
       case .done:
-        buttonImage = nil
+        image = nil
         progressCircle.isHidden = true
-        self.titleEdgeInsets = .zero
       case .justDone:
-        buttonImage = checkmarkImage
+        image = checkmarkImage
         progressCircle.isHidden = true
-        self.titleEdgeInsets = .zero
       case .waiting:
-        buttonImage = nil
+        image = nil
         progressCircle.isHidden = false
         progressCircle.waiting = true
-        self.titleEdgeInsets = UIEdgeInsets(top: 0, left: offset,
-                                            bottom: 0, right: offset)
     }
-    self.titleLabel?.setNeedsUpdateConstraints()
-    self.titleLabel?.updateConstraintsIfNeeded()
   }
   
   public override func tintColorDidChange() {
     super.tintColorDidChange()
-    self.progressCircle.color = self.tintColor
+    self.progressCircle.tintColor = self.tintColor
   }
   
-  public override func willMove(toSuperview newSuperview: UIView?) {
-    if newSuperview != nil { setup(); update() }
-    super.willMove(toSuperview: newSuperview)
+  public override func layoutSubviews() {
+    super.layoutSubviews()
+    progressCircle.frame = CGRect(origin: .zero, size: statusWrapper.frame.size)
   }
 
   
   func setup() {
-    self.addTarget(self,
-                   action: #selector(self.handleButtonPress),
-                   for: .touchUpInside)
-    self.layer.addSublayer(progressCircle)
-    self.addSubview(customImageView)
-    customImageView.centerY()
-    customImageView.pinWidth(23.8)
-    customImageView.contentMode = .scaleAspectFit
-    pin(customImageView.right, to: self.right)
-  }
+    statusWrapper.addSubview(progressCircle)
+    progressCircle.centerY(dist: circleOffsetY)
+    progressCircle.pinSize(circleSize)
+    pin(progressCircle.right, to: statusWrapper.right, dist: 0.0)
+    
+    statusWrapper.addSubview(imageView)
+    imageOffsetConstraint
+    = imageView.centerY(dist: imageOffsetY)
+    let imageSizeConstraints = imageView.pinSize(imageSize)
+    imageSizeWConstraint
+    = imageSizeConstraints.width
+    imageSizeHConstraint
+    = imageSizeConstraints.height
+    pin(imageView.right, to: statusWrapper.right, dist: 0.0)
+    imageView.contentMode = .scaleAspectFit
+    
+    self.addSubview(statusWrapper)
+    pin(statusWrapper.right, to: self.right, dist: 0.0)
+    pin(statusWrapper.top, to: self.top, dist: 0.0)
+    pin(statusWrapper.bottom, to: self.bottom, dist: 0.0)
+    statusWrapper.pinAspect(ratio: 1.0)
 
-  @objc func handleButtonPress(){
+    self.addSubview(label)
+    label.centerY()
+    pin(label.left, to: self.left, dist: 0.0)
+    
+    pin(label.right, to: statusWrapper.left, dist: -5.0)
+
+    
+    statusWrapper.addBorder(.red)
+    imageView.addBorder(.blue)
+    progressCircle.addBorder(.green)
+    self.addBorder(.yellow)
+    label.addBorder(.systemPink)
+    
+    update()
+    
+    self.onTapping {[weak self] _ in
+      self?.handleButtonPress()
+    }
+  }
+  
+  public var startHandler : (()->())?
+  public var stopHandler : (()->())?
+  
+  
+  func handleButtonPress(){
     if downloadState == .notStarted, let handler = startHandler {
       downloadState = .process
       percent = 0.0
@@ -135,22 +185,44 @@ public class DownloadStatusButton : UIButton {
       handler()
     }
   }
-      
-  private func updateBoundsIfNeeded(){
-    if lastBounds == self.bounds { return }
-    lastBounds = self.bounds
-    
-    let diam = self.bounds.height - 2*verticalPadding
-    let offsetRight = self.bounds.width - diam - iconPadding
-    progressCircle.frame =  CGRect(x: offsetRight,
-                                   y: verticalPadding,
-                                   width: diam,
-                                   height: diam)
+  
+  override public init(frame: CGRect) {
+    super.init(frame: frame)
+    setup()
   }
   
-  public override func layoutSubviews() {
-    updateBoundsIfNeeded()
+  required public init?(coder aDecoder: NSCoder) {
+    super.init(coder: aDecoder)
+    setup()
+  }
+}
+
+class ProgressCircleWrapper: UIView {
+  
+  private var circle = ProgressCircle()
+  
+  var progress: Float {
+    set { circle.progress = newValue }
+    get { circle.progress }
+  }
+  
+  var waiting: Bool {
+    set { circle.waiting = newValue }
+    get { circle.waiting }
+  }
+  
+  public override func tintColorDidChange() {
+    super.tintColorDidChange()
+    self.circle.color = self.tintColor
+  }
+
+  
+  override func layoutSubviews() {
     super.layoutSubviews()
+    if circle.frame.size != self.frame.size {
+      circle.frame = CGRect(origin: .zero, size: self.frame.size)
+      circle.updateComponents()
+    }
   }
 }
 
@@ -252,18 +324,8 @@ class ProgressCircle: CALayer {
   }()
   
   
-  override var frame: CGRect {
-    didSet {
-      updateComponentsIfNeeded()
-    }
-  }
-  
-  private var lastBounds:CGRect?
-  
-  private func updateComponentsIfNeeded(){
-    if lastBounds == self.bounds { return }
+  fileprivate func updateComponents(){
     addSublayerIfNeeded()
-    lastBounds = self.bounds
     //Layout Circle
     let diam = self.bounds.height
     let rect = CGRect(origin: CGPoint(x: -diam/2, y: -diam/2), size: CGSize(width: diam, height: diam))
