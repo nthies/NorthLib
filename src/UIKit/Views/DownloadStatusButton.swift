@@ -11,8 +11,9 @@ import UIKit
 public enum DownloadStatusIndicatorState { case notStarted, process, justDone, done, waiting }
 
 public class DownloadStatusButton : UIView {
-  
+   
   private var indicatorHeight:CGFloat = 25.0
+
   
   public private(set) var indicator = DownloadStatusIndicator()
   public private(set) var label = UILabel()
@@ -20,19 +21,19 @@ public class DownloadStatusButton : UIView {
   func setup() {
     self.addSubview(label)
     self.addSubview(indicator)
+   
+    indicator.pinSize(CGSize(width: indicatorHeight, height: indicatorHeight))
+
     
     pin(label.left, to: self.left)
-    pin(indicator.left, to: label.right, dist: 5.0)
+    pin(indicator.left, to: label.right, dist: 2.0)
     pin(indicator.right, to: self.right)
     
     indicator.centerY()
     label.centerY()
     
-    indicator.pinSize(CGSize(width: indicatorHeight, height: indicatorHeight))
-    
     indicator.addBorder(.green)
-    label.addBorder(.blue)
-    self.addBorder(.red)
+    label.addBorder(.yellow)
   }
   
   override public init(frame: CGRect) {
@@ -63,7 +64,7 @@ public class DownloadStatusIndicator: UIView {
       if let c = circleHeightConstraint { circleWrapper.removeConstraint(c)}
       guard let newValue = circleHeightRatio else { return }
       circleHeightConstraint
-      = circleWrapper.pinHeight(to: self.height, factor: newValue)
+      = circleWrapper.pinHeight(to: self.height, factor: newValue, priority: .defaultLow)
     }
   }
   
@@ -71,11 +72,14 @@ public class DownloadStatusIndicator: UIView {
   public private(set) var imageHeightRatio:CGFloat? {
     didSet {
       if imageHeightRatio == oldValue { return }
-      if circleWrapper.superview != self { return }
+      if imageWrapper.superview != self { return }
       if let c = imageHeightConstraint { imageWrapper.removeConstraint(c)}
       guard let newValue = imageHeightRatio else { return }
+      ///Warning if parents frame changed imageWrapper not updates height automatically
+      ///you need to call imageWrapper.setNeedsUpdateConstraints & .updateConstraintsIfNeeded
+      ///you need to call imageWrapper.setNeedsUpdateConstraints & .updateConstraintsIfNeededaddBo
       imageHeightConstraint
-      = imageWrapper.pinHeight(to: self.height, factor: newValue)
+      = imageWrapper.pinHeight(to: self.height, factor: newValue, priority: .defaultLow)
     }
   }
   
@@ -85,26 +89,19 @@ public class DownloadStatusIndicator: UIView {
   public private(set) var circleOffsetY:CGFloat
   = 0.0 { didSet { circleYConstraint?.constant = circleOffsetY }}
   
-  func updateImageAlignment(){
-    var yOffset:CGFloat
-    switch image {
-      case cloudImage: yOffset = cloudImageOffsetY
-      case checkmarkImage: yOffset = checkmarkImageOffsetY
-      default: yOffset = imageOffsetY;
-    }
-    if imageYConstraint?.constant != yOffset {
-      imageYConstraint?.constant = yOffset
-    }
-  }
   
-  var imageOffsetY:CGFloat = 0.0
-  var cloudImageOffsetY : CGFloat = 3.0
-  var checkmarkImageOffsetY : CGFloat = 0.0
-
-  private var cloudImage : UIImage? = UIImage(named: "download")
+  /// UI Components
+  private lazy var cloudImage : UIImage? = {
+    let img = UIImage(named: "download")?.resizableImage(withCapInsets: .zero)
+//    img?.resizingMode = .stretch
+    return img
+  }()
+  
+//  private var cloudImage : UIImage? = UIImage(named: "download")
+//  private var cloudImage : UIImage? = UIImage(name: "icloud.and.arrow.down")
   private var checkmarkImage : UIImage? = UIImage(name: "checkmark")
 
-  public var downloadState: DownloadStatusIndicatorState = .notStarted {
+  public var downloadState: DownloadStatusIndicatorState? {
     didSet{ if oldValue != downloadState { update()}}}
   
   func update(){
@@ -128,6 +125,9 @@ public class DownloadStatusIndicator: UIView {
         image = nil
         circleWrapper.isHidden = false
         circle.waiting = true
+      default:
+        image = nil
+        circleWrapper.isHidden = true
     }
   }
   
@@ -145,40 +145,74 @@ public class DownloadStatusIndicator: UIView {
     }
   }
   
-  public var image : UIImage? { didSet{ updateImageAlignment() }   }
+  public var image : UIImage? {
+    didSet {
+//      if imageWrapper.image == image { return }
+      imageWrapper.image = image
+      switch image {
+        case cloudImage:
+          imageYConstraint?.constant = 3.0
+          imageHeightRatio = 0.7
+        case checkmarkImage:
+          imageYConstraint?.constant = 0.0
+          imageHeightRatio = 0.6
+        default:
+          imageYConstraint?.constant = 0.0
+          imageHeightRatio = 0.0
+      }
+    }
+  }
     
   public override func tintColorDidChange() {
     super.tintColorDidChange()
     self.circle.color = self.tintColor
   }
   
+  var lastSize: CGSize = .zero
+  
   public override func layoutSubviews() {
     super.layoutSubviews()
+    if self.frame.size == lastSize { return }
+    lastSize = self.frame.size
     circle.frame = CGRect(origin: .zero, size: circleWrapper.frame.size)
+    imageWrapper.doLayout()
+    circleWrapper.setNeedsUpdateConstraints()
+    circleWrapper.updateConstraintsIfNeeded()
   }
   
+  public override func didMoveToSuperview() {
+    super.didMoveToSuperview()
+    
+  }
+  
+  public override var frame: CGRect {
+    didSet {
+      if oldValue == frame { return }
+      print("set ned frame \(self.frame.size)")
+    }
+  }
+  
+  
   func setup() {
+    circleWrapper.layer.addSublayer(circle)
     self.addSubview(circleWrapper)
     self.addSubview(imageWrapper)
-    
-    imageWrapper.contentMode = .scaleAspectFit
+    imageWrapper.contentMode = .scaleToFill
     
     pin(circleWrapper.right, to: self.right)
     pin(imageWrapper.right, to: self.right)
     
-    circleHeightRatio = 1.0
-    imageHeightRatio = 1.0
+    circleWrapper.pinAspect(ratio: 1.0)
+    imageWrapper.pinAspect(ratio: 1.0)
+    
+    circleHeightRatio = 0.8//like cloudImageHeightRatio
         
     circleYConstraint = circleWrapper.centerY(dist: circleOffsetY)
-    imageYConstraint = imageWrapper.centerY(dist: imageOffsetY)
+    imageYConstraint = imageWrapper.centerY()
     
     self.onTapping {[weak self] _ in
       self?.handleButtonPress()
     }
-    
-    circleWrapper.addBorder(.yellow)
-    imageWrapper.addBorder(.orange)
-    
     update()
   }
   
@@ -210,12 +244,28 @@ public class DownloadStatusIndicator: UIView {
     set { circle.waiting = newValue }
     get { circle.waiting }
   }
+  
+  override public init(frame: CGRect) {
+    super.init(frame: frame)
+    setup()
+  }
+  
+  required public init?(coder aDecoder: NSCoder) {
+    super.init(coder: aDecoder)
+    setup()
+  }
 }
 
 class ProgressCircle: CALayer {
+  ///track line width
+  let lw:CGFloat = 2.0
   
+  override var frame: CGRect
+  { didSet { if oldValue != frame { updateComponents() }}}
+    
   public var progress: Float = 0.0 {
     didSet{
+      print("\(progress*100)% \(self.frame) \(progressCircle.frame)")
       waiting = false
       if let tv = self.animation.toValue as? Float, progress - tv < 0.1 { return }
       self.progressCircle.strokeColor = color.cgColor
@@ -224,8 +274,8 @@ class ProgressCircle: CALayer {
         self.animation.fromValue = oldValue
         self.animation.toValue = self.progress
         if self.progressCircle.animation(forKey: "ani1") != nil {
-          self.progressCircle.add(self.animation, forKey: "ani2")
           self.progressCircle.removeAnimation(forKey: "ani1")
+          self.progressCircle.add(self.animation, forKey: "ani2")
         } else {
           self.progressCircle.removeAnimation(forKey: "ani2")
           self.progressCircle.add(self.animation, forKey: "ani1")
@@ -274,9 +324,10 @@ class ProgressCircle: CALayer {
     let circle = CAShapeLayer ()
     circle.strokeColor = UIColor.clear.cgColor
     circle.fillColor = UIColor.clear.cgColor
-    circle.lineWidth = 1.5
+    circle.lineWidth = lw
     circle.strokeStart = 0.0
     circle.strokeEnd = 0.0
+    circle.backgroundColor = UIColor.systemTeal.cgColor
     return circle
   }()
   
@@ -284,7 +335,8 @@ class ProgressCircle: CALayer {
     let circle = CAShapeLayer ()
     circle.strokeColor = trackColor.cgColor
     circle.fillColor = UIColor.clear.cgColor
-    circle.lineWidth = 1.5
+    circle.lineWidth = lw
+    circle.backgroundColor = UIColor.orange.cgColor
     return circle
   }()
   
@@ -312,19 +364,26 @@ class ProgressCircle: CALayer {
   
   fileprivate func updateComponents(){
     addSublayerIfNeeded()
+    //stroke width
+    let s = lw/2
     //Layout Circle
     let diam = self.bounds.height
-    let rect = CGRect(origin: CGPoint(x: -diam/2, y: -diam/2), size: CGSize(width: diam, height: diam))
-    let circlePath = UIBezierPath(roundedRect: rect, cornerRadius: diam/2)
-    progressTrackCircle.path = circlePath.cgPath
-    progressTrackCircle.position = CGPoint(x: diam/2, y: diam/2)
-    progressCircle.path = circlePath.cgPath
-    progressCircle.position = CGPoint(x: diam/2, y: diam/2)
+    
+    let rect = CGRect(origin: CGPoint(x: -diam/2+s, y: -diam/2+s),
+                      size: CGSize(width: diam-lw, height: diam-lw))
+    
+    let path = UIBezierPath(roundedRect: rect, cornerRadius: diam/2).cgPath
+    let pos = CGPoint(x: diam/2, y: diam/2)
+    progressCircle.backgroundColor = UIColor.blue.withAlphaComponent(0.4).cgColor
+    progressTrackCircle.path = path
+    progressTrackCircle.position = pos
+    progressCircle.path = path
+    progressCircle.position = pos
     
     //Layout square in Circle
     let squareSize:CGFloat = self.bounds.height/5
-    stopIcon.frame = CGRect(x: self.bounds.width - diam/2 - squareSize/2,
-                            y: diam/2 - squareSize/2,
+    stopIcon.frame = CGRect(x: (diam - squareSize)/2,
+                            y: (diam - squareSize)/2,
                             width: squareSize,
                             height: squareSize)
     stopIcon.backgroundColor = trackColor.cgColor
