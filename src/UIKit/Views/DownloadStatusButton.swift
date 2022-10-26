@@ -31,9 +31,6 @@ public class DownloadStatusButton : UIView {
     
     indicator.centerY()
     label.centerY()
-    
-//    indicator.addBorder(.green)
-    label.addBorder(.yellow)
   }
   
   override public init(frame: CGRect) {
@@ -61,63 +58,34 @@ public class DownloadStatusIndicator: UIView {
     didSet {
       if circleHeightRatio == oldValue { return }
       if circleWrapper.superview != self { return }
-      if let c = circleHeightConstraint { circleWrapper.removeConstraint(c)}
+      circleHeightConstraint?.isActive = false
+//      if let c = circleHeightConstraint { circleWrapper.removeConstraint(c)}
       guard let newValue = circleHeightRatio else { return }
       circleHeightConstraint
-      = circleWrapper.pinHeight(to: self.height, factor: newValue, priority: .defaultLow)
+      = circleWrapper.pinHeight(to: self.height, factor: newValue)
     }
   }
   
-//  private var imageHeightConstraint: NSLayoutConstraint?
-//  public private(set) var imageHeightRatio:CGFloat? {
-//    didSet {
-//      if imageHeightRatio == oldValue { return }
-//      if imageWrapper.superview != self { return }
-//      if let c = imageHeightConstraint { imageWrapper.removeConstraint(c)}
-//      guard let newValue = imageHeightRatio else { return }
-//      ///Warning if parents frame changed imageWrapper not updates height automatically
-//      ///you need to call imageWrapper.setNeedsUpdateConstraints & .updateConstraintsIfNeeded
-//      ///you need to call imageWrapper.setNeedsUpdateConstraints & .updateConstraintsIfNeededaddBo
-//      imageHeightConstraint
-//      = imageWrapper.pinHeight(to: self.height, factor: newValue, priority: .defaultLow)
-//    }
-//  }
+  private var imageHeightConstraint: NSLayoutConstraint?
+  public private(set) var imageHeightRatio:CGFloat? {
+    didSet {
+      if imageHeightRatio == oldValue { return }
+      if imageWrapper.superview != self { return }
+      imageHeightConstraint?.isActive = false
+//      if let c = imageHeightConstraint { imageWrapper.removeConstraint(c)}//didnotwork!
+      guard let newValue = imageHeightRatio else { return }
+      imageHeightConstraint
+      = imageWrapper.pinHeight(to: self.height, factor: newValue)
+    }
+  }
   
   private var circleYConstraint: NSLayoutConstraint?
   private var imageYConstraint: NSLayoutConstraint?
 
   public private(set) var circleOffsetY:CGFloat
   = 0.0 { didSet { circleYConstraint?.constant = circleOffsetY }}
-  
-  
-  /// UI Components
-//  private lazy var cloudImage : UIImage? = {
-//    let img = UIImage(named: "download")?.resizableImage(withCapInsets: .zero)
-////    img?.resizingMode = .stretch
-//    return img
-//  }()
-  
-  private var cloudImage : UIImage? = UIImage(named: "download")
 
-  
-  /// Asset catalog image ignores contentMode (scaleAspectFit) under certain conditions
-  /// fix this by convert CIImage to CGImage
-  /// @see: https://stackoverflow.com/a/48039082
-  private lazy var altCloudImage : UIImage? = {
-    let context = CIContext(options: nil)
-    if let cloudImage = cloudImage,
-       let ciImg = cloudImage.ciImage,
-       let cgImage = context.createCGImage(ciImg, from: ciImg.extent)
-    {
-      return UIImage(cgImage: cgImage)
-    }
-    return nil
-  }()
-  
- 
-  
-  
-//  private var cloudImage : UIImage? = UIImage(name: "icloud.and.arrow.down")
+  private var cloudImage : UIImage? = UIImage(named: "download")
   private var checkmarkImage : UIImage? = UIImage(name: "checkmark")
 
   public var downloadState: DownloadStatusIndicatorState? {
@@ -127,7 +95,6 @@ public class DownloadStatusIndicator: UIView {
     switch downloadState {
       case .notStarted:
         percent = 0.0
-//        image = altCloudImage ?? cloudImage
         image = cloudImage
         circleWrapper.isHidden = true
       case .process:
@@ -167,22 +134,18 @@ public class DownloadStatusIndicator: UIView {
   
   public var image : UIImage? {
     didSet {
-////      if imageWrapper.image == image { return }
+      if imageWrapper.image == image { return }
       imageWrapper.image = image
-      imageWrapper.contentMode = .scaleAspectFit
-      imageWrapper.setNeedsUpdateConstraints()
-      imageWrapper.updateConstraintsIfNeeded()
-//      switch image {
-//        case cloudImage:
-//          imageYConstraint?.constant = 3.0
-//          imageHeightRatio = 0.7
-//        case checkmarkImage:
-//          imageYConstraint?.constant = 0.0
-//          imageHeightRatio = 0.6
-//        default:
-//          imageYConstraint?.constant = 0.0
-//          imageHeightRatio = 1.0
-//      }
+      switch image {
+        case cloudImage:
+          imageYConstraint?.constant = 3.2
+          imageHeightRatio = 0.78
+        case checkmarkImage:
+          imageYConstraint?.constant = 0.0
+          imageHeightRatio = 0.7
+        default:
+          break;
+      }
     }
   }
     
@@ -220,19 +183,9 @@ public class DownloadStatusIndicator: UIView {
     circleWrapper.layer.addSublayer(circle)
     self.addSubview(circleWrapper)
     self.addSubview(imageWrapper)
-    imageWrapper.addBorder(.blue)
-    
-    imageWrapper.pinHeight(to: self.height)
-    
-    
-
-//    imageWrapper.setContentCompressionResistancePriority(UILayoutPriority(rawValue: 252), for: .vertical)
-//    imageWrapper.setContentCompressionResistancePriority(UILayoutPriority(rawValue: 253), for: .horizontal)
-//    imageWrapper.setContentHuggingPriority(UILayoutPriority(rawValue: 251), for: .vertical)
-//    imageWrapper.setContentHuggingPriority(UILayoutPriority(rawValue: 250), for: .horizontal)
     
     pin(circleWrapper.right, to: self.right)
-//    pin(imageWrapper.right, to: self.right)
+    pin(imageWrapper.right, to: self.right)
     
     circleWrapper.pinAspect(ratio: 1.0)
     imageWrapper.pinAspect(ratio: 1.0)
@@ -245,7 +198,7 @@ public class DownloadStatusIndicator: UIView {
     self.onTapping {[weak self] _ in
       self?.handleButtonPress()
     }
-    
+
     imageWrapper.translatesAutoresizingMaskIntoConstraints = false
     update()
   }
@@ -292,7 +245,7 @@ public class DownloadStatusIndicator: UIView {
 
 class ProgressCircle: CALayer {
   ///track line width
-  let lw:CGFloat = 2.0
+  let lw:CGFloat = 1.4
   
   override var frame: CGRect
   { didSet { if oldValue != frame { updateComponents() }}}
