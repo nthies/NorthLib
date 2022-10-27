@@ -72,7 +72,6 @@ public class DownloadStatusIndicator: UIView {
       if imageHeightRatio == oldValue { return }
       if imageWrapper.superview != self { return }
       imageHeightConstraint?.isActive = false
-//      if let c = imageHeightConstraint { imageWrapper.removeConstraint(c)}//didnotwork!
       guard let newValue = imageHeightRatio else { return }
       imageHeightConstraint
       = imageWrapper.pinHeight(to: self.height, factor: newValue)
@@ -100,10 +99,9 @@ public class DownloadStatusIndicator: UIView {
       case .process:
         image = nil
         circleWrapper.isHidden = false
-        //Center Label
       case .done:
         percent = 1.0
-        image = UIImage()
+        image = nil
         circleWrapper.isHidden = true
       case .justDone:
         image = checkmarkImage
@@ -196,33 +194,11 @@ public class DownloadStatusIndicator: UIView {
         
     circleYConstraint = circleWrapper.centerY(dist: circleOffsetY)
     imageYConstraint = imageWrapper.centerY()
-    
-    self.onTapping {[weak self] _ in
-      self?.handleButtonPress()
-    }
 
     imageWrapper.translatesAutoresizingMaskIntoConstraints = false
     update()
   }
   
-  public var startHandler : (()->())?
-  public var stopHandler : (()->())?
-  
-  
-  func handleButtonPress(){
-    if downloadState == .notStarted, let handler = startHandler {
-      downloadState = .process
-      percent = 0.0
-      handler()
-    }
-    else if downloadState == .process,
-            percent < 1.0,
-            let handler = stopHandler {
-      downloadState = .notStarted
-      percent = 0.0
-      handler()
-    }
-  }
   
   var progress: Float {
     set { circle.progress = newValue }
@@ -254,7 +230,6 @@ class ProgressCircle: CALayer {
     
   public var progress: Float = 0.0 {
     didSet{
-      print("\(progress*100)% \(self.frame) \(progressCircle.frame)")
       waiting = false
       if let tv = self.animation.toValue as? Float, progress - tv < 0.1 { return }
       self.progressCircle.strokeColor = color.cgColor
