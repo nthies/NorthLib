@@ -83,7 +83,7 @@ public class DownloadStatusIndicator: UIView {
   private var imageYConstraint: NSLayoutConstraint?
 
   public private(set) var circleOffsetY:CGFloat
-  = 0.0 { didSet { circleYConstraint?.constant = circleOffsetY }}
+  = 1.0 { didSet { circleYConstraint?.constant = circleOffsetY }}
 
   private var cloudImage : UIImage? = UIImage(named: "download")
   private var checkmarkImage : UIImage? = UIImage(name: "checkmark")
@@ -184,13 +184,15 @@ public class DownloadStatusIndicator: UIView {
     self.addSubview(circleWrapper)
     self.addSubview(imageWrapper)
     
+    imageWrapper.contentMode = .scaleAspectFit
+    
     pin(circleWrapper.right, to: self.right)
     pin(imageWrapper.right, to: self.right)
     
     circleWrapper.pinAspect(ratio: 1.0)
     imageWrapper.pinAspect(ratio: 1.0)
     
-    circleHeightRatio = 0.8//like cloudImageHeightRatio
+    circleHeightRatio = 0.75
         
     circleYConstraint = circleWrapper.centerY(dist: circleOffsetY)
     imageYConstraint = imageWrapper.centerY()
@@ -245,7 +247,7 @@ public class DownloadStatusIndicator: UIView {
 
 class ProgressCircle: CALayer {
   ///track line width
-  let lw:CGFloat = 1.4
+  let lw:CGFloat = 1.3
   
   override var frame: CGRect
   { didSet { if oldValue != frame { updateComponents() }}}
