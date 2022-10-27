@@ -24,9 +24,10 @@ public class DownloadStatusButton : UIView {
    
     indicator.pinSize(CGSize(width: indicatorHeight, height: indicatorHeight))
 
-    
+    label.numberOfLines = 1
+
     pin(label.left, to: self.left)
-    pin(indicator.left, to: label.right, dist: 2.0)
+    pin(indicator.left, to: label.right, dist: 1.0, priority: .fittingSizeLevel)
     pin(indicator.right, to: self.right)
     
     indicator.centerY()
