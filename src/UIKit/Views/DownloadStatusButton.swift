@@ -195,8 +195,6 @@ public class DownloadStatusIndicator: UIView {
         
     circleYConstraint = circleWrapper.centerY(dist: circleOffsetY)
     imageYConstraint = imageWrapper.centerY()
-
-    imageWrapper.translatesAutoresizingMaskIntoConstraints = false
     update()
   }
   
