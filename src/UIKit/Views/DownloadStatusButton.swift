@@ -14,9 +14,16 @@ public class DownloadStatusButton : UIView {
    
   private var indicatorHeight:CGFloat = 25.0
 
-  
   public private(set) var indicator = DownloadStatusIndicator()
   public private(set) var label = UILabel()
+  
+  public var color: UIColor? {
+    didSet{
+      guard let color = color else { return }
+      indicator.color = color
+      label.textColor = color
+    }
+  }
   
   func setup() {
     self.addSubview(label)
@@ -134,7 +141,7 @@ public class DownloadStatusIndicator: UIView {
   public var image : UIImage? {
     didSet {
       if imageWrapper.image == image { return }
-      imageWrapper.image = image
+      imageWrapper.image = image?.withTintColor(color, renderingMode: .alwaysOriginal)
       switch image {
         case cloudImage:
           imageYConstraint?.constant = 3.2
@@ -147,11 +154,18 @@ public class DownloadStatusIndicator: UIView {
       }
     }
   }
-    
-  public override func tintColorDidChange() {
-    super.tintColorDidChange()
-    self.circle.color = self.tintColor
+  
+  public var color: UIColor = .red {
+    didSet{
+      circle.color = color
+      ///not 100% same color even in renderingMode alwaysTemplate
+      /// and setup with:
+      ///    - imageWrapper.tintAdjustmentMode = .normal
+      ///    - self.tintColor = .clear
+      //imageWrapper.tintColor = color
+    }
   }
+    
   
   var lastSize: CGSize = .zero
   
@@ -337,7 +351,6 @@ class ProgressCircle: CALayer {
     
     let path = UIBezierPath(roundedRect: rect, cornerRadius: diam/2).cgPath
     let pos = CGPoint(x: diam/2, y: diam/2)
-    progressCircle.backgroundColor = UIColor.blue.withAlphaComponent(0.4).cgColor
     progressTrackCircle.path = path
     progressTrackCircle.position = pos
     progressCircle.path = path
