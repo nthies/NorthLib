@@ -60,8 +60,9 @@ open class ExportDialogue<T>: NSObject, UIActivityItemSource {
     self.altText = altText
     self.onlineLink = onlineLink
     self.subject = subject
+    let additionalItems = onlineLink != nil ? [customItem] : []
     let aController = UIActivityViewController(activityItems: [self],
-      applicationActivities: [customItem])
+      applicationActivities: additionalItems)
     aController.presentAt(view)
   }
   
