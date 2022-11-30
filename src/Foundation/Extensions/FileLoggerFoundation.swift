@@ -14,16 +14,13 @@ extension Log.FileLogger {
     if let fn = filename { return URL(fileURLWithPath: fn) }
     else { return nil }
   }
-  
-  /// Default logfile in cache directory
-  public static var defaultLogfile: String = "\(Dir.cachePath)/default.log"
+
   
   /// Logfile from last execution
-  public static var lastLogfile: String = defaultLogfile + ".old"
+  public static var lastLogfile: String = tmpLogfile + ".old"
   
   /// FileLogger logging to cache directory
   public static var cached: Log.FileLogger =
-    Log.FileLogger(Log.FileLogger.defaultLogfile)
-  
+    Log.FileLogger(Log.FileLogger.tmpLogfile)
 
 } // extension Log.FileLogger
