@@ -240,7 +240,9 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
   
   // Number of HttpSession incarnations
   fileprivate static var incarnations: Int = 0
-  fileprivate lazy var syncQueue: DispatchQueue = {
+  //https://stackoverflow.com/questions/72979632/exc-bad-access-kern-invalid-address-crash-in-addoperation-of-operationqueue
+  // it's not a good idea to make it lazy, since it's not thread safe and may crash if 2 threads initialize it at the same time.
+  fileprivate var syncQueue: DispatchQueue = {
     HttpSession.incarnations += 1
     let qname = "HttpSession.\(HttpSession.incarnations)"
     return DispatchQueue(label: qname)
