@@ -262,7 +262,7 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
   public func createJob(task: URLSessionTask, filename: String? = nil,
                         closure: @escaping(HttpJob)->()) {
     let job = HttpJob(task: task, filename: filename, closure: closure)
-    debug("New HTTP Job \(job.tid) created: \(job.url ?? "[undefined URL]")")
+    log("New HTTP Job \(job.tid) created: \(job.url ?? "[undefined URL]")")
     syncQueue.sync { [weak self] in
       //crash: simulator 16.6. +2
       //reproduceable on simulator, not reproduceable on 4 devices
@@ -447,7 +447,7 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
   // Is called when all tasks are finished or cancelled
   public func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
     logIf(error)
-    debug("Session finished or cancelled")
+    log("Warning: Session finished or cancelled")
   }
   
   // Background processing complete - call background completion handler
