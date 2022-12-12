@@ -448,6 +448,7 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
   public func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
     logIf(error)
     log("Warning: Session finished or cancelled")
+    _session = nil//should prevent: Task created in a session that has been invalidated
   }
   
   // Background processing complete - call background completion handler
