@@ -5,8 +5,6 @@
 //  Created by Ringo Müller on 08.02.21.
 //  Copyright © 2021 Norbert Thies. All rights reserved.
 //
-/**
-
 import Foundation
 import AVFoundation
 import MediaPlayer
@@ -23,13 +21,14 @@ public class SpeechSynthesizer : AVSpeechSynthesizer {
   var currentArticleItems : [SpeechData] = []
   var nextIndex : Int = 0
   var lastArticleItems : [SpeechData] = []
-  var speechUtteranceRate:Float = 0.52 //default:0.5 min:0.0 max: 1.0
+  var speechUtteranceRate:Float = 0.50 //default:0.5 min:0.0 max: 1.0
   
   var canSpeakNext : Bool = true
   var partStarted:Date = Date()
   
   public static let sharedInstance = SpeechSynthesizer()
-  private let germanVoice = AVSpeechSynthesisVoice(language: "de-DE")
+  #warning("Use the right Lang!")
+  private var germanVoice = AVSpeechSynthesisVoice(language: "de-DE")
   fileprivate var finishedClosure:(()->())?
   private var lastSpeechUtterance:AVSpeechUtterance?
   private let commandCenter = MPRemoteCommandCenter.shared()
@@ -54,6 +53,7 @@ public class SpeechSynthesizer : AVSpeechSynthesizer {
   private override init(){
     super.init()
     self.delegate = self
+    setupVoice()
     setupAVAudioSession()
     setupNowPlayingInfo()
     setupCommandCenter()
@@ -70,7 +70,7 @@ public class SpeechSynthesizer : AVSpeechSynthesizer {
     
     for pieceOfText in textParagraphs {
       parts.append((text: pieceOfText,
-                    albumTitle:albumTitle,
+                          albumTitle:albumTitle,
                     trackTitle:trackTitle))
     }
     
@@ -108,7 +108,7 @@ public class SpeechSynthesizer : AVSpeechSynthesizer {
     
     let speechUtterance = AVSpeechUtterance(string: itm.text)
     speechUtterance.voice = germanVoice
-    speechUtterance.postUtteranceDelay = 0.005
+    speechUtterance.postUtteranceDelay = 0.015
     speechUtterance.rate = speechUtteranceRate
     updatePlayInfo(itm)
     updateCommandCenter()
@@ -166,6 +166,32 @@ public class SpeechSynthesizer : AVSpeechSynthesizer {
       return UIImage()
     }
     nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
+  }
+  
+  
+  func setupVoice(){
+    if let name = germanVoice?.name, name.contains("(Erweitert)"){
+      Toast.show("Benutze \(name) zur TTS Sprachausgabe.")
+      return
+    }
+    
+    for voice in AVSpeechSynthesisVoice.speechVoices() {
+      if voice.language != "de-DE" {
+        //print("Skip: \(voice.language)")
+        continue
+      }
+      
+      if voice.name.contains("(Erweitert)"){
+        return
+      }
+      
+      if voice.name.contains("(Erweitert)"){
+        Toast.show("Benutze \(voice.name) zur TTS Sprachausgabe.")
+        germanVoice = voice
+        return
+      }
+    }
+    Toast.show("Benutze \(germanVoice?.name ?? "") zur TTS Sprachausgabe.", .alert)
   }
   
   func setupAVAudioSession(){
@@ -260,4 +286,3 @@ extension WKWebView {
                             })
   }
 }
-*/
