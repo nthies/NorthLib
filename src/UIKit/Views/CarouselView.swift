@@ -14,7 +14,7 @@ import UIKit
 open class CarouselFlowLayout: UICollectionViewFlowLayout, DoesLog {
   
   /// The maximum scale to use when increasing the size of the central cell
-  var maxScale: CGFloat = 1.3
+  public internal(set) var maxScale: CGFloat = 1.3
 
   /// Increase the requested cell up to maxScale
   private func scaleAttribute(_ attr: UICollectionViewLayoutAttributes) -> UICollectionViewLayoutAttributes {
