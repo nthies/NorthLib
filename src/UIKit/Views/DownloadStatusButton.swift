@@ -102,6 +102,7 @@ public class DownloadStatusIndicator: UIView {
     switch downloadState {
       case .notStarted:
         percent = 0.0
+        circle.reset()
         image = cloudImage
         circleWrapper.isHidden = true
       case .process:
@@ -165,7 +166,7 @@ public class DownloadStatusIndicator: UIView {
       //imageWrapper.tintColor = color
     }
   }
-    
+  
   
   var lastSize: CGSize = .zero
   
@@ -338,6 +339,11 @@ class ProgressCircle: CALayer {
     return rotation
   }()
   
+  fileprivate func reset(){
+    self.progressCircle.removeAnimation(forKey: "ani1")
+    self.progressCircle.removeAnimation(forKey: "ani2")
+    progress = 0.0
+  }
   
   fileprivate func updateComponents(){
     addSublayerIfNeeded()
