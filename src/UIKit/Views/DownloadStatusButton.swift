@@ -132,7 +132,9 @@ public class DownloadStatusIndicator: UIView {
         if percent == 1.0 {
           downloadState = .justDone
           onMainAfter(2.0) { [weak self] in
-            self?.downloadState = .done
+            if self?.downloadState == .justDone {
+              self?.downloadState = .done
+            }
           }
         }
       }
