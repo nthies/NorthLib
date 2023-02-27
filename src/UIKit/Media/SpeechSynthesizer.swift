@@ -5,7 +5,6 @@
 //  Created by Ringo Müller on 08.02.21.
 //  Copyright © 2021 Norbert Thies. All rights reserved.
 //
-/**
 
 import Foundation
 import AVFoundation
@@ -260,4 +259,3 @@ extension WKWebView {
                             })
   }
 }
-*/
