@@ -202,7 +202,7 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
   
   /// Perform debug logging?
   public static var isDebug: Bool = true
-  public var isDebugLogging: Bool { return HttpSession.isDebug }
+  open var isDebugLogging: Bool { return HttpSession.isDebug }
   
   public var isDownloading: Bool { return !jobs.isEmpty }
 
@@ -334,6 +334,13 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
       name: UIApplication.willResignActiveNotification, object: nil)
     nc.addObserver(self, selector: #selector(onTermination), 
       name: UIApplication.willTerminateNotification, object: nil)
+  }
+  
+  /// Cancel outstanding jobs and close URLSession
+  public func release() {
+    _session?.invalidateAndCancel()
+    _session = nil
+    _config = nil
   }
   
   // Factory method producing a background session
@@ -723,14 +730,18 @@ open class HttpLoader: ToString, DoesLog {
           self.totalSize += file.size
         }
       }
-      onMain { self.progressClosure?(self, 0, self.totalSize) }
+      onMain { [weak self] in
+        guard let self else { return }
+        self.progressClosure?(self, 0, self.totalSize) 
+      }
       for file in toDownload {
         self.downloadNext(file: file)
         let dto = self.semaphore.wait(timeout: .now() + 5)
         if dto == .timedOut { self.debug("download timeout") }
       }
       onMain { [weak self] in
-        self?.closure?(self!)
+        guard let self else { return }
+        self.closure?(self)
       }
     }
   }
