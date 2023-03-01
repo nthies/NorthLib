@@ -10,7 +10,7 @@ import UIKit
 
 public enum DownloadStatusIndicatorState { case notStarted, process, justDone, done, waiting }
 
-public class DownloadStatusButton : UIView {
+open class DownloadStatusButton : UIView {
    
   private var indicatorHeight:CGFloat = 25.0
 
@@ -25,7 +25,7 @@ public class DownloadStatusButton : UIView {
     }
   }
   
-  func setup() {
+  open func setup() {
     self.addSubview(label)
     self.addSubview(indicator)
    
