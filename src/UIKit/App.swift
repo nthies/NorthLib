@@ -134,8 +134,8 @@ open class StoreApp {
   }
   
   /// Open app store with app description
-  public func openInAppStore() {
-    UIApplication.shared.open(url)
+  public func openInAppStore(closure: (()->())? = nil) {
+    UIApplication.shared.open(url) { _ in closure?() }
   }
   
   /// Retrieve app store data of app with given bundle identifier

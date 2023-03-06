@@ -136,7 +136,19 @@ public extension UIViewController {
   
   /// The App's key window
   static var keyWindow: UIWindow? {
-    UIApplication.shared.windows.filter {$0.isKeyWindow}.first
+    if #available(iOS 13, *) {
+      var last: UIWindow? = nil
+      for scene in UIApplication.shared.connectedScenes {
+        if let windowScene = scene as? UIWindowScene {
+          for window in windowScene.windows {
+            if window.isKeyWindow { return window }
+            else { last = window }
+          }
+        }
+      }
+      return last
+    }
+    else { return UIApplication.shared.keyWindow }
   } 
   
   /// The App's root view controller
