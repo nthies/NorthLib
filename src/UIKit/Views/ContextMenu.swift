@@ -50,7 +50,8 @@ open class ContextMenu: NSObject, UIContextMenuInteractionDelegate {
   
   fileprivate func createContextMenu() -> UIMenu {
     let menuItems = menu.map { m in
-      UIAction(title: m.title, image: UIImage(systemName: m.icon)) { [weak self] _ in 
+      UIAction(title: m.title,
+               image: UIImage(name: m.icon) ?? UIImage(named: m.icon)) { [weak self] _ in
         m.closure(self?.argument) 
       }
     }
