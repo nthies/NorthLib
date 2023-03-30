@@ -640,6 +640,10 @@ open class ButtonedWebView: UIView {
   public var buttonMargin: CGFloat = 8 { didSet { adaptLayoutConstraints() } }
   private var isButtonVisible = false
   
+  public func showBottomButtonInitially(){
+    isButtonVisible = true
+  }
+  
   private var buttonBottomConstraint: NSLayoutConstraint?
   private var webViewBottomConstraint: NSLayoutConstraint?
   

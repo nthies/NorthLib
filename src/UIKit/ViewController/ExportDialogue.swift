@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import LinkPresentation
 
 open class ExportDialogue<T>: NSObject, UIActivityItemSource {
 
@@ -15,6 +16,8 @@ open class ExportDialogue<T>: NSObject, UIActivityItemSource {
   var altText: String?
   /// A String describing the item (ie used as Subject in eMails
   var subject: String?
+  /// A Image for share dialogue
+  var image: UIImage?
   /// Link to share
   var onlineLink: String?
 
@@ -23,6 +26,31 @@ open class ExportDialogue<T>: NSObject, UIActivityItemSource {
     if let item = item { return item }
     else { return "Error" }
   }
+  
+  public func activityViewControllerLinkMetadata(_ activityViewController: UIActivityViewController) -> LPLinkMetadata? {
+    let metadata = LPLinkMetadata()
+    metadata.title = subject
+    
+    if let img = image {
+      metadata.iconProvider = NSItemProvider(object: img)
+    }
+    
+    if let s = item as? String {
+      metadata.originalURL = URL(string: s)
+    }
+    else if let onlineLink = onlineLink {
+      metadata.originalURL = URL(string: onlineLink)
+    }
+    else if let altText = altText {
+      metadata.originalURL = URL(fileURLWithPath: altText)
+    }
+    else {
+      metadata.originalURL = URL(string: "Dokument teilen")
+    }
+    
+    return metadata
+  }
+  
   
   public func activityViewController(_ activityViewController: UIActivityViewController, itemForActivityType activityType: UIActivity.ActivityType?) -> Any? {
     if activityType == OpenInSafari.OpenInSafariActivity, let link = self.onlineLink {
@@ -50,7 +78,7 @@ open class ExportDialogue<T>: NSObject, UIActivityItemSource {
   
   /// Create export dialogue
   public func present(item: T, altText: String?, onlineLink: String?, view: UIView? = nil,
-                      subject: String? = nil) {
+                      subject: String? = nil, image: UIImage? = nil) {
     let customItem = OpenInSafari(title: "In Safari öffnen",
                                   image: UIImage(systemName: "safari")  ) { sharedItems in
       guard let url = sharedItems[0] as? URL else { return }
@@ -60,6 +88,7 @@ open class ExportDialogue<T>: NSObject, UIActivityItemSource {
     self.altText = altText
     self.onlineLink = onlineLink
     self.subject = subject
+    self.image = image
     let additionalItems = onlineLink != nil ? [customItem] : []
     let aController = UIActivityViewController(activityItems: [self],
       applicationActivities: additionalItems)

@@ -472,21 +472,68 @@ open class ButtonSlider: Slider {
     button.addTarget(self, action: #selector(buttonPressed(sender:)), for: .touchUpInside)
   }
   
-  public func buttonMoveOut( _ duration: TimeInterval = 0.9, _ delay: TimeInterval = 0.1, atEnd: (()->())? = nil ) {
-    UIView.animate(withDuration: duration/3, delay: delay, options: .curveEaseOut, animations: {
-      self.leadingButtonConstraint.constant = 3
+  public func buttonMoveOut( _ duration: TimeInterval = 0.7, _ delay: TimeInterval = 0.1, atEnd: (()->())? = nil ) {
+    UIView.animate(withDuration: duration/2, delay: delay, options: .curveEaseOut, animations: {
+      self.leadingButtonConstraint.constant = -self.button.frame.size.width+2
       self.active.view.layoutIfNeeded()
     } ) { _ in
-      UIView.animate(withDuration: duration/3, delay: 0, options: .curveEaseOut, animations: {
-        self.leadingButtonConstraint.constant = -self.button.frame.size.width+2
+      UIView.animate(withDuration: duration/2, delay: 0, options: .curveEaseOut, animations: {
+        self.leadingButtonConstraint.constant = -self.button.frame.size.width+7
         self.active.view.layoutIfNeeded()
-      } ) { _ in
-        UIView.animate(withDuration: duration/9, delay: 0, options: .curveEaseOut, animations: {
-          self.leadingButtonConstraint.constant = -self.button.frame.size.width+7
-          self.active.view.layoutIfNeeded()
-        } ) { _ in
-      if let closure = atEnd { closure() }
-        }
+      } ) { [weak self] _ in
+        if let closure = atEnd { closure() }
+        self?.collapsedButtonAnimation = false
+      }
+    }
+  }
+  
+  var collapsedButtonAnimation = false {
+    didSet {
+      guard collapsedButtonAnimation == false else { return }
+      log("collapsedButtonAnimation set to false collapsedButtonNext is: \(collapsedButtonNext)")
+      collapsedButton = collapsedButtonNext ?? collapsedButton
+      collapsedButtonNext = nil
+    }
+  }
+  var collapsedButtonNext: Bool?
+  
+  
+  /// move in/out the slider button with animation on value change
+  ///
+  public var collapsedButton: Bool = false {
+    didSet {
+      if oldValue == collapsedButton { return }
+      
+      if collapsedButtonAnimation {
+        collapsedButtonNext = collapsedButton
+        ///Prevent race condition: if animation just finished set the next value otherwise reset to old value
+        ///default value for nil-coalescing operator is irellevant
+        collapsedButton = collapsedButtonAnimation ? oldValue : collapsedButtonNext ?? collapsedButton
+        return
+      }
+      collapsedButtonAnimation = true
+      hideButtonOnClose = collapsedButton
+      if collapsedButton {
+        buttonMovedOut = true
+        buttonMoveOut() }
+      else {
+        buttonMovedOut = false
+        buttonMoveIn()
+      }
+    }
+  }
+  
+  func buttonMoveIn( _ duration: TimeInterval = 0.7, _ delay: TimeInterval = 0.1, atEnd: (()->())? = nil ) {
+    UIView.animate(withDuration: duration/2, delay: delay, options: .curveEaseOut, animations: {
+      self.leadingButtonConstraint.constant = -self.button.frame.size.width+2
+      self.active.view.layoutIfNeeded()
+    } ) { _ in
+      UIView.animate(withDuration: duration/2, delay: 0, options: .curveEaseOut, animations: {
+        self.leadingButtonConstraint.constant = 0
+        self.active.view.layoutIfNeeded()
+      } ) {[weak self] _ in
+        if let closure = atEnd { closure() }
+        self?.collapsedButtonAnimation = false
       }
     }
   }

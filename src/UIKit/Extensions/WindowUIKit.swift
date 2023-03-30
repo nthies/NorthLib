@@ -105,4 +105,10 @@ public extension UIScreen {
     let s = main.bounds.size
     return max(s.width, s.height)
   }
+  
+  static var isIpadRegularSize: Bool {
+    guard Device.isIpad else {  return false }
+    guard let window = UIWindow.keyWindow else {  return false }
+    return window.traitCollection.horizontalSizeClass == .regular
+  }
 }

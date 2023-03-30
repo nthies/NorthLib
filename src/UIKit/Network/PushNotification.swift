@@ -392,6 +392,11 @@ open class NotifiedDelegate: UIResponder, UIApplicationDelegate,
   public override init() {
     super.init()
     NotifiedDelegate.singleton = self
+    Notification.receive(NotificationNames.remoteNotificationFetchCompleete) { [weak self] notif in
+      let result = (notif.content as? UIBackgroundFetchResult) ?? UIBackgroundFetchResult.failed
+      self?.fetchCompletionHandler?(result)
+      self?.fetchCompletionHandler = nil
+    }
   }
 
   // MARK: - UIApplicationDelegate protocol methods
@@ -408,12 +413,17 @@ open class NotifiedDelegate: UIResponder, UIApplicationDelegate,
     notifier.register(token: nil)
   }
   
+  // last remote Notification compleetionHandler
+  var fetchCompletionHandler: ((UIBackgroundFetchResult)->())?
+  
   // Notification received
   public func application(_ application: UIApplication, didReceiveRemoteNotification
     userInfo: [AnyHashable : Any], fetchCompletionHandler
     completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+    fetchCompletionHandler?(.failed)//set old one to failed if any; but this should not happen!
+    fetchCompletionHandler = completionHandler
     notifier.receive(userInfo)
-    completionHandler(UIBackgroundFetchResult.noData)
+    onThreadAfter(29.0) { [weak self] in self?.fetchCompletionHandler?(.failed) }
   }
   
   /// Lock all view controllers not obeying the CanRotate protocol to portrait orientation
@@ -443,3 +453,6 @@ open class NotifiedDelegate: UIResponder, UIApplicationDelegate,
 } // NotifiedDelegate
 
 
+public struct NotificationNames {
+  public static let remoteNotificationFetchCompleete = "NotificationName.remoteNotificationFetchCompleete"
+} // Filename
