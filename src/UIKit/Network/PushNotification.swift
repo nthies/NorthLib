@@ -7,9 +7,11 @@
 
 import UIKit
 
+public typealias FetchCompletionHandler = ((UIBackgroundFetchResult)->())
+
 /// Wrapper class for push notifications
 open class PushNotification: NSObject, UNUserNotificationCenterDelegate, DoesLog {
-  
+
   /// AlertPayload defines the alert message of the standard payload
   public class AlertPayload: Decodable, ToString {
     public var title: String?
@@ -235,7 +237,7 @@ open class PushNotification: NSObject, UNUserNotificationCenterDelegate, DoesLog
   // Closure to call upon user permission success or failure
   private var permissionClosure: ((PushNotification)->())?
   // Closure to call upon remote push delivery
-  private var receiveClosure: ((PushNotification, Payload)->())?
+  private var receiveClosure: ((PushNotification, Payload, FetchCompletionHandler?)->())?
  
   /// Asks the user to permit push notifications (if not already permitted)
   public func permit(opt: UNAuthorizationOptions = options, 
@@ -254,7 +256,7 @@ open class PushNotification: NSObject, UNUserNotificationCenterDelegate, DoesLog
   }
   
   /// Defines closure to call upon reception of notifications
-  public func onReceive(closure: @escaping (PushNotification, Payload)->()) {
+  public func onReceive(closure: @escaping (PushNotification, Payload, FetchCompletionHandler?)->()) {
     receiveClosure = closure
   }
   
@@ -272,10 +274,10 @@ open class PushNotification: NSObject, UNUserNotificationCenterDelegate, DoesLog
   }
 
   /// Receive notification
-  func receive(_ payload: [AnyHashable:Any]) { 
+  func receive(_ payload: [AnyHashable:Any], _ fetchCompletionHandler: FetchCompletionHandler?) {
     let pl = Payload(payload)
-    debug("Push Notification received: \(pl.json.count) bytes")
-    if let closure = receiveClosure { onMain { closure(self, pl) } }
+    debug("Push Notification received: \(pl.json.count) bytes has fetchCompletionHandler: \(fetchCompletionHandler != nil)")
+    if let closure = receiveClosure { onMain { closure(self, pl, fetchCompletionHandler) } }
   }  
   
 } // PushNotification
@@ -283,7 +285,7 @@ open class PushNotification: NSObject, UNUserNotificationCenterDelegate, DoesLog
 extension PushNotification {
   public func handleTestRemoteNotification(_ payload: [AnyHashable:Any]) {
     debug("handleTestRemoteNotification!")
-    self.receive(payload)
+    self.receive(payload, nil)
   }
 }
 
@@ -384,7 +386,7 @@ open class NotifiedDelegate: UIResponder, UIApplicationDelegate,
   
   /// Call closure when a push notification has been received
   public func onReceivePush(closure: @escaping (PushNotification,
-    PushNotification.Payload)->()) {
+    PushNotification.Payload, FetchCompletionHandler?)->()) {
     notifier.onReceive(closure: closure)
   }
   
@@ -392,11 +394,6 @@ open class NotifiedDelegate: UIResponder, UIApplicationDelegate,
   public override init() {
     super.init()
     NotifiedDelegate.singleton = self
-    Notification.receive(NotificationNames.remoteNotificationFetchCompleete) { [weak self] notif in
-      let result = (notif.content as? UIBackgroundFetchResult) ?? UIBackgroundFetchResult.failed
-      self?.fetchCompletionHandler?(result)
-      self?.fetchCompletionHandler = nil
-    }
   }
 
   // MARK: - UIApplicationDelegate protocol methods
@@ -413,17 +410,11 @@ open class NotifiedDelegate: UIResponder, UIApplicationDelegate,
     notifier.register(token: nil)
   }
   
-  // last remote Notification compleetionHandler
-  var fetchCompletionHandler: ((UIBackgroundFetchResult)->())?
-  
   // Notification received
   public func application(_ application: UIApplication, didReceiveRemoteNotification
     userInfo: [AnyHashable : Any], fetchCompletionHandler
     completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
-    fetchCompletionHandler?(.failed)//set old one to failed if any; but this should not happen!
-    fetchCompletionHandler = completionHandler
-    notifier.receive(userInfo)
-    onThreadAfter(29.0) { [weak self] in self?.fetchCompletionHandler?(.failed) }
+    notifier.receive(userInfo, completionHandler)
   }
   
   /// Lock all view controllers not obeying the CanRotate protocol to portrait orientation
@@ -451,8 +442,3 @@ open class NotifiedDelegate: UIResponder, UIApplicationDelegate,
   }
   
 } // NotifiedDelegate
-
-
-public struct NotificationNames {
-  public static let remoteNotificationFetchCompleete = "NotificationName.remoteNotificationFetchCompleete"
-} // Filename
