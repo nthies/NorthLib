@@ -10,23 +10,41 @@ import Foundation
 import UserNotifications
 
 open class LocalNotifications: DoesLog {
-   
   //Helper to trigger local Notification if App is in Background
-  public static func notifyUser(_ text:String = "Ausgabe wird derzeit im Hintergrund geladen"){
-    
-    let yourFireDate = Date().addingTimeInterval(5)
+  public static func notify(title:String? = nil,
+                            subtitle:String? = nil,
+                            message:String,
+                            sound: UNNotificationSound = UNNotificationSound.default,
+                            badge: Int? = nil,
+                            attachmentURL: URL? = nil,
+                            categoryIdentifier: String? = nil,
+                            delay: TimeInterval = 5.0
+
+  ){
+    let fireDate = Date().addingTimeInterval(delay)
+    let identifier = "Notification-\(title ?? subtitle ?? message)-\(fireDate.ddMMyy_HHmmss)"
     
     let content = UNMutableNotificationContent()
-    content.title = NSString.localizedUserNotificationString(forKey:
-                                                              "Neue Ausgabe - \(text)", arguments: nil)
-    content.body = NSString.localizedUserNotificationString(forKey: text, arguments: nil)
-    content.categoryIdentifier = "Neue Ausgabe"
-    content.sound = UNNotificationSound.default
-    content.badge = 0
+    if let title = title { content.title = title }
+    if let subtitle = subtitle { content.subtitle = subtitle }
+    content.body = message
+    content.sound = sound
+    if let attachmentURL = attachmentURL {
+      do {
+        let attachment = try UNNotificationAttachment(identifier: "\(identifier)-ai", url: attachmentURL)
+        content.attachments = [attachment]
+      }
+      catch let error { Log.fatal(error) }
+    }
+    if let categoryIdentifier = categoryIdentifier { content.categoryIdentifier = categoryIdentifier }
+    if let badge = badge { content.badge = NSNumber(value: badge) }
     
-    let dateComponents = Calendar.current.dateComponents(Set(arrayLiteral: Calendar.Component.year, Calendar.Component.month, Calendar.Component.day, Calendar.Component.hour, Calendar.Component.minute, Calendar.Component.second), from: yourFireDate)
+
+    let dateComponents = Calendar.current.dateComponents(Set(arrayLiteral: Calendar.Component.year, Calendar.Component.month, Calendar.Component.day, Calendar.Component.hour, Calendar.Component.minute, Calendar.Component.second), from: fireDate)
     let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
-    let request = UNNotificationRequest(identifier: "Ausgabe-\(yourFireDate.ddMMyy_HHmmss)a-\(text)", content: content, trigger: trigger)
+    let request = UNNotificationRequest(identifier: "\(identifier)-ni",
+                                        content: content,
+                                        trigger: trigger)
     UNUserNotificationCenter.current().add(request, withCompletionHandler: { error in
       if let error = error {
         Log.log("notification with error: \(error)")
@@ -34,41 +52,6 @@ open class LocalNotifications: DoesLog {
         Log.log("notification setup succeed")
       }
     })
-    Log.log("notification added for \(yourFireDate.ddMMyy_HHmmss)")
+    Log.log("notification added for \(fireDate.ddMMyy_HHmmss)")
   }
-  
-//  //Helper to trigger local Notification if App is in Background
-//  public static func notify(title:String?,
-//                            subTitle:String?,
-//                            message:String,
-//                            sound: UNNotificationSound = UNNotificationSound.default,
-//                            launchImageName: String? = "NewIssueLaunch",
-//                            badge: NSNumber?,
-//                            attachment: URL?,
-//                            delay: Int
-//
-//  ){
-//    NewIssueLaunch
-//    let yourFireDate = Date().addingTimeInterval(5)
-//
-//    let content = UNMutableNotificationContent()
-//    content.title = NSString.localizedUserNotificationString(forKey:
-//                                                              "Neue Ausgabe - \(text)", arguments: nil)
-//    content.body = NSString.localizedUserNotificationString(forKey: text, arguments: nil)
-//    content.categoryIdentifier = "Neue Ausgabe"
-//    content.sound = UNNotificationSound.default
-//    content.badge = 0
-//
-//    let dateComponents = Calendar.current.dateComponents(Set(arrayLiteral: Calendar.Component.year, Calendar.Component.month, Calendar.Component.day, Calendar.Component.hour, Calendar.Component.minute, Calendar.Component.second), from: yourFireDate)
-//    let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
-//    let request = UNNotificationRequest(identifier: "Ausgabe-\(yourFireDate.ddMMyy_HHmmss)a-\(text)", content: content, trigger: trigger)
-//    UNUserNotificationCenter.current().add(request, withCompletionHandler: { error in
-//      if let error = error {
-//        Log.log("notification with error: \(error)")
-//      } else {
-//        Log.log("notification setup succeed")
-//      }
-//    })
-//    Log.log("notification added for \(yourFireDate.ddMMyy_HHmmss)")
-//  }
 }
