@@ -260,6 +260,10 @@ open class PushNotification: NSObject, UNUserNotificationCenterDelegate, DoesLog
     receiveClosure = closure
   }
   
+  public func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+    return completionHandler(UNNotificationPresentationOptions.alert)
+  }
+  
   /// Register device token
   func register(token: Data?) {
     if let token = token {
@@ -394,6 +398,7 @@ open class NotifiedDelegate: UIResponder, UIApplicationDelegate,
   public override init() {
     super.init()
     NotifiedDelegate.singleton = self
+    UNUserNotificationCenter.current().delegate = notifier
   }
 
   // MARK: - UIApplicationDelegate protocol methods
