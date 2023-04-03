@@ -640,8 +640,10 @@ open class ButtonedWebView: UIView {
   public var buttonMargin: CGFloat = 8 { didSet { adaptLayoutConstraints() } }
   private var isButtonVisible = false
   
-  public func showBottomButtonInitially(){
-    isButtonVisible = true
+  public var toggleBottomButton = true {
+    didSet {
+      if !toggleBottomButton { isButtonVisible = true }
+    }
   }
   
   private var buttonBottomConstraint: NSLayoutConstraint?
@@ -705,6 +707,7 @@ open class ButtonedWebView: UIView {
     }
     webView.scrollDelegate.atEndOfContent { [weak self] isAtEnd in
       guard let self = self else { return }
+      guard toggleBottomButton else { return }
       if self.isButtonVisible != isAtEnd {
         self.isButtonVisible = isAtEnd
         self.adaptLayout(animated: true)
