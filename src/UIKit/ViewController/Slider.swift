@@ -467,6 +467,7 @@ open class ButtonSlider: Slider {
   public init(slider: UIViewController, into active: UIViewController) {
     active.view.addSubview(button)
     button.translatesAutoresizingMaskIntoConstraints = false
+    self.button.additionalTapOffset = 5.0
     super.init(slider: slider, into: active, isHorizontal: true)
     active.view.bringSubviewToFront(button)
     button.addTarget(self, action: #selector(buttonPressed(sender:)), for: .touchUpInside)
@@ -503,6 +504,8 @@ open class ButtonSlider: Slider {
   public var collapsedButton: Bool = false {
     didSet {
       if oldValue == collapsedButton { return }
+      
+      self.button.additionalTapOffset = collapsedButton ? 50.0 : 5.0
       
       if collapsedButtonAnimation {
         collapsedButtonNext = collapsedButton
