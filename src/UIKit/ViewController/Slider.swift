@@ -491,7 +491,7 @@ open class ButtonSlider: Slider {
   var collapsedButtonAnimation = false {
     didSet {
       guard collapsedButtonAnimation == false else { return }
-      log("collapsedButtonAnimation set to false collapsedButtonNext is: \(collapsedButtonNext)")
+      log("collapsedButtonAnimation set to false collapsedButtonNext is: \(collapsedButtonNext ?? false)")
       collapsedButton = collapsedButtonNext ?? collapsedButton
       collapsedButtonNext = nil
     }
