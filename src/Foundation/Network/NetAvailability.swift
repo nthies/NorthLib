@@ -73,9 +73,13 @@ open class NetAvailability {
 
   /// Is network connection via mobile networks?
   public func isMobile(flags: SCNetworkReachabilityFlags? = nil) -> Bool {
+#if canImport(UIKit)
     var fl = flags
     if fl == nil { fl = reachabilityFlags }
     return isReachable(flags: fl!) && fl!.contains(.isWWAN)
+#else
+    return false
+#endif
   }
   
   /// Is network connection via mobile networks?

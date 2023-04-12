@@ -5,7 +5,11 @@
 //  Copyright © 2019 Norbert Thies. All rights reserved.
 //
 
+import Foundation
+
+#if canImport(UIKit)
 import UIKit
+#endif
 
 /// DlFile describes a file that is downloadable from a HTTP server
 public protocol DlFile {
@@ -332,10 +336,12 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
     self.isBackground = isBackground
     super.init()
     let nc = NotificationCenter.default
-    nc.addObserver(self, selector: #selector(onBackground), 
+#if canImport(UIKit)
+    nc.addObserver(self, selector: #selector(onBackground),
       name: UIApplication.willResignActiveNotification, object: nil)
     nc.addObserver(self, selector: #selector(onTermination), 
       name: UIApplication.willTerminateNotification, object: nil)
+#endif
   }
   
   /// Cancel outstanding jobs and close URLSession
