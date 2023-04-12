@@ -112,7 +112,7 @@ var dependencies: [Package.Dependency] = [
 let package = Package(
   name: "NorthLib",
   defaultLocalization: "en",
-  platforms: [.iOS(.v13), .macOS(.v10_15), .tvOS(.v13), .watchOS(.v6)],
+  platforms: [.iOS(.v13), .macOS(.v11), .tvOS(.v13), .watchOS(.v6)],
   products: products,
   dependencies: dependencies,
   targets: targets,
