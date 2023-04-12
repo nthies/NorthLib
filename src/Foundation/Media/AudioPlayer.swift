@@ -5,7 +5,7 @@
 //  Copyright © 2019 Norbert Thies. All rights reserved.
 //
 
-import UIKit
+import Foundation
 import AVFoundation
 import MediaPlayer
 
