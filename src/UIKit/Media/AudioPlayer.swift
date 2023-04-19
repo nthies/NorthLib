@@ -96,6 +96,7 @@ open class AudioPlayer: NSObject, DoesLog {
       if item.status == .failed {
         if let closure = self?._onError { closure(item.error!.localizedDescription, item.error!) }
         else { self?.error(item.error!.localizedDescription) }
+        self?._onEnd?(item.error)
         self?.close()
       }
       else if item.status == .readyToPlay {}
