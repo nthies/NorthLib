@@ -50,7 +50,13 @@ open class PageCollectionVC: UIViewController {
   /// Index of current view, change it to scroll to a certain cell
   open var index: Int? {
     get { return collectionView?.index }
-    set { collectionView?.index = newValue }
+    set {
+      if collectionView?.index == nil {
+        ///initially call layout if not done jet to ensure scroll to index works
+        collectionView?.doLayout()
+      }
+      collectionView?.index = newValue
+    }
   }
 
   /// Define and change the number of views to display, will reload data

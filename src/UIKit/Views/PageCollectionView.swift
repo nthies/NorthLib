@@ -166,25 +166,15 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
   fileprivate var collectionViewInitialized = false
   
   // initialize with initialIndex when scroll view is ready
-  fileprivate func initialize(_ itemIndex: Int? = nil) {
+  fileprivate func initialize() {
     guard let layout = self.collectionViewLayout as? UICollectionViewFlowLayout 
       else { return }
     if !isInitialized {
       layout.minimumLineSpacing = swidth
       layout.sectionInset = UIEdgeInsets(top: 0, left: inset, bottom: 0, right: inset)
-      isHidden = true 
-      delay(seconds: 0.01) { [weak self] in
-        guard let self = self else { return }
-        self.isInitialized = true
-        if var idx = self.initialIndex {
-          if idx > self.count - 1 {
-            self.debug("Prevent Chash set last index: \(self.count - 1) instead: \(idx)")
-            idx = self.count - 1
-          }
-          self.index = idx
-          
-        }
-        self.isHidden = false
+      self.isInitialized = true
+      if let idx = self.initialIndex {
+        self.index = idx
       }
     }
   }
@@ -357,7 +347,7 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
       let itemIndex = indexPath.item
       debug("index \(itemIndex) requested in cell \(address(cell))")
       cell.update(pcv: self, idx: itemIndex)
-      initialize(itemIndex)
+      initialize()
       return cell
     }
     return PageCell()
