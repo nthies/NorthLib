@@ -114,9 +114,14 @@ open class PageCollectionVC: UIViewController {
   }
  
   // MARK: - Life Cycle
+  open override func viewWillAppear(_ animated: Bool) {
+    super.viewWillAppear(animated)
+    collectionView?.preventInit = false
+  }
 
   override open func loadView() {
     super.loadView()
+    collectionView?.preventInit = true
     collectionView?.isPagingEnabled = true
     collectionView?.relativePageWidth = 1
     collectionView?.relativeSpacing = 0

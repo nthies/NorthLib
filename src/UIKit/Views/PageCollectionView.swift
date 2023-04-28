@@ -160,6 +160,10 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
   
   public convenience init() { self.init(frame: CGRect()) }
   
+  var preventInit: Bool = false {
+    didSet { if preventInit == false {initialize()}}
+  }
+  
   fileprivate var _index: Int?
   fileprivate var isInitialized = false
   fileprivate var initialIndex: Int? = nil
@@ -167,6 +171,7 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
   
   // initialize with initialIndex when scroll view is ready
   fileprivate func initialize() {
+    if preventInit { return }
     guard let layout = self.collectionViewLayout as? UICollectionViewFlowLayout 
       else { return }
     if !isInitialized {
