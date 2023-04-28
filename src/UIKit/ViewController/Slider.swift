@@ -52,7 +52,7 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
   public var duration: TimeInterval = 0.5
   /// how many points of the active view controller are covered by the slider
   /// (derived from coverageRatio by default)
-  public var coverage: CGFloat { 
+  open var coverage: CGFloat { 
     get {
       if isHorizontal { return active.view.bounds.width * coverageRatio }
       else { return active.view.bounds.height * coverageRatio }
