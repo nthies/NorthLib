@@ -228,7 +228,7 @@ open class PushNotification: NSObject, UNUserNotificationCenterDelegate, DoesLog
   } // Payload
   
   /// Default notification options
-  public static var options: UNAuthorizationOptions = [.alert, .sound, .badge]
+  public static var options: UNAuthorizationOptions = [.alert, .sound, .badge, .provisional]
   /// Unique device token (aka device ID)
   public var deviceId: String?
   /// isPermitted returns true if the user has accepted push notifications
