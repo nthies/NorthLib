@@ -44,9 +44,12 @@ open class Database: DoesLog, ToString {
   /// Load model from model dictionary (if available) or from single model
   /// file. Evaluate model version from the model's 'versionIdentifiers' 
   /// property which is expected to be a single integer number.
-  private func getModel() throws -> NSManagedObjectModel { 
-    let murl = Bundle.main.url(forResource: modelName, withExtension: "momd") ??
-        Bundle.main.url(forResource: modelName, withExtension: "mom")
+  private func getModel(modelURL: URL? = nil) throws -> NSManagedObjectModel { 
+    var murl: URL? = modelURL
+    if murl == nil {
+      murl = Bundle.main.url(forResource: modelName, withExtension: "momd") ??
+             Bundle.main.url(forResource: modelName, withExtension: "mom")
+    }
     guard let murl = murl else {
       throw fatal("Can't find Core Data model for \(modelName)")
     }
