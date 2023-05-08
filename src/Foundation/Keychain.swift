@@ -5,8 +5,7 @@
 //  Copyright © 2020 Norbert Thies. All rights reserved.
 //
 
-import UIKit
-import NorthFoundation
+import Foundation
 
 /** 
  A simple wrapper around Apples's keychain functions
