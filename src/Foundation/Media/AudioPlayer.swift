@@ -9,6 +9,10 @@ import Foundation
 import AVFoundation
 import MediaPlayer
 
+#if canImport(UIKit)
+
+import UIKit
+
 /// UIImage extension to resize an image:
 extension UIImage {
   func resize(to size: CGSize) -> UIImage {
@@ -19,6 +23,8 @@ extension UIImage {
     return image.withRenderingMode(self.renderingMode)
   }
 }
+
+#endif
 
 /// A very simple audio player utilizing AVPlayer
 open class AudioPlayer: NSObject, DoesLog {
@@ -42,12 +48,14 @@ open class AudioPlayer: NSObject, DoesLog {
   
   /// Artist of the track being played
   public var artist = ""
-  
+
+  #if canImport(UIKit) 
   // The resized image for the lock screen player UI
   private var resizedImage: UIImage?
   
   /// The image to display while playing
   public var image: UIImage? { didSet { resizedImage = nil } }
+  #endif
   
   /// current playback position
   public var currentTime: CMTime {
@@ -102,7 +110,7 @@ open class AudioPlayer: NSObject, DoesLog {
       else if item.status == .readyToPlay {}
     }
     self.player = AVPlayer(playerItem: item)
-    if #available(iOS 15.0, *) {
+    if #available(iOS 15.0, macOS 12, *) {
       self.player?.audiovisualBackgroundPlaybackPolicy = .continuesIfPossible
     } 
     updatePlayingInfo()
@@ -111,8 +119,10 @@ open class AudioPlayer: NSObject, DoesLog {
     NotificationCenter.default.addObserver(self, selector:
       #selector(playerHasFinishedWithError(notification:)),
       name: .AVPlayerItemFailedToPlayToEndTime, object: item)
-   NotificationCenter.default.addObserver(self, selector: #selector(playerIsInterrupted),
+    #if canImport(UIKit)
+    NotificationCenter.default.addObserver(self, selector: #selector(playerIsInterrupted),
       name: AVAudioSession.interruptionNotification, object: nil)
+    #endif
     timer = every(seconds: 1) { [weak self] _ in self?.updatePlayingInfo() }
   }
   
@@ -130,6 +140,7 @@ open class AudioPlayer: NSObject, DoesLog {
     close()
   }
   
+  #if canImport(UIKit)
   // player is beeing interrupted
   @objc private func playerIsInterrupted(notification: Notification) {
     guard let userInfo = notification.userInfo,
@@ -154,11 +165,13 @@ open class AudioPlayer: NSObject, DoesLog {
       default: print("unknown AV interrupt notification")
     }
   }
+  #endif
   
   // defines playing info on lock/status screen
   private func updatePlayingInfo() {
     if let player = self.player {
       var info = [String:Any]()
+      #if canImport(UIKit)
       if let image = image {
         info[MPMediaItemPropertyArtwork] =
         MPMediaItemArtwork(boundsSize: image.size) { [weak self] s in 
@@ -172,6 +185,7 @@ open class AudioPlayer: NSObject, DoesLog {
           return self.resizedImage ?? UIImage()
         }
       }
+      #endif
       info[MPMediaItemPropertyTitle] = title
       info[MPMediaItemPropertyAlbumTitle] = album
       info[MPMediaItemPropertyArtist] = artist
@@ -219,7 +233,9 @@ open class AudioPlayer: NSObject, DoesLog {
       self.player = nil
       updatePlayingInfo()
       NotificationCenter.default.removeObserver(self)
-      try AVAudioSession.sharedInstance().setActive(false)
+      #if canImport(UIKit)
+        try AVAudioSession.sharedInstance().setActive(false)
+      #endif
     }
     catch let err {
       error(err)
@@ -265,8 +281,10 @@ open class AudioPlayer: NSObject, DoesLog {
   public override init() {
     do {
       super.init()
+      #if canImport(UIKit)
       try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
 //      try AVAudioSession.sharedInstance().setActive(true) //Stops Background Audio Playback e.g. from Apple Music on enter Issue
+      #endif
     }
     catch let err {
       error(err)
