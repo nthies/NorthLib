@@ -5,7 +5,11 @@
 //  Copyright © 2018 Norbert Thies. All rights reserved.
 //
 
+import Foundation
+
+#if canImport(UIKit)
 import UIKit
+#endif
 
 extension String {
   public static func fromC(_ cstr: Int8...) -> String {
@@ -53,6 +57,7 @@ public enum Device: CustomStringConvertible {
 
   // Use Device.singleton
   fileprivate init() {
+    #if canImport(UIKit)
     let io = UIDevice.current.userInterfaceIdiom
     switch io {
       case .phone: self = .iPhone
@@ -61,6 +66,9 @@ public enum Device: CustomStringConvertible {
       case .tv:    self = .tv
       default:     self = .unknown
     }
+    #else
+    self = .mac
+    #endif
   }
   
   public static var deviceType = "apple"
@@ -72,6 +80,14 @@ public enum Device: CustomStringConvertible {
       case .tv:     return "tv"
       default:      return "desktop"
     }
+  }
+  
+  public static var deviceModel: String {
+    #if canImport(UIKit)
+      return UIDevice().model
+    #else
+      return Utsname.nodename
+    #endif
   }
   
   /// The Device singleton specifying the current device type
@@ -89,6 +105,8 @@ extension Utsname {
     #endif
   }
 }
+
+#if canImport(UIKit)
 
 /// App description from Apple's App Store
 open class StoreApp {
@@ -146,6 +164,8 @@ open class StoreApp {
   
 } // class StoreApp
 
+#endif // UIKit
+
 /// Currently running app
 open class App {
   
@@ -178,47 +198,9 @@ open class App {
   /// Version of running app
   public static var version = Version(App.bundleVersion)
   
-  /// AppStore app information
-  public static var store: StoreApp? = {
-    do { return try StoreApp(App.bundleIdentifier) }
-    catch { return nil }
-  }()
-  
   /// Version of running OS
   public static var osVersion = Version(device.systemVersion)
-  
-  /// Returns true if a newer version is available at the app store
-  public static func isUpdatable() -> Bool {
-    if let sversion = store?.version {
-      return (version < sversion) && (osVersion >= store!.minOsVersion)
-    }
-    else { return false }
-  }
-  
-  /// Calls the passed closure if an update is avalable at the app store
-  public static func ifUpdatable(closure: @escaping ()->()) {
-    DispatchQueue.global().async {
-      if App.isUpdatable() {
-        DispatchQueue.main.async { closure() }
-      }
-    }
-  }
-  
-  /// Returns the largest AppIcon
-  private static var _icon: UIImage?
-  public static var icon: UIImage? {
-    if _icon == nil {
-      guard 
-        let iconsDictionary = Bundle.main.infoDictionary?["CFBundleIcons"] as? NSDictionary,
-        let primaryIconsDictionary = iconsDictionary["CFBundlePrimaryIcon"] as? NSDictionary,
-        let iconFiles = primaryIconsDictionary["CFBundleIconFiles"] as? NSArray,
-        let lastIcon = iconFiles.lastObject as? String,
-        let img = UIImage(named: lastIcon) else { return nil }
-      _icon = img
-    }
-    return _icon
-  }
-  
+    
   /// InstallationId: A String uniquely identifying this App's installation on this
   /// unique device (called identifierForVendor by Apple)
   fileprivate static var _installationId: String?
@@ -237,3 +219,49 @@ open class App {
   public init() {}
   
 } // class App
+
+#if canImport(UIKit)
+
+public extension App {
+  
+  /// AppStore app information
+  static var store: StoreApp? = {
+    do { return try StoreApp(App.bundleIdentifier) }
+    catch { return nil }
+  }()
+  
+  /// Returns true if a newer version is available at the app store
+  static func isUpdatable() -> Bool {
+    if let sversion = store?.version {
+      return (version < sversion) && (osVersion >= store!.minOsVersion)
+    }
+    else { return false }
+  }
+  
+  /// Calls the passed closure if an update is avalable at the app store
+  static func ifUpdatable(closure: @escaping ()->()) {
+    DispatchQueue.global().async {
+      if App.isUpdatable() {
+        DispatchQueue.main.async { closure() }
+      }
+    }
+  }
+  
+  /// Returns the largest AppIcon
+  private static var _icon: UIImage?
+  static var icon: UIImage? {
+    if _icon == nil {
+      guard 
+        let iconsDictionary = Bundle.main.infoDictionary?["CFBundleIcons"] as? NSDictionary,
+        let primaryIconsDictionary = iconsDictionary["CFBundlePrimaryIcon"] as? NSDictionary,
+        let iconFiles = primaryIconsDictionary["CFBundleIconFiles"] as? NSArray,
+        let lastIcon = iconFiles.lastObject as? String,
+        let img = UIImage(named: lastIcon) else { return nil }
+      _icon = img
+    }
+    return _icon
+  }
+
+} // App extension
+
+#endif
