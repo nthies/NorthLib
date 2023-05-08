@@ -90,6 +90,11 @@ public enum Device: CustomStringConvertible {
     #endif
   }
   
+  public static var osVersion: String { 
+    let v = ProcessInfo.processInfo.operatingSystemVersion 
+    return "\(v.majorVersion).\(v.minorVersion).\(v.patchVersion)"
+  }
+  
   /// The Device singleton specifying the current device type
   static public let singleton = Device()
   
@@ -171,10 +176,7 @@ open class App {
   
   /// Info dictionary of currently running app
   public static let info = Bundle.main.infoDictionary!
-  
-  /// The current device
-  public static let device = UIDevice.current
-  
+    
   /// Version string of currently running app
   public static var bundleVersion: String {
     return info["CFBundleShortVersionString"] as! String
@@ -199,7 +201,7 @@ open class App {
   public static var version = Version(App.bundleVersion)
   
   /// Version of running OS
-  public static var osVersion = Version(device.systemVersion)
+  public static var osVersion = Version(Device.osVersion)
     
   /// InstallationId: A String uniquely identifying this App's installation on this
   /// unique device (called identifierForVendor by Apple)
