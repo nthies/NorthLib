@@ -16,6 +16,9 @@ open class Database: DoesLog, ToString {
   /// name of data model
   public var modelName: String
   
+  /// URL of data model
+  public var modelURL: URL?
+  
   /// actual version of App model
   public var newModelVersion = 1
   
@@ -23,7 +26,7 @@ open class Database: DoesLog, ToString {
   public var oldModelVersion = 1
   
   /// the model object
-  public lazy var model = try! getModel()
+  public lazy var model = try! getModel(modelURL: modelURL)
   
   /// the persistent store coordinator
   public lazy var coordinator = NSPersistentStoreCoordinator(managedObjectModel: model)
@@ -158,8 +161,9 @@ open class Database: DoesLog, ToString {
     open(closure: closure)
   }
  
-  public init(name: String,  model: String) {
+  public init(name: String,  model: String, modelURL: URL? = nil) {
     self.modelName = model
+    self.modelURL = modelURL
     self.name = name
   }
   
