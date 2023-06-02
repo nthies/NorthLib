@@ -208,7 +208,7 @@ public extension UIViewController {
       v = view!
       if let pvc = v.parentViewController { vc = pvc }
       else { return }
-      rect = CGRect(x: v.bounds.size.width/2, y: v.bounds.size.height-2, width: 1, height: 1)
+      rect = CGRect(x: v.bounds.size.width/2, y: v.bounds.size.height/2, width: 1, height: 1)
     }
     else {
       vc = UIViewController.top()!
