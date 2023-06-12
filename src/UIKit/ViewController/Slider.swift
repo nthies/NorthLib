@@ -558,7 +558,7 @@ open class ButtonSlider: Slider {
     }
   }
   
-  public override func slide(toOpen: Bool, animated: Bool = true) {
+  open override func slide(toOpen: Bool, animated: Bool = true) {
     buttonMovedOut = !toOpen
     super.slide(toOpen: toOpen, animated: animated)
     if hideButtonOnClose, toOpen == false { buttonMoveOut()}
