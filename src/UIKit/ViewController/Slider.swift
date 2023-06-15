@@ -88,7 +88,6 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
   }
   
   var shadeView = UIView()
-  let leftBackground = UIView()//hide previous vc. content if vertical slider on spring open
   public private(set) var sliderView = UIView()
   var contentView = UIView()
   var handleView: RoundedRect?
@@ -294,13 +293,6 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
     active.view.addSubview(shadeView)
     active.view.addSubview(sliderView)
     
-    active.view.addSubview(leftBackground)
-    leftBackground.backgroundColor = .black
-    pin(leftBackground.rightGuide(), to: sliderView.leftGuide())
-    pin(leftBackground.topGuide(), to: sliderView.topGuide(), dist: -30)
-    pin(leftBackground.bottomGuide(), to: sliderView.bottomGuide(), dist: -30)
-    leftBackground.pinWidth(12)
-    
     setupInvariableConstraints()
     let ics = slider.view.intrinsicContentSize
     if isHorizontal { if ics.width > 0 { coverage = ics.width } }
@@ -316,7 +308,6 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
   
   public func slide(toOpen: Bool, animated: Bool = true) {
     let view = active.view!
-    leftBackground.isHidden = isHorizontal && !toOpen
     shadeView.isHidden = false
     sliderView.isHidden = false
     if !isOpen {
@@ -364,13 +355,6 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
     tmpCloseClosure = closure
     slide(toOpen: false, animated: animated)
   }
-  
-  /// Hides left Background layer, which hides previoud pushed VC
-  /// use this to fix back block on disappear of current vc
-  public func hideLeftBackground() {
-    leftBackground.isHidden = true
-  }
-  
 } // class Slider
 
 
@@ -681,7 +665,6 @@ open class BottomSheet: VerticalSheet {
       
       sliderView.pinWidth(maxWidth, relation: .lessThanOrEqual, priority: .required)
       sliderView.centerX()
-      leftBackground.alpha = 0.0
     }
   }
   
