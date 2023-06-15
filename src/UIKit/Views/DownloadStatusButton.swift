@@ -12,7 +12,7 @@ public enum DownloadStatusIndicatorState { case notStarted, process, justDone, d
 
 open class DownloadStatusButton : UIView {
    
-  private var indicatorHeight:CGFloat = 25.0
+  private var indicatorHeight:CGFloat = 28.0
 
   public private(set) var indicator = DownloadStatusIndicator()
   public private(set) var label = UILabel()
@@ -28,7 +28,6 @@ open class DownloadStatusButton : UIView {
   open func setup() {
     self.addSubview(label)
     self.addSubview(indicator)
-   
     indicator.pinSize(CGSize(width: indicatorHeight, height: indicatorHeight))
 
     label.numberOfLines = 1
