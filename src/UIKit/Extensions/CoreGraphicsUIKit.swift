@@ -224,13 +224,13 @@ public extension UIBezierPath {
      - to:   end point of dotted line
      - radius: radius of dot (width is 2*radius)
    */
-  func dottedLine(from: CGPoint, to: CGPoint, radius r: CGFloat, offset: CGFloat = 1.0) {
+  func dottedLine(from: CGPoint, to: CGPoint, radius r: CGFloat) {
     let vec = from.vector(to)
     let l = vec.abs // length of line
     let d = 2*r // diameter of dots
     let angle = vec.angle // angle of line in rad
-    let n = round(offset*l/(2*d)) // number of dots
-    let v = CGPoint(length: 2*d*offset, angle: angle) // vector from one dot to the next
+    let n = round(l/(2*d)) // number of dots
+    let v = CGPoint(length: 2*d, angle: angle) // vector from one dot to the next
     let le = (2*n-1)*d // effective length of dotted line (- start/end whitespace)
     let lstart = (l - le)/2 // length of start/end whitespace
     let vstart = CGPoint(length: lstart + r, angle: angle) // vector to center of first dot
