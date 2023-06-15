@@ -31,6 +31,8 @@ open class DottedLineView: UIView {
   open var strokeColor = UIColor.black
   /// width of the stroked line (0)
   open var lineWidth: CGFloat = 0
+  /// width of the stroked line (0)
+  open var offset: CGFloat = 1.0
   
   override open func draw(_ rect: CGRect) {
     let w = bounds.size.width, h = bounds.size.height
@@ -47,7 +49,7 @@ open class DottedLineView: UIView {
       d = w
     }
     path.lineWidth = lineWidth
-    path.dottedLine(from: from, to: to, radius: d/2)
+    path.dottedLine(from: from, to: to, radius: d/2, offset: offset)
     strokeColor.setStroke()
     fillColor.setFill()
     path.fill()
