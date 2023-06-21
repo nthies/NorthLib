@@ -340,6 +340,27 @@ open class ButtonControl: UIControl {
     }
   }
   
+  @objc fileprivate func touchDown() {
+    log("touchDown \(Date().ddMMyy_HHmmss)")
+  }
+  @objc fileprivate func touchCancel() {
+    log("touchCancel \(Date().ddMMyy_HHmmss)")
+  }
+  @objc fileprivate func touchDownRepeat() {
+    log("touchDownRepeat \(Date().ddMMyy_HHmmss)")
+  }
+  @objc fileprivate func touchUpOutside() {
+    log("touchUpOutside \(Date().ddMMyy_HHmmss)")
+  }
+  @objc fileprivate func touchDragOutside() {
+    log("touchDragOutside \(Date().ddMMyy_HHmmss)")
+  }
+  
+  @objc fileprivate func allEvents(sender:Any) {
+    log("touchallEvents \(Date().ddMMyy_HHmmss) sender: \(sender)")
+  }
+  
+  
   open func setup() {
     translatesAutoresizingMaskIntoConstraints = false
     backgroundColor = UIColor.clear
@@ -348,6 +369,12 @@ open class ButtonControl: UIControl {
     addSubview(view!)
     pin(view!, to: self)
     addTarget(self, action: #selector(self.buttonPressed), for: .touchUpInside)
+    addTarget(self, action: #selector(self.touchDown), for: .touchDown)
+    addTarget(self, action: #selector(self.touchCancel), for: .touchCancel)
+    addTarget(self, action: #selector(self.touchDownRepeat), for: .touchDownRepeat)
+    addTarget(self, action: #selector(self.touchUpOutside), for: .touchUpOutside)
+    addTarget(self, action: #selector(self.touchDragOutside), for: .touchDragOutside)
+//    addTarget(self, action: #selector(self.allEvents), for: .allEvents)
   }
   
   /// Initialize with ButtonView and frame

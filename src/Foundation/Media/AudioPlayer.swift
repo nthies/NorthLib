@@ -41,13 +41,13 @@ open class AudioPlayer: NSObject, DoesLog {
   }
   
   /// Title of the track being played
-  public var title = ""
+  public var title:String?
   
   /// Name of the album being played
-  public var album = ""
+  public var album:String?
   
   /// Artist of the track being played
-  public var artist = ""
+  public var artist:String?
 
   #if canImport(UIKit) 
   // The resized image for the lock screen player UI
@@ -63,11 +63,26 @@ open class AudioPlayer: NSObject, DoesLog {
     set { player?.seek(to: newValue) }
   }
   
+  /// current playback position
+  public var currentItem: AVPlayerItem? { player?.currentItem }
+  
   // the player
   private var player: AVPlayer? = nil
   
+  
+  
   // The timer updating the playing info
-  private var timer: Timer?
+  private var timer: Timer? {
+    didSet {
+      oldValue?.invalidate()
+    }
+  }
+  
+  private var childTimerClosure: (()->())?
+  
+  public func onTimer(closure: @escaping ()->()) {
+    childTimerClosure = closure
+  }
   
   // Are we playing a stream?
   private var isStream = false
@@ -123,7 +138,10 @@ open class AudioPlayer: NSObject, DoesLog {
     NotificationCenter.default.addObserver(self, selector: #selector(playerIsInterrupted),
       name: AVAudioSession.interruptionNotification, object: nil)
     #endif
-    timer = every(seconds: 1) { [weak self] _ in self?.updatePlayingInfo() }
+    timer = every(seconds: 1) { [weak self] _ in
+      self?.updatePlayingInfo()
+      self?.childTimerClosure?()
+    }
   }
   
   // player has finished playing medium
@@ -186,9 +204,15 @@ open class AudioPlayer: NSObject, DoesLog {
         }
       }
       #endif
-      info[MPMediaItemPropertyTitle] = title
-      info[MPMediaItemPropertyAlbumTitle] = album
-      info[MPMediaItemPropertyArtist] = artist
+      if let titel = title {
+        info[MPMediaItemPropertyTitle] = title
+      }
+      if let album = album {
+        info[MPMediaItemPropertyAlbumTitle] = album
+      }
+      if let artist = artist {
+        info[MPMediaItemPropertyArtist] = artist
+      }
       info[MPNowPlayingInfoPropertyIsLiveStream] = false
       info[MPMediaItemPropertyPlaybackDuration] = player.currentItem!.asset.duration.seconds
       info[MPNowPlayingInfoPropertyPlaybackRate] = player.rate
@@ -247,8 +271,11 @@ open class AudioPlayer: NSObject, DoesLog {
   private var pauseCommand: Any?
   private var seekCommand: Any?
   
+  public var setupRemoteCommands = true
+  
   // enable remote commands
   private func openRemoteCommands() {
+    if setupRemoteCommands == false { return }
     let commandCenter = MPRemoteCommandCenter.shared()
     // Add handler for Play Command
     playCommand = commandCenter.playCommand.addTarget { [unowned self] event in
@@ -272,6 +299,7 @@ open class AudioPlayer: NSObject, DoesLog {
   
   // disable remote commands
   private func closeRemoteCommands() {
+    if setupRemoteCommands == false { return }
     let commandCenter = MPRemoteCommandCenter.shared()
     commandCenter.playCommand.removeTarget(playCommand)
     commandCenter.pauseCommand.removeTarget(pauseCommand)
