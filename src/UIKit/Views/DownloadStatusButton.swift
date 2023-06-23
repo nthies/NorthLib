@@ -341,7 +341,7 @@ public class ProgressCircle: CALayer {
     return rotation
   }()
   
-  fileprivate func reset(){
+  public func reset(){
     self.progressCircle.removeAnimation(forKey: "ani1")
     self.progressCircle.removeAnimation(forKey: "ani2")
     progress = 0.0
