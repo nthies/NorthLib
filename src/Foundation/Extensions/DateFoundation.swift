@@ -92,3 +92,13 @@ public extension TimeInterval {
   static var hour: Double { get { return 60*minute} }
   static var minute: Double { get { return 60} }
 }
+
+public extension TimeInterval {
+  var minuteSecondsString: String? {
+    let formater = DateComponentsFormatter()
+    formater.zeroFormattingBehavior = .pad
+    formater.unitsStyle = .positional
+    formater.allowedUnits = [.minute, .second]
+    return formater.string(from: self)
+  }
+}
