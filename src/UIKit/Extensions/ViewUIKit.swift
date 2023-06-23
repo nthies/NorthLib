@@ -308,11 +308,20 @@ public extension UIView {
     return (pinWidth(size.width, priority: priority), pinHeight(size.height, priority: priority))
   }
   
-  /// Pin aspect ratio (width/height)
   @discardableResult
-  func pinAspect(ratio: CGFloat) -> NSLayoutConstraint {
+  /// Pin aspect ratio (width/height)
+  /// - Parameters:
+  ///   - ratio: ration to pin w/h
+  ///   - pinWidth: pin width otherwise pin height
+  /// - Returns: constraint of pin
+  func pinAspect(ratio: CGFloat, pinWidth: Bool = true) -> NSLayoutConstraint {
     translatesAutoresizingMaskIntoConstraints = false
-    let constraint = widthAnchor.constraint(equalTo: heightAnchor, multiplier: ratio)
+    //let ratio = (!pinWidth && ratio == 0.0) ? 1.0 : ratio ///prevent divisionby zero
+    let ratio = ratio == 0.0 ? 1.0 : ratio ///ratio of 0.0 make no sense so set it to square
+    let constraint
+    = pinWidth
+    ? widthAnchor.constraint(equalTo: heightAnchor, multiplier: ratio)
+    : heightAnchor.constraint(equalTo: widthAnchor, multiplier: 1/ratio)
     constraint.isActive = true
     return constraint
   }
