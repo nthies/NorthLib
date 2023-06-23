@@ -236,11 +236,12 @@ public class DownloadStatusIndicator: UIView {
   }
 }
 
-class ProgressCircle: CALayer {
+public class ProgressCircle: CALayer {
   ///track line width
   let lw:CGFloat = 1.3
+  public var hideStopIcon = false
   
-  override var frame: CGRect
+  public override var frame: CGRect
   { didSet { if oldValue != frame { updateComponents() }}}
     
   public var progress: Float = 0.0 {
@@ -365,6 +366,7 @@ class ProgressCircle: CALayer {
     
     //Layout square in Circle
     let squareSize:CGFloat = self.bounds.height/5
+    if hideStopIcon { return }
     stopIcon.frame = CGRect(x: (diam - squareSize)/2,
                             y: (diam - squareSize)/2,
                             width: squareSize,
@@ -376,6 +378,7 @@ class ProgressCircle: CALayer {
     if progressCircle.superlayer != nil { return }
     self.addSublayer(progressTrackCircle)
     self.addSublayer(progressCircle)
+    if hideStopIcon { return }
     self.addSublayer(stopIcon)
   }
 }
