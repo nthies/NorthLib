@@ -425,12 +425,17 @@ open class NotifiedDelegate: UIResponder, UIApplicationDelegate,
   /// Lock all view controllers not obeying the CanRotate protocol to portrait orientation
   public func application(_ application: UIApplication, supportedInterfaceOrientationsFor 
     window: UIWindow?) -> UIInterfaceOrientationMask {
-    if topViewController(in: window?.rootViewController) is CanRotate {
+    let topVc = topViewController(in: window?.rootViewController)
+    if topVc is CanRotate {
       return .allButUpsideDown
-    } else {
-      return .portrait
     }
-  }  
+    else if ((topVc?.presentingViewController as? UITabBarController)?.selectedViewController as? NavigationController)?.topViewController is CanRotate {
+      ///in PDF the appearance of the context menu triggers this call and viewWillTransition > no menu is displayed on the phone and the behavior is ugly
+      ///the presented VC is _UIContextMenuInteraction a private apple api
+      return .allButUpsideDown
+    }
+    return .portrait
+  }
   
   func topViewController(in rootViewController: UIViewController?) -> UIViewController? {
     guard let rootViewController = rootViewController else { return nil }

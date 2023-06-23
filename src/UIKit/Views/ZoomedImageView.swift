@@ -55,6 +55,9 @@ extension OptionalImageItem{
 // MARK: - ZoomedImageView
 open class ZoomedImageView: UIView, ZoomedImageViewSpec {
   
+  @Default("doubleTapToZoomPdf")
+  public var doubleTapToZoomPdf: Bool
+  
   deinit { debug("\(self)") }
   public static var isDebug = true
   var isDebugLogging: Bool { Self.isDebug }
@@ -73,7 +76,7 @@ open class ZoomedImageView: UIView, ZoomedImageViewSpec {
   private var highResImgRequested = false
   private var orientationClosure:OrientationClosure? = OrientationClosure()
   private var singleTapRecognizer : UITapGestureRecognizer?
-  private let doubleTapRecognizer = UITapGestureRecognizer()
+  public let doubleTapRecognizer = UITapGestureRecognizer()
   private var zoomEnabled :Bool = true {
     didSet{
       self.scrollView.pinchGestureRecognizer?.isEnabled = zoomEnabled
@@ -302,7 +305,7 @@ extension ZoomedImageView{
     guard let tapR = sender as? UITapGestureRecognizer else {
       return
     }
-    if zoomEnabled == false {
+    if zoomEnabled == false || doubleTapToZoomPdf == false {
       self.setNeedsLayout()
       self.layoutIfNeeded()
       return
