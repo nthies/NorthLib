@@ -239,7 +239,7 @@ public class DownloadStatusIndicator: UIView {
 public class ProgressCircle: CALayer {
   ///track line width
   let lw:CGFloat = 1.3
-  public var hideStopIcon = false
+  public var isDownloadButtonItem = true
   
   public override var frame: CGRect
   { didSet { if oldValue != frame { updateComponents() }}}
@@ -247,7 +247,7 @@ public class ProgressCircle: CALayer {
   public var progress: Float = 0.0 {
     didSet{
       waiting = false
-      if let tv = self.animation.toValue as? Float, progress - tv < 0.1 { return }
+      if let tv = self.animation.toValue as? Float, progress - tv < (isDownloadButtonItem ? 0.1 : 0.01) { return }
       self.progressCircle.strokeColor = color.cgColor
       onMain { [weak self] in
         guard let self = self else { return }
@@ -344,6 +344,8 @@ public class ProgressCircle: CALayer {
   public func reset(){
     self.progressCircle.removeAnimation(forKey: "ani1")
     self.progressCircle.removeAnimation(forKey: "ani2")
+    animation.fromValue = nil
+    animation.toValue = nil
     progress = 0.0
   }
   
@@ -366,7 +368,7 @@ public class ProgressCircle: CALayer {
     
     //Layout square in Circle
     let squareSize:CGFloat = self.bounds.height/5
-    if hideStopIcon { return }
+    guard isDownloadButtonItem else { return }
     stopIcon.frame = CGRect(x: (diam - squareSize)/2,
                             y: (diam - squareSize)/2,
                             width: squareSize,
@@ -378,7 +380,7 @@ public class ProgressCircle: CALayer {
     if progressCircle.superlayer != nil { return }
     self.addSublayer(progressTrackCircle)
     self.addSublayer(progressCircle)
-    if hideStopIcon { return }
+    guard isDownloadButtonItem else { return }
     self.addSublayer(stopIcon)
   }
 }
