@@ -138,7 +138,7 @@ open class AudioPlayer: NSObject, DoesLog {
     NotificationCenter.default.addObserver(self, selector: #selector(playerIsInterrupted),
       name: AVAudioSession.interruptionNotification, object: nil)
     #endif
-    timer = every(seconds: 0.2) { [weak self] _ in
+    timer = every(seconds: 0.5) { [weak self] _ in
       self?.updatePlayingInfo()
       self?.childTimerClosure?()
     }
