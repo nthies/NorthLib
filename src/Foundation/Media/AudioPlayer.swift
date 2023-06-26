@@ -20,6 +20,13 @@ extension UIImage {
     let image = renderer.image { _ in
       self.draw(in: CGRect.init(origin: CGPoint.zero, size: size))
     }
+    if let tazLogo = UIImage(named: "StartupLogo") {
+      tazLogo.draw(in: CGRect(x: size.width*0.01,
+                              y: size.height*0.01,
+                              width: size.width*0.15,
+                              height: size.height*0.15))
+    }
+    
     return image.withRenderingMode(self.renderingMode)
   }
 }
