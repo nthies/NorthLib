@@ -14,19 +14,31 @@ import MediaPlayer
 import UIKit
 
 /// UIImage extension to resize an image:
-extension UIImage {
+public extension UIImage {
+  //110/696
+  //110/458
+  //dist 56
+  func resized(to size: CGSize, withLogo: UIImage?, logoSize: CGSize? = CGSize(width: 110, height: 110), dist: CGFloat? = 20.0) -> UIImage? {
+    UIGraphicsBeginImageContextWithOptions(size, false, scale)
+    self.draw(in: CGRect(origin: CGPoint.zero, size: size))
+    if let logo = withLogo, let logoSize = logoSize, let dist = dist {
+      let rect = CGRect(x: dist,
+                        y: dist,
+                        width: logoSize.width,
+                        height: logoSize.height)
+      UIBezierPath(roundedRect: rect, cornerRadius: 20.0).addClip()
+      logo.draw(in: rect)
+    }
+    let newImage = UIGraphicsGetImageFromCurrentImageContext()
+    UIGraphicsEndImageContext()
+    return newImage ?? self.resize(to: size)
+  }
+  
   func resize(to size: CGSize) -> UIImage {
     let renderer = UIGraphicsImageRenderer(size: size)
     let image = renderer.image { _ in
       self.draw(in: CGRect.init(origin: CGPoint.zero, size: size))
     }
-    if let tazLogo = UIImage(named: "StartupLogo") {
-      tazLogo.draw(in: CGRect(x: size.width*0.01,
-                              y: size.height*0.01,
-                              width: size.width*0.15,
-                              height: size.height*0.15))
-    }
-    
     return image.withRenderingMode(self.renderingMode)
   }
 }
@@ -55,6 +67,11 @@ open class AudioPlayer: NSObject, DoesLog {
   
   /// Artist of the track being played
   public var artist:String?
+  
+  /// Artist of the track being played
+  public var addLogo:Bool = false
+  
+  public var logoToAdd: UIImage?
 
   #if canImport(UIKit) 
   // The resized image for the lock screen player UI
@@ -202,7 +219,10 @@ open class AudioPlayer: NSObject, DoesLog {
         MPMediaItemArtwork(boundsSize: image.size) { [weak self] s in 
           guard let self = self else { return UIImage() }
           if self.resizedImage == nil {
-            self.resizedImage = image.resize(to: s) 
+            self.resizedImage
+            = addLogo
+            ? image.resized(to: s, withLogo: logoToAdd)
+            : image.resize(to: s)
             if self.resizedImage == nil {
               self.error("Can't resize image from \(image.size) to \(s)")
             }
