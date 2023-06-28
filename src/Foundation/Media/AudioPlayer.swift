@@ -91,7 +91,7 @@ open class AudioPlayer: NSObject, DoesLog {
   public var currentItem: AVPlayerItem? { player?.currentItem }
   
   // the player
-  private var player: AVPlayer? = nil
+  public private(set) var player: AVPlayer? = nil
   
   
   
@@ -170,8 +170,8 @@ open class AudioPlayer: NSObject, DoesLog {
   
   // player has finished playing medium
   @objc private func playerHasFinished() {
-    _onEnd?(nil)
-    close()
+    guard let endHandler = _onEnd else { close(); return }
+    endHandler(nil)
   }
   
   // player has finished with error
