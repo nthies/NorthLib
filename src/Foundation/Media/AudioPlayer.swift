@@ -13,20 +13,32 @@ import MediaPlayer
 
 import UIKit
 
+extension CGSize {
+  var isPortrait: Bool {
+    return height > width
+  }
+}
+
 /// UIImage extension to resize an image:
 public extension UIImage {
-  //110/696
-  //110/458
-  //dist 56
+
   func resized(to size: CGSize, withLogo: UIImage?, logoSize: CGSize? = CGSize(width: 110, height: 110), dist: CGFloat? = 20.0) -> UIImage? {
-    UIGraphicsBeginImageContextWithOptions(size, false, scale)
+    UIGraphicsBeginImageContextWithOptions(size, false, UIScreen.main.scale)
     self.draw(in: CGRect(origin: CGPoint.zero, size: size))
-    if let logo = withLogo, let logoSize = logoSize, let dist = dist {
+    if let logo = withLogo, logo.size.height > 0.0 {
+      let logoLongSide = max(logo.size.width, logo.size.height, 1)
+      let logoFactor
+      = size.isPortrait
+      ? 0.12*size.height/logoLongSide
+      : 0.12*size.width/logoLongSide
+      let logoSize = CGSize(width: logo.size.width*logoFactor,
+                            height: logo.size.height*logoFactor)
+      let dist = logoSize.width*0.3
       let rect = CGRect(x: dist,
                         y: dist,
                         width: logoSize.width,
                         height: logoSize.height)
-      UIBezierPath(roundedRect: rect, cornerRadius: 20.0).addClip()
+      UIBezierPath(roundedRect: rect, cornerRadius: logoSize.width * 0.3).addClip()
       logo.draw(in: rect)
     }
     let newImage = UIGraphicsGetImageFromCurrentImageContext()
@@ -227,11 +239,11 @@ open class AudioPlayer: NSObject, DoesLog {
               self.error("Can't resize image from \(image.size) to \(s)")
             }
           }
-          return self.resizedImage ?? UIImage()
+          return self.resizedImage ?? self.logoToAdd ?? UIImage()
         }
       }
       #endif
-      if let titel = title {
+      if let title = title {
         info[MPMediaItemPropertyTitle] = title
       }
       if let album = album {
