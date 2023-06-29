@@ -38,7 +38,7 @@ public extension UIImage {
                         y: dist,
                         width: logoSize.width,
                         height: logoSize.height)
-      UIBezierPath(roundedRect: rect, cornerRadius: logoSize.width * 0.3).addClip()
+      UIBezierPath(roundedRect: rect, cornerRadius: logoSize.width * 0.15).addClip()
       logo.draw(in: rect)
     }
     let newImage = UIGraphicsGetImageFromCurrentImageContext()
