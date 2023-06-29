@@ -7,6 +7,50 @@
 
 import UIKit
 
+public typealias menuAction = (title: String, icon: String, group: Int, closure: (Any?)->())
+
+public class MenuActions {
+  
+  public init() { self.actions = [] }
+  public var actions: [menuAction]
+  /// Add an additional menu item
+  public func addMenuItem(title: String, icon: String, group: Int? = nil,
+                   closure: @escaping (Any?)->()) {
+    actions += (title: title, icon: icon, group: group ?? 0, closure: closure)
+  }
+  
+  public var contextMenu: UIMenu {
+    var itms: [Int:[UIAction]] = [:]
+    for m in actions {
+      var subItems = itms[m.group] ?? []
+      subItems.append(UIAction(title: m.title,
+                         image: UIImage(name: m.icon)
+                         ?? UIImage(named: m.icon)) { [weak self] _ in
+        m.closure(self)
+      })
+      itms[m.group] = subItems
+    }
+    
+    if itms.count == 1, let actions = itms.first?.value as? [UIAction] {
+      return UIMenu(title: "", children: actions )
+    }
+    
+    let menuItems
+    = itms.sorted(by: { $0.key < $1.key })
+      .map {_, itm in UIMenu(title: "",
+                             options: .displayInline,
+                             children:itm) }
+    
+    return UIMenu(title: "",
+                  children:menuItems)
+  }
+  
+}
+
+public protocol ContextMenuItemPrivider {
+  var menu: MenuActions? { get }
+}
+
 /**
  A ContextMenu is used to display a context menu (if iOS >= 13) or an alert
  controller showing an action sheet when a long touch is performed on a
@@ -32,6 +76,13 @@ open class ContextMenu: NSObject, UIContextMenuInteractionDelegate {
     super.init()
   }
   
+  /// The argument to pass to menu item closures
+  public var itemPrivider: ContextMenuItemPrivider? {
+    didSet {
+      menu = []
+    }
+  }
+  
   /// Define the menu to display on long touch
   public var menu: [(title: String, icon: String, closure: (Any?)->())] = [] {
     willSet {
@@ -42,7 +93,8 @@ open class ContextMenu: NSObject, UIContextMenuInteractionDelegate {
     }
   }
   
-  fileprivate func createFlatContextMenu() -> UIMenu {
+  fileprivate func createContextMenu() -> UIMenu {
+    if let m = itemPrivider?.menu?.contextMenu { return m }
     let menuItems = menu.map { m in
       UIAction(title: m.title,
                image: UIImage(name: m.icon) ?? UIImage(named: m.icon)) { [weak self] _ in
@@ -51,60 +103,10 @@ open class ContextMenu: NSObject, UIContextMenuInteractionDelegate {
     }
     return UIMenu(title: "", children: menuItems)
   }
-
-  
-  fileprivate func createContextMenu() -> UIMenu {
-    if groupedMenu.count > 0 {
-      return createGroupedContextMenu()
-    }
-    return createFlatContextMenu()
-  }
-  
-  /// Define the menu to display on long touch
-  public var groupedMenu: [(title: String, icon: String, group: Int, closure: (Any?)->())] = [] {
-    willSet {
-      if menu.count == 0 {
-        view.isUserInteractionEnabled = true
-        view.addInteraction(UIContextMenuInteraction(delegate: self))
-      }
-    }
-  }
-  
-  fileprivate func createGroupedContextMenu() -> UIMenu {
-    var itms: [Int:[UIAction]] = [:]
-    for m in groupedMenu {
-      var subItems = itms[m.group] ?? []
-      subItems.append(UIAction(title: m.title,
-                         image: UIImage(name: m.icon)
-                         ?? UIImage(named: m.icon)) { [weak self] _ in
-        m.closure(self?.argument)
-      })
-      itms[m.group] = subItems
-    }
-    
-    if itms.count == 1, let actions = itms.first?.value as? [UIAction] {
-      return UIMenu(title: "", children: actions )
-    }
-    
-    let menuItems
-    = itms.sorted(by: { $0.key < $1.key })
-      .map {_, itm in UIMenu(title: "",
-                             options: .displayInline,
-                             children:itm) }
-    
-    return UIMenu(title: "",
-                  children:menuItems)
-  }
-  
   /// Add an additional menu item
-  public func addMenuItem(title: String, icon: String, group: Int? = nil,
+  public func addMenuItem(title: String, icon: String,
                           closure: @escaping (Any?)->()) {
-    if let group = group {
-      groupedMenu += (title: title, icon: icon, group: group, closure: closure)
-    }
-    else {
       menu += (title: title, icon: icon, closure: closure)
-    }
   }
   
   // MARK: - UIContextMenuInteractionDelegate protocol
