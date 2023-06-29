@@ -56,6 +56,9 @@ class OptionalWebView: OptionalView, DoesLog {
     webView.scrollView.isDirectionalLockEnabled = true
     webView.scrollView.showsHorizontalScrollIndicator = false
     webView.scrollDelegate.minScrollRatio = 0.01
+    if #available(iOS 16.4, *) {
+      webView.isInspectable = true
+    }
     webView.baseDir = baseDir
     webView.whenLoaded { [weak self] _ in
       self?.$whenAvailable.notify(sender: self)
