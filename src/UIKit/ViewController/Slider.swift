@@ -357,6 +357,37 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
   }
 } // class Slider
 
+/**
+ *  Adoption of horizontal ButtonSlider with aditional open coverage used in taz cannot be placed there due
+ *   class is called from NorthLib taz project is hidden from NorthLib so on execution the ratio was not set
+ *   in release only in debug
+ */
+class MyButtonSlider:ButtonSlider{
+  
+  let ContentSliderMaxWidth = 420.0
+  
+  var ocoverage: CGFloat? {
+    didSet {
+      guard let ocoverage = ocoverage, isOpen else { return }
+      shiftRatio = ocoverage < ContentSliderMaxWidth ? 0.7 : 0.1
+      resetConstraints()
+    }
+  }
+  override var coverage: CGFloat {
+    get { return ocoverage ?? super.coverage }
+    set { super.coverage = newValue }
+  }
+  override func slide(toOpen: Bool, animated: Bool = true) {
+    if toOpen == true, let ocoverage = ocoverage, ocoverage < ContentSliderMaxWidth {
+      shiftRatio = 0.7
+    }
+    else if toOpen == false && shiftRatio != 0.1 {
+      shiftRatio = 0.1
+    }
+    super.slide(toOpen: toOpen, animated: animated)
+  }
+}
+
 
 /**
  *  A ButtonSlider is a horizontal Slider that uses an image as a Button at the 
