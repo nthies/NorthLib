@@ -125,6 +125,19 @@ open class AudioPlayer: NSObject, DoesLog {
   
   // Should we be playing
   private var wasPlaying = false
+  
+  /// closure to call in case of error
+  public func onStateChange(closure:  (()->())?) { _stateChangeHandler = closure }
+  private var _stateChangeHandler: (()->())?
+  
+  
+  private var lastRate: Float? {
+    didSet {
+      if abs((oldValue ?? 0.0) - (lastRate ?? 0.0)) > 0.1 {
+        _stateChangeHandler?()
+      }
+    }
+  }
       
   /// returns true if the player is currently playing
   public var isPlaying: Bool { return (player?.rate ?? 0.0) > 0.001 }
@@ -177,6 +190,7 @@ open class AudioPlayer: NSObject, DoesLog {
     timer = every(seconds: 0.5) { [weak self] _ in
       self?.updatePlayingInfo()
       self?.childTimerClosure?()
+      self?.lastRate = self?.player?.rate
     }
   }
   
