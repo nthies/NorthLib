@@ -74,6 +74,10 @@ open class AudioPlayer: NSObject, DoesLog {
   /// Title of the track being played
   public var title:String?
   
+  ///should reset NowPlayingInfo here or outside?
+  ///prevent apering of latest played in other app after every article
+  public var resetNowPlayingInfo:Bool = true
+  
   /// Name of the album being played
   public var album:String?
   
@@ -272,8 +276,8 @@ open class AudioPlayer: NSObject, DoesLog {
       info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = player.currentItem!.currentTime().seconds
       MPNowPlayingInfoCenter.default().nowPlayingInfo = info
     }
-    else {
-      MPNowPlayingInfoCenter.default().nowPlayingInfo = nil      
+    else if resetNowPlayingInfo {
+      MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
     }
   }
   
