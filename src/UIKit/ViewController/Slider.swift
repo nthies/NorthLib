@@ -362,22 +362,22 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
  *   class is called from NorthLib taz project is hidden from NorthLib so on execution the ratio was not set
  *   in release only in debug
  */
-class MyButtonSlider:ButtonSlider{
+open class MyButtonSlider:ButtonSlider{
   
   let ContentSliderMaxWidth = 420.0
   
-  var ocoverage: CGFloat? {
+  open var ocoverage: CGFloat? {
     didSet {
       guard let ocoverage = ocoverage, isOpen else { return }
       shiftRatio = ocoverage < ContentSliderMaxWidth ? 0.7 : 0.1
       resetConstraints()
     }
   }
-  override var coverage: CGFloat {
+  open override var coverage: CGFloat {
     get { return ocoverage ?? super.coverage }
     set { super.coverage = newValue }
   }
-  override func slide(toOpen: Bool, animated: Bool = true) {
+  open override func slide(toOpen: Bool, animated: Bool = true) {
     if toOpen == true, let ocoverage = ocoverage, ocoverage < ContentSliderMaxWidth {
       shiftRatio = 0.7
     }
