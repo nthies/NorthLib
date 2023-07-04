@@ -472,19 +472,36 @@ open class WebView: WKWebView, WKScriptMessageHandler,
   
   private func handleLoadError(err: Error) {
     stopLoading()
+    errorCount += 1
+    
+    if let failUrl = (err as? URLError)?.failingURL,
+       let loadUrl = url,
+       loadUrl != failUrl {
+      log("Warning recive error for: \(failUrl), but loading: \(loadUrl)")
+      return
+    }
+    
+    if let curl = url, File(curl).exists {
+      debug("File exist but could not be loaded, try to reload url: \(curl) err count:\(errorCount)")
+      onMain(after: 0.1) { [weak self] in
+        guard let url = self?.originalUrl else { return }
+        self?.load(URLRequest(url: url))
+      }
+      return
+    }
+    
     if self.errorCount >= self.maxErrorCount {
       error(err)
       error("Load failed after \(maxErrorCount) retries")
       $whenLoadError.notify(sender: self, content: err)
-      errorCount = 0
     }
     else {
       debug("Load error after \(errorCount) retries:\n  \(err)")
       onMain(after: 0.1 * 2**errorCount) { [weak self] in
         guard let url = self?.originalUrl else { return }
+        if self?.errorCount == 0 { return }
         self?.load(URLRequest(url: url))
       }
-      errorCount += 1
     }
   }
   

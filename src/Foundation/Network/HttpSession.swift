@@ -128,7 +128,7 @@ open class HttpJob: DoesLog {
   /// Expected mime type
   public var expectedMimeType: String?
   /// Pathname of file downloading data to
-  private var filename: String?
+  public private(set) var filename: String?
   
   /// returns true if the job is performing a download task
   public var isDownload: Bool { task is URLSessionDownloadTask }
