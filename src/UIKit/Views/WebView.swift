@@ -245,6 +245,7 @@ open class WebView: WKWebView, WKScriptMessageHandler,
     for obj in bridgeObjects {
       self.configuration.userContentController.removeScriptMessageHandler(forName: obj.key)
     }
+//    NotificationCenter.default.removeObserver(self)
   }
   
   /// The closures to call when content has been loaded
@@ -383,10 +384,26 @@ open class WebView: WKWebView, WKScriptMessageHandler,
   
   public private(set) var scrollDelegate = WebViewScrollDelegate()
   
+  /// listen for download to refresh content instread of reload multiple times after load failed, may reduce battery impact
+  /// if using this soon: thimk about any.html contains any.jpg > html loaded before jpg > need to refresh after jpg loaded!
+//  @objc public func handleDownloadNotification(notification: Notification) {
+//    if self.errorCount == 0 {
+//      log("no need to reload for \(self.originalUrl)")
+//      return
+//    }
+//    guard let url = self.originalUrl else { return }
+//    log("notif filename: \((notification.object as? HttpJob)?.filename) url: \(url.lastPathComponent)")
+//    self.load(url: url)
+//  }
+  
+  
   public func setup() {
     self.navigationDelegate = self
     self.uiDelegate = self
     self.scrollView.delegate = scrollDelegate
+//    NotificationCenter.default.addObserver(self,
+//      selector: #selector(handleDownloadNotification),
+//      name: Notification.Name.httpSessionDownload, object: nil)
   }
   
   override public init(frame: CGRect, configuration: WKWebViewConfiguration? = nil) {
