@@ -34,8 +34,8 @@ class OptionalWebView: OptionalView, DoesLog {
   }
   
   func release(){
-    self.$whenAvailable.removeAll()
     self.webView?.release()
+    self.$whenAvailable.removeAll()
   }
   
   fileprivate func urlChanged() {
@@ -170,7 +170,10 @@ open class WebViewCollectionVC: PageCollectionVC {
   
   var optionalWebViews:[OptionalWebView] = []
   
-  open func release(){ optionalWebViews.forEach{$0.release()}}
+  open func releaseOnDisappear(){
+    optionalWebViews.forEach{$0.release()}
+    optionalWebViews = []
+  }
   
   /// Overwrite if necessary (eg. to inject JS instead of reloading)
   open func needsReload(webView: WebView) -> Bool { true }

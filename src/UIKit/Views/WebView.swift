@@ -237,7 +237,6 @@ open class WebView: WKWebView, WKScriptMessageHandler,
   /// Max. number of ongoing errors
   private let maxErrorCount = 5
   
-  deinit { log("\(self)")}
   
   public func release(){
     self.whenAvailable { _ in }
