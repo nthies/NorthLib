@@ -329,6 +329,7 @@ open class AudioPlayer: NSObject, DoesLog {
   private var seekCommand: Any?
   
   public var setupRemoteCommands = true
+  public var setupCloseRemoteCommands = true
   
   // enable remote commands
   private func openRemoteCommands() {
@@ -356,7 +357,7 @@ open class AudioPlayer: NSObject, DoesLog {
   
   // disable remote commands
   private func closeRemoteCommands() {
-    if setupRemoteCommands == false { return }
+    if setupRemoteCommands == false || setupCloseRemoteCommands == false { return }
     let commandCenter = MPRemoteCommandCenter.shared()
     commandCenter.playCommand.removeTarget(playCommand)
     commandCenter.pauseCommand.removeTarget(pauseCommand)
