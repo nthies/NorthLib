@@ -18,11 +18,12 @@ open class LocalNotifications: DoesLog {
                             badge: Int? = nil,
                             attachmentURL: URL? = nil,
                             categoryIdentifier: String? = nil,
+                            notificationIdentifier: String? = nil,
                             delay: TimeInterval = 5.0
 
   ){
     let fireDate = Date().addingTimeInterval(delay)
-    let identifier = "Notification-\(title ?? subtitle ?? message)-\(fireDate.ddMMyy_HHmmss)"
+    let identifier = notificationIdentifier ?? "Notification-\(title ?? subtitle ?? message)-\(fireDate.ddMMyy_HHmmss)"
     
     let content = UNMutableNotificationContent()
     if let title = title { content.title = title }
