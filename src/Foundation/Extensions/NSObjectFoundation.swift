@@ -97,3 +97,8 @@ public var gt_iOS14 : Bool {
   if #available(iOS 14, *) { return true }
   return false
 }
+
+public var gt_iOS16 : Bool {
+  if #available(iOS 16, *) { return true }
+  return false
+}

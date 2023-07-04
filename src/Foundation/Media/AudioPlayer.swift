@@ -250,7 +250,7 @@ open class AudioPlayer: NSObject, DoesLog {
           guard let self = self else { return UIImage() }
           if self.resizedImage == nil {
             self.resizedImage
-            = addLogo
+            = addLogo && gt_iOS16
             ? image.resized(to: s, withLogo: logoToAdd)
             : image.resize(to: s)
             if self.resizedImage == nil {
