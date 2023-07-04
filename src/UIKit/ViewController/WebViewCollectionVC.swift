@@ -36,12 +36,7 @@ class OptionalWebView: OptionalView, DoesLog {
   func release(){
     self.webView?.release()
     self.$whenAvailable.removeAll()
-//    log(">>>>> releaseOnDisappear:\(ObjectIdentifier(self).debugDescription)")
   }
-  
-//  deinit {
-//    log(">>>>> releaseD:\(ObjectIdentifier(self).debugDescription)")
-//  }
   
   fileprivate func urlChanged() {
     if let webView = self.webView { webView.stopLoading() }
@@ -178,7 +173,6 @@ open class WebViewCollectionVC: PageCollectionVC {
   open func releaseOnDisappear(){
     optionalWebViews.forEach{$0.release()}
     optionalWebViews = []
-//    log(">>>>> releaseOnDisappear: \(self)")
   }
   
   /// Overwrite if necessary (eg. to inject JS instead of reloading)

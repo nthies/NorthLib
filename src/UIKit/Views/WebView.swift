@@ -237,9 +237,6 @@ open class WebView: WKWebView, WKScriptMessageHandler,
   /// Max. number of ongoing errors
   private let maxErrorCount = 5
   
-//  deinit {
-//    log(">>>>> releaseD: \(self)")
-//  }
   
   public func release(){
     self.whenAvailable { _ in }
@@ -248,7 +245,6 @@ open class WebView: WKWebView, WKScriptMessageHandler,
       self.configuration.userContentController.removeScriptMessageHandler(forName: obj.key)
     }
 //    NotificationCenter.default.removeObserver(self)
-//    log(">>>>> releaseOnDisappear: \(self)")
   }
   
   /// The closures to call when content has been loaded
