@@ -68,12 +68,17 @@ public extension String {
 /// Various other String extensions
 public extension String {
   
-  /// Remove leading and trailing white space
+  /// Remove leading and trailing white space of a single word string, removes everything after whitespace
   var trim: String {
     var tmp = withCString { str_trim($0) }
     let ret = String(cString: tmp!)
     str_release(&tmp)
     return ret
+  }
+  
+  /// Remove leading and trailing white space of a multiword string
+  var trimed: String {
+    return self.trimmingCharacters(in: .whitespacesAndNewlines)
   }
   
   /// Remove leading and trailing white space
