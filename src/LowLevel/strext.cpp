@@ -920,7 +920,12 @@ const char *str_substring(const char **rstr, char *buff, int len, char delim) {
 char *str_trim(const char *str) {
   int l = str_len(str) + 1;
   char *tmp = (char *) malloc(l * sizeof(char));
-  str_substring(&str, tmp, l, 0);
+  const char *s = str;
+  char *d = tmp;
+  while (*s && isspace (*s)) s++;
+  str_cpy(&d, l, s);
+  while ((d > tmp) && isspace(*(d-1))) d--;
+  *d = 0;
   return str_heap(tmp, 0);
 }
 

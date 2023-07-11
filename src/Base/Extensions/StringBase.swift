@@ -8,7 +8,6 @@
 //
 
 import NorthLowLevel
-import Foundation
 
 /// String conforms to Error and can thus be thrown:
 extension String: Error {}
@@ -68,7 +67,7 @@ public extension String {
 /// Various other String extensions
 public extension String {
   
-  /// Remove leading and trailing white space of a single word string, removes everything after whitespace
+  /// Remove leading and trailing white space
   var trim: String {
     var tmp = withCString { str_trim($0) }
     let ret = String(cString: tmp!)
@@ -76,16 +75,6 @@ public extension String {
     return ret
   }
   
-  /// Remove leading and trailing white space of a multiword string
-  var trimed: String {
-    return self.trimmingCharacters(in: .whitespacesAndNewlines)
-  }
-  
-  /// Remove leading and trailing white space
-  var lastPathComponent: String? {
-    return (self as NSString).lastPathComponent
-  }
-
   /// Escape XML special characters. Set isAttribute to true if the
   /// String should be used as an XML attribute.
   func xmlEscaped(isAttribute: Bool = false) -> String {

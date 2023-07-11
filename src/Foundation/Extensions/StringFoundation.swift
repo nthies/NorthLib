@@ -71,3 +71,17 @@ public func Localized(_ key: String) -> String {
 public func Localized(keyWithFormat: String, _  arguments: CVarArg...) -> String {
   return String(format: Localized(keyWithFormat), arguments: arguments)
 }
+
+extension String {
+  
+  /// Remove leading and trailing white space of a multiword string
+  var trimed: String {
+    return self.trimmingCharacters(in: .whitespacesAndNewlines)
+  }
+  
+  /// Remove leading and trailing white space
+  var lastPathComponent: String? {
+    return (self as NSString).lastPathComponent
+  }
+
+}
