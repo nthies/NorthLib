@@ -72,7 +72,7 @@ public func Localized(keyWithFormat: String, _  arguments: CVarArg...) -> String
   return String(format: Localized(keyWithFormat), arguments: arguments)
 }
 
-extension String {
+public extension String {
   
   /// Remove leading and trailing white space of a multiword string
   var trimed: String {
