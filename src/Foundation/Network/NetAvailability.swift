@@ -229,9 +229,6 @@ public class ExtendedNetAvailability: DoesLog {
       self.netAvailability = createNetAvailability()
       _onChangeClosure?(self.netAvailability?.isAvailable ?? false)
     }
-    else {
-      log("NO CHange")
-    }
   }
   
   public init(url: String) {
@@ -242,10 +239,9 @@ public class ExtendedNetAvailability: DoesLog {
     if netAvailability == nil { netAvailability = createNetAvailability() }
     guard let netAvailability = netAvailability else { return false }
 
-    let recheckDuration = Device.isSimulator ? 10.0 : 5*60.0
+    let recheckDuration = Device.isSimulator ? 30.0 : 5*60.0
     
     if abs(netStatusVerification.timeIntervalSinceNow) > recheckDuration {
-      #warning("TODO: test ensure verification works")
       recheck()
     }
     
