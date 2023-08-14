@@ -452,7 +452,7 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
           job.close()
           ///retry job if 2 jobs with same task.taskIdentifier started; may create another task instead before
           if doRetry == true
-              && job.httpError?.description.contains("still exists") {
+              && (job.httpError?.description.contains("still exists") ?? false) == true {
             self?.downloadDlFile(baseUrl: baseUrl, file: file, toDir: toDir, cacheDir: cacheDir, doRetry: false, closure: closure)
           }
           else {
