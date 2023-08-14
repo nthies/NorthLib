@@ -218,14 +218,14 @@ public class ExtendedNetAvailability: DoesLog {
   }
   
   /// Defines the closure to call when a network change has happened
-  public func recheck() {
+  public func recheck(force: Bool = false) {
     netStatusVerification = Date()
     guard let netAvailability = self.netAvailability else {
       self.netAvailability = createNetAvailability()
       return
     }
     
-    if createNetAvailability()?.reachabilityFlags != netAvailability.lastFlags {
+    if force || createNetAvailability()?.reachabilityFlags != netAvailability.lastFlags {
       self.netAvailability = createNetAvailability()
       _onChangeClosure?(self.netAvailability?.isAvailable ?? false)
     }
