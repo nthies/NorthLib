@@ -237,6 +237,11 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
   /// URLSession
   public var session: URLSession {
     if _session == nil {
+      ///intel imac simulator crash: Thread 11: EXC_BAD_ACCESS (code=EXC_I386_GPFLT)
+      ///EXC_I386_GPFLT is surely referring to "General Protection fault", which is the x86's way to tell you that "you did something that you are not allowed to do".
+      ///in thread stack there are 7 Threads like:>> Thread 3/4/6/8/9/11/12 Queue : com.apple.root.background-qos (concurrent)
+      ///all containing: ...in HttpSession.session.getter...
+      log("request a new session for thread: \(Thread.current) at: \(Date().timeIntervalSinceReferenceDate)")
       _session = URLSession(configuration: config, delegate: self, delegateQueue: nil)
     }
     return _session!
@@ -448,6 +453,7 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
       let task = session.downloadTask(with: req)
       Dir(toDir).create()
       createJob(task: task, filename: toFile.path) { [weak self] job in
+        guard self != nil else { return }
         if job.wasError {
           job.close()
           ///retry job if 2 jobs with same task.taskIdentifier started; may create another task instead before
@@ -456,7 +462,8 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
             self?.downloadDlFile(baseUrl: baseUrl, file: file, toDir: toDir, cacheDir: cacheDir, doRetry: false, closure: closure)
           }
           else {
-            closure(.failure(job.httpError!))
+            //fixes: Thread 2: Fatal error: Unexpectedly found nil while unwrapping an Optional value
+            closure(.failure(job.httpError ?? self!.error("unknown")))
           }
         }
         else { 
