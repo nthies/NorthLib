@@ -136,6 +136,7 @@ open class ZoomedImageView: UIView, ZoomedImageViewSpec {
   
   fileprivate func zoomOutAndCenter() {
     layoutInitialized = false
+    self.updateConstraintsForSize(self.bounds.size)
     self.setNeedsLayout()
     self.layoutIfNeeded()
   }
