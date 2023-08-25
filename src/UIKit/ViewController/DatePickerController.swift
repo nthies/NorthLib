@@ -226,11 +226,18 @@ extension DatePickerController {
       self.minimumDate = minimumDate
       self.maximumDate = maximumDate
       
-      minimumYear = minimumDate.components().year ?? 0
+      var yearCount = 0
       
-      let intervall = Calendar.current.dateComponents([.month, .year], from: minimumDate, to: maximumDate)
+      if let minYear = minimumDate.components().year,
+         let maxYear = maximumDate.components().year {
+        minimumYear = minYear
+        yearCount = maxYear - minYear
+      }
+      else {
+        minimumYear = 0
+      }
       
-      yearIniciesCount = 1 + (intervall.year ?? 0)
+      yearIniciesCount = 1 + yearCount
       monthIniciesCount = 12
       dayIniciesCount = 31
     }
