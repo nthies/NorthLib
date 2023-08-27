@@ -43,7 +43,11 @@ class OptionalWebView: OptionalView, DoesLog {
     else { createWebView() }
     if isAvailable { loadView() }
     else {
-      url.whenAvailable { [weak self] in self?.loadView() }
+      url.whenAvailable { [weak self] in
+        ///prevent reproduceable crash due login in: Thread 1: Fatal error: FileEntry.path is undefined
+        if self?.isAvailable != true { return }
+        self?.loadView()
+      }
     }
   }
   

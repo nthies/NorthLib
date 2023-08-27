@@ -73,6 +73,21 @@ class StringTests: XCTestCase {
     XCTAssertEqual(escaped, "&lt;abc&gt;def&apos;ghi&quot;jkl&amp;mno")
   }
   
+  func testTrim() {
+    XCTAssertEqual(" abc def ".trim, "abc def")
+    XCTAssertEqual("abc def ".trim, "abc def")
+    XCTAssertEqual("abc def".trim, "abc def")
+    XCTAssertEqual(" abc ".trim, "abc")
+    XCTAssertEqual(" abc".trim, "abc")
+    XCTAssertEqual("abc".trim, "abc")
+    XCTAssertEqual("".trim, "")
+    XCTAssertEqual(" a ".trim, "a")
+    XCTAssertEqual(" a".trim, "a")
+    XCTAssertEqual("a".trim, "a")
+    XCTAssertEqual(" a \n b ".trim, "a \n b")
+    XCTAssertEqual(" a \n".trim, "a")
+  }
+  
 } // StringTests
 
 class MathTests: XCTestCase {

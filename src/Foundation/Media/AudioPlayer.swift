@@ -86,18 +86,16 @@ open class AudioPlayer: NSObject, DoesLog {
   
   /// Artist of the track being played
   public var addLogo:Bool = false
+  
+#if canImport(UIKit)
+  public var logoToAdd: UIImage?
 
-  #if canImport(UIKit)  
-    public var logoToAdd: UIImage?
-  #endif
-
-  #if canImport(UIKit) 
   // The resized image for the lock screen player UI
   private var resizedImage: UIImage?
   
   /// The image to display while playing
   public var image: UIImage? { didSet { resizedImage = nil } }
-  #endif
+#endif
   
   /// current playback position
   public var currentTime: CMTime {

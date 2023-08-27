@@ -237,6 +237,11 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
   /// URLSession
   public var session: URLSession {
     if _session == nil {
+      ///intel imac simulator crash: Thread 11: EXC_BAD_ACCESS (code=EXC_I386_GPFLT)
+      ///EXC_I386_GPFLT is surely referring to "General Protection fault", which is the x86's way to tell you that "you did something that you are not allowed to do".
+      ///in thread stack there are 7 Threads like:>> Thread 3/4/6/8/9/11/12 Queue : com.apple.root.background-qos (concurrent)
+      ///all containing: ...in HttpSession.session.getter...
+      log("request a new session for thread: \(Thread.current) at: \(Date().timeIntervalSinceReferenceDate)")
       _session = URLSession(configuration: config, delegate: self, delegateQueue: nil)
     }
     return _session!
@@ -268,11 +273,23 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
     let job = HttpJob(task: task, filename: filename, closure: closure)
     log("New HTTP Job \(job.tid) created: \(job.url ?? "[undefined URL]")")
     syncQueue.sync { [weak self] in
+      guard let self = self else { return }
       //crash: simulator 16.6. +2
       //reproduceable on simulator, not reproduceable on 4 devices
-      self?.jobs[job.tid] = job
+      
+      if self.jobs[job.tid] == nil {
+        self.jobs[job.tid] = job
+      }
+      else {
+        job.httpError = error("job with \(job.tid) still exists")
+      }
     }
-    job.task.resume()
+    if job.wasError == false {
+      job.task.resume()
+    }
+    else {
+      closure(job)
+    }
   }
   
   /// Close a job with given task ID
@@ -315,6 +332,8 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
       config.urlCache = nil
       config.requestCachePolicy = .reloadIgnoringLocalAndRemoteCacheData
     }
+    config.timeoutIntervalForRequest = 20.0
+    config.timeoutIntervalForResource = 40.0
     config.allowsCellularAccess = allowMobile
     config.waitsForConnectivity = waitForAvailability
     return config
@@ -412,6 +431,7 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
    */
   public func downloadDlFile(baseUrl: String, file: DlFile, toDir: String,
                              cacheDir: String? = nil,
+                             doRetry: Bool = true,
                              closure: @escaping(Result<HttpJob?,Error>)->()) {
     if file.exists(inDir: toDir) { closure(.success(nil)) }
     else if let cache = cacheDir, file.exists(inDir: cache) {
@@ -433,7 +453,19 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
       let task = session.downloadTask(with: req)
       Dir(toDir).create()
       createJob(task: task, filename: toFile.path) { [weak self] job in
-        if job.wasError { closure(.failure(job.httpError!)) }
+        guard self != nil else { return }
+        if job.wasError {
+          job.close()
+          ///retry job if 2 jobs with same task.taskIdentifier started; may create another task instead before
+          if doRetry == true
+              && (job.httpError?.description.contains("still exists") ?? false) == true {
+            self?.downloadDlFile(baseUrl: baseUrl, file: file, toDir: toDir, cacheDir: cacheDir, doRetry: false, closure: closure)
+          }
+          else {
+            //fixes: Thread 2: Fatal error: Unexpectedly found nil while unwrapping an Optional value
+            closure(.failure(job.httpError ?? self!.error("unknown")))
+          }
+        }
         else { 
           var err: Error? = nil
           toFile.mTime = file.moTime
@@ -445,10 +477,8 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
           if let err = err { 
             self?.error(err)
             self?.log("* Warning: File \(file.name) successfully downloaded " +
-                      "but size and/or checksum is incorrect" )
-            // TODO: Report error when the higher layers have been fixed
-            closure(.success(job))
-            // closure(.failure(err)) 
+                      "but size and/or checksum is incorrect source URL:\(url)" )
+            closure(.failure(err))
           }
         }
       }
@@ -745,8 +775,7 @@ open class HttpLoader: ToString, DoesLog {
       }
       for file in toDownload {
         self.downloadNext(file: file)
-        let dto = self.semaphore.wait(timeout: .now() + 5)
-        if dto == .timedOut { self.debug("download timeout") }
+        self.semaphore.wait()
       }
       onMain { [weak self] in
         guard let self else { return }

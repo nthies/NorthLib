@@ -425,7 +425,10 @@ open class File: ToString, DoesLog {
     }
     if isOverwrite {
       let dest = File(to)
-      if dest.exists { dest.remove() }
+      if dest.exists {
+        debug("overwriting: \(to)")
+        dest.remove()
+      }
     }
     Dir(File.dirname(to)).create()
     let ret = to.withCString { dest -> Int in

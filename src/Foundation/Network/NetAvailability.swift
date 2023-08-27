@@ -53,9 +53,9 @@ open class NetAvailability {
   // destination to test for reachability
   private var destination: SCNetworkReachability
   
-  private var lastFlags: SCNetworkReachabilityFlags
+  fileprivate var lastFlags: SCNetworkReachabilityFlags
   
-  private var reachabilityFlags: SCNetworkReachabilityFlags {
+  fileprivate var reachabilityFlags: SCNetworkReachabilityFlags {
     var flags = SCNetworkReachabilityFlags()
     SCNetworkReachabilityGetFlags(self.destination, &flags)
     return flags
@@ -134,7 +134,7 @@ open class NetAvailability {
   // changeCallback is called upon network reachability changes
   private func changeCallback(flags: SCNetworkReachabilityFlags) {
     if let closure = self._onChangeClosure {
-      closure(flags)
+      if lastFlags != flags { closure(flags) }//prevent double call
     }
     if let closure = self._whenUpClosure {
       if isAvailable(flags: flags) && !isAvailable(flags: lastFlags) { closure() }
@@ -164,3 +164,94 @@ open class NetAvailability {
   }  
   
 } // NetAvailability
+
+public class ExtendedNetAvailability: DoesLog {
+  /**
+   [...]
+   SCNetworkReachability and  NWPathMonitor
+   is not perfect; it can result in both false positives (saying that something is reachable when it’s not) and false negatives (saying that something is unreachable when it is). It also suffers from TOCTTOU issues.
+   [...]
+   Source: https://developer.apple.com/forums/thread/105822
+   Written by: Quinn “The Eskimo!”   Apple Developer Relations, Developer Technical Support, Core OS/Hardware
+    => this is maybe the problem within our: Issue not appears, download not work issues
+   */
+  /// netAvailability is used to check for network access to the Feeder
+  public var netAvailability: NetAvailability? {
+    didSet {
+      oldValue?.onChange{ _ in }
+      netAvailability?.onChange{[weak self] flags in
+        guard let self = self,
+              let conn = netAvailability?.isAvailable(flags:flags) else { return }
+        self._onChangeClosure?(conn)
+      }
+    }
+  }
+  
+  var _onChangeClosure: ((Bool)->())? = nil
+  
+  /// Defines the closure to call when a network change has happened
+  public func onChange(_ closure: ((Bool)->())?) {
+    _onChangeClosure = closure
+  }
+  
+  var netStatusVerification = Date()
+  
+  
+  public var isMobile: Bool { netAvailability?.isMobile ?? false }
+  
+  public var wasConnected: Bool {
+    guard let netAvailability = netAvailability else { return false }
+    return netAvailability.isAvailable(flags: netAvailability.lastFlags)
+  }
+  
+  /// Factory Method to create NetAvailability Instances for isConnected check and verification
+  private func createNetAvailability() -> NetAvailability? {
+    guard let host = URL(string: self.url)?.host else { return nil }
+    return NetAvailability(host: host)
+  }
+  
+  public var url: String {
+    didSet {
+      netStatusVerification = Date()
+      self.netAvailability = createNetAvailability()
+    }
+  }
+  
+  /// Defines the closure to call when a network change has happened
+  public func recheck(force: Bool = false) {
+    netStatusVerification = Date()
+    guard let netAvailability = self.netAvailability else {
+      self.netAvailability = createNetAvailability()
+      return
+    }
+    
+    if force || createNetAvailability()?.reachabilityFlags != netAvailability.lastFlags {
+      self.netAvailability = createNetAvailability()
+      _onChangeClosure?(self.netAvailability?.isAvailable ?? false)
+    }
+  }
+  
+  public init(url: String) {
+    self.url = url
+  }
+  
+  public var isConnected: Bool {
+    if netAvailability == nil { netAvailability = createNetAvailability() }
+    guard let netAvailability = netAvailability else { return false }
+
+    let recheckDuration = Device.isSimulator ? 30.0 : 5*60.0
+    
+    if abs(netStatusVerification.timeIntervalSinceNow) > recheckDuration {
+      recheck()
+    }
+    
+    let lastFlags = netAvailability.lastFlags
+    let currentFlags = netAvailability.reachabilityFlags
+    let connected = netAvailability.isAvailable(flags:currentFlags)
+    
+    if lastFlags != currentFlags {
+      _onChangeClosure?(connected)
+    }
+    return connected
+  }
+}
