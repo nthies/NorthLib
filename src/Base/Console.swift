@@ -27,7 +27,7 @@ open class Console: DoesLog {
   }
   
   /// Read a String from the console without leading and trailing WS
-  func gets() -> String? {
+  public func gets() -> String? {
     var s = tty_getstring(input)
     defer { str_release(&s) }
     if let s { 
@@ -37,13 +37,13 @@ open class Console: DoesLog {
     return nil
   }
   
-  func gets() async -> String? {
+  public func gets() async -> String? {
     let t = Task { () -> String? in gets() }
     return try! await t.result.get()
   }
   
   /// Read a String from the console without echo
-  func negets() -> String? {
+  public func negets() -> String? {
     var s = tty_negetstring(input)
     defer { str_release(&s) }
     if let s { 
@@ -53,20 +53,20 @@ open class Console: DoesLog {
     return nil
   }
   
-  func negets() async -> String? {
+  public func negets() async -> String? {
     let t = Task { () -> String? in negets() }
     return try! await t.result.get()
   }
   
   /// Write String to the console (no newline is added)
-  func puts(_ str: String) {
+  public func puts(_ str: String) {
     _ = str.withCString { s in
       tty_write(output, s)
     }
   }
 
   /// Write String to the console (newline is added)
-  func putsln(_ str: String) {
+  public func putsln(_ str: String) {
     let s = str + "\n"
     _ = s.withCString { s in
       tty_write(output, s)
