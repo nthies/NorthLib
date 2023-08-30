@@ -37,6 +37,11 @@ open class Console: DoesLog {
     return nil
   }
   
+  func gets() async -> String? {
+    let t = Task { () -> String? in gets() }
+    return try! await t.result.get()
+  }
+  
   /// Read a String from the console without echo
   func negets() -> String? {
     var s = tty_negetstring(input)
@@ -46,6 +51,11 @@ open class Console: DoesLog {
       return str?.trim
     }
     return nil
+  }
+  
+  func negets() async -> String? {
+    let t = Task { () -> String? in negets() }
+    return try! await t.result.get()
   }
   
   /// Write String to the console (no newline is added)
