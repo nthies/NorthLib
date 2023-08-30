@@ -32,7 +32,7 @@ open class Console: DoesLog {
     defer { str_release(&s) }
     if let s { 
       let str = String(validatingUTF8: s) 
-      return str?.trimmingCharacters(in: .whitespacesAndNewlines)
+      return str?.trim
     }
     return nil
   }
@@ -43,7 +43,7 @@ open class Console: DoesLog {
     defer { str_release(&s) }
     if let s { 
       let str = String(validatingUTF8: s) 
-      return str?.trimmingCharacters(in: .whitespacesAndNewlines)
+      return str?.trim
     }
     return nil
   }
