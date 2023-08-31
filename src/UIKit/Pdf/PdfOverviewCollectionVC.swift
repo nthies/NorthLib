@@ -229,7 +229,6 @@ class TwoColumnUICollectionViewFlowLayout : UICollectionViewFlowLayout {
       let indexPath = IndexPath(item: idx, section: 0)
       let attributes = UICollectionViewLayoutAttributes(forCellWith: indexPath)
       if let item = pdfModel.item(atIndex: idx) {
-        //print("Layout Item \(item.pageTitle) type: \(item.pageType) atIndex: \(idx)")
         switch (prevPageType, item.pageType) {
           case (.left, .right):
             attributes.frame = CGRect(origin: CGPoint(x: xRight, y: yOffset), size: singleItemSize)

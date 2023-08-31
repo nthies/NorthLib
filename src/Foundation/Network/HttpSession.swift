@@ -198,7 +198,6 @@ open class HttpJob: DoesLog {
 
 extension URLSessionTask {
   fileprivate var cid: String {
-    print("\(self.taskIdentifier)+\(self.originalRequest?.url?.lastPathComponent ?? "empty")")
     return "\(self.taskIdentifier)+\(self.originalRequest?.url?.lastPathComponent ?? "empty")"
   }
 }
@@ -280,7 +279,7 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
   public func createJob(task: URLSessionTask, filename: String? = nil,
                         closure: @escaping(HttpJob)->()) {
     let job = HttpJob(task: task, filename: filename, closure: closure)
-    log("New HTTP Job \(job.cid) created: \(job.url ?? "[undefined URL]")")
+//    debug("New HTTP Job \(job.cid) created: \(job.url ?? "[undefined URL]")")
     syncQueue.sync { [weak self] in
       guard let self = self else { return }
       //crash: simulator 16.6. +2
