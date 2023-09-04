@@ -180,8 +180,11 @@ open class AudioPlayer: NSObject, DoesLog {
     self.player = AVPlayer(playerItem: item)
     if #available(iOS 15.0, macOS 12, *) {
       self.player?.audiovisualBackgroundPlaybackPolicy = .continuesIfPossible
-    } 
-    updatePlayingInfo()
+    }
+    onThread {[weak self] in
+      self?.updatePlayingInfo()
+    }
+    
     NotificationCenter.default.addObserver(self, selector: #selector(playerHasFinished),
       name: .AVPlayerItemDidPlayToEndTime, object: item)
     NotificationCenter.default.addObserver(self, selector:
@@ -271,6 +274,9 @@ open class AudioPlayer: NSObject, DoesLog {
         info[MPMediaItemPropertyArtist] = artist
       }
       info[MPNowPlayingInfoPropertyIsLiveStream] = false
+      //WARNING THIS IS SLOW & BLOCKES UI MULTIPLE TIMES; MAYBE MOVE TO BG PROCESS!?
+      //Test with bad internet!
+      #warning("Blocks UI")
       info[MPMediaItemPropertyPlaybackDuration] = player.currentItem!.asset.duration.seconds
       info[MPNowPlayingInfoPropertyPlaybackRate] = player.rate
       info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = player.currentItem!.currentTime().seconds
