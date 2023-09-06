@@ -476,17 +476,30 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
         }
         else { 
           var err: Error? = nil
+          var reason = ""
           toFile.mTime = file.moTime
-          if toFile.size != file.size 
-            { err = HttpError.unexpectedFileSize(toFile.size, file.size) }
-          else if toFile.sha256 != file.sha256
-            { err = HttpError.invalidSHA256(toFile.sha256) }
-          else { closure(.success(job)) }
+          if toFile.size != file.size {
+            err = HttpError.unexpectedFileSize(toFile.size, file.size)
+            reason = "filesize \(toFile.size) != \(file.size)"
+          }
+          else if toFile.sha256 != file.sha256 {
+            err = HttpError.invalidSHA256(toFile.sha256)
+            reason = "checksum"
+          }
+          else {
+            closure(.success(job))
+          }
+          
           if let err = err { 
             self?.error(err)
             self?.log("* Warning: File \(file.name) successfully downloaded " +
-                      "but size and/or checksum is incorrect source URL:\(url)" )
-            closure(.failure(err))
+                      "but \(reason) is incorrect! source URL:\(url)" )
+            #warning("ToDo, To Discuss: if failure responded wrong data would not be shown in App")
+            ///e.g. Issue 2023-08-22, loading never succed if responde with error Article Berlin 4/12 BERLIN RINGT UM OLYMPIA never shown
+            ///is wrong data on server?, what happen if issue refreshed /re-delivered are checksums/filesize korrekt
+            closure(.success(job))
+            // TODO: Report error when the higher layers have been fixed
+            //closure(.failure(err))
           }
         }
       }
