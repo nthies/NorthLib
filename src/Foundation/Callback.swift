@@ -44,7 +44,10 @@ open class ThreadClosure<T>: NSObject {
   public func callAsFunction(arg: T, wait: Bool = false)
     { call(arg: arg, wait: wait) }
   
-  @objc private func callClosure(arg: Any) { closure(arg as! T) }
+  @objc private func callClosure(arg: Any) {
+    guard let targ = arg as? T else { return }
+    closure(targ)
+  }
 }
 
 /// Let ThreadClosure default to Void
