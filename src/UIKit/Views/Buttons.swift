@@ -313,6 +313,30 @@ open class ButtonControl: UIControl {
     set { view?.inset = newValue }
   }
   
+//  fileprivate var longPressRecognizer: UILongPressGestureRecognizer?
+//  /// Closure will be called if the button has been pressed and is released
+//  fileprivate var longPressClosure: ((ButtonControl)->())? = nil {
+//    didSet {
+//
+//      longPressRecognizer?.isEnabled = longPressClosure != nil
+//      guard longPressRecognizer == nil,
+//            longPressClosure != nil else { return }
+//      let lgr
+//      = UILongPressGestureRecognizer(target: self,
+//                                     action: #selector(handleLongTap(sender:)))
+//      self.addGestureRecognizer(lgr)
+//      longPressRecognizer = lgr
+//    }
+//  }
+//  
+//  @objc fileprivate func handleLongTap(sender: UILongPressGestureRecognizer) {
+//    guard sender.state == .began else { return }
+//    longPressClosure?(self)
+//  }
+//  
+//  /// define the closure to call when the button has been pressed
+//  open func onLongPress(closure: @escaping (ButtonControl)->()) { longPressClosure = closure }
+  
   /// Closure will be called if the button has been pressed and is released
   fileprivate var onPressClosure: ((ButtonControl)->())? = nil
   
