@@ -237,22 +237,31 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
   fileprivate var _config: URLSessionConfiguration? { didSet { _session = nil } }
   /// Session configuration
   public var config: URLSessionConfiguration {
-    if _config == nil { _config = getConfig() }
-    return _config!
+    let cfg = _config ?? getConfig()
+    if _config == nil {
+      _config = cfg
+      log("request a new session for thread: \(Thread.current) at: \(Date().timeIntervalSinceReferenceDate)")
+    }
+    return cfg
   }
   
-  public var _session: URLSession?  
+  public var _session: URLSession?
   /// URLSession
   public var session: URLSession {
+    let sess = _session ?? URLSession(configuration: config, delegate: self, delegateQueue: nil)
     if _session == nil {
+      _session = sess
       ///intel imac simulator crash: Thread 11: EXC_BAD_ACCESS (code=EXC_I386_GPFLT)
       ///EXC_I386_GPFLT is surely referring to "General Protection fault", which is the x86's way to tell you that "you did something that you are not allowed to do".
       ///in thread stack there are 7 Threads like:>> Thread 3/4/6/8/9/11/12 Queue : com.apple.root.background-qos (concurrent)
       ///all containing: ...in HttpSession.session.getter...
-      log("request a new session for thread: \(Thread.current) at: \(Date().timeIntervalSinceReferenceDate)")
-      _session = URLSession(configuration: config, delegate: self, delegateQueue: nil)
+      ///Crashes in Debug session 23-09-18 before this commits changes
+      ///Crash on Debug after ResetApp, Device Locked for 3 Minutes, Unlock continue debug session
+      ///Thread 7: EXC_BAD_ACCESS (code=1, address=0x10)
+      ///Crash again in Wochentaz Tiles after app to backgrounf => Foreground switch to PDF
+      ///after changing no crash while extensive try to reproduce stept... but this must not mean problem solved
     }
-    return _session!
+    return sess
   }
   
   // Number of HttpSession incarnations
