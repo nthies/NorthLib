@@ -60,6 +60,9 @@ public extension UIImage {
 /// A very simple audio player utilizing AVPlayer
 open class AudioPlayer: NSObject, DoesLog {
   
+  @Default("playbackRate")
+  public var playbackRate: Double
+  
   private var _file: String? = nil
   
   /// file or String url to play
@@ -293,6 +296,7 @@ open class AudioPlayer: NSObject, DoesLog {
     guard let player = self.player else { return }
     wasPlaying = true
     player.play()
+    player.rate = Float(playbackRate)
   }
   
   /// stop stops the current playback (pauses it)
