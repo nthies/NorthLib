@@ -7,14 +7,14 @@
 
 import UIKit
 
-public typealias menuAction = (title: String, icon: String, group: Int, closure: (Any?)->())
+public typealias menuAction = (title: String, icon: String?, group: Int, closure: (Any?)->())
 
 public class MenuActions {
   
   public init() { self.actions = [] }
   public var actions: [menuAction]
   /// Add an additional menu item
-  public func addMenuItem(title: String, icon: String, group: Int? = nil,
+  public func addMenuItem(title: String, icon: String?, group: Int? = nil,
                    closure: @escaping (Any?)->()) {
     actions += (title: title, icon: icon, group: group ?? 0, closure: closure)
   }
@@ -23,9 +23,12 @@ public class MenuActions {
     var itms: [Int:[UIAction]] = [:]
     for m in actions {
       var subItems = itms[m.group] ?? []
+      var img: UIImage?
+      if let icon = m.icon {
+        img = UIImage(name: icon) ?? UIImage(named: icon)
+      }
       subItems.append(UIAction(title: m.title,
-                         image: UIImage(name: m.icon)
-                         ?? UIImage(named: m.icon)) { [weak self] _ in
+                         image:img) { [weak self] _ in
         m.closure(self)
       })
       itms[m.group] = subItems
