@@ -9,7 +9,11 @@ import UIKit
 import MessageUI
 
 /// A simple UINavigationController offering left/right edge swipe detection
-open class NavigationController: UINavigationController, 
+/// ATTENTION
+/// In case of drawer slide out manually is required restore old state
+///  AND Fix Bug Carousel tap to download open > swipe back before push
+///  by setup gesture recognizers after viewdidload of pushed VC
+open class NavigationController: UINavigationController,
   UIGestureRecognizerDelegate, MailingVC {
   
   open override func viewDidLoad() {
