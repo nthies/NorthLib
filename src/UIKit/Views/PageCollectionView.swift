@@ -280,11 +280,18 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
   open func reload(index: Int) { reloadItems(at: [IndexPath(item: index, section: 0)]) }
   
   // An array of closures, each is to call when the displayed page changes
-  fileprivate var onDisplayClosures: [(Int, OptionalView?)->()] = []
+  fileprivate var onDisplayClosures: [String:(Int, OptionalView?)->()] = [:]
    
   /// Define closure to call when a cell is newly displayed  
-  public func onDisplay(closure: @escaping (Int, OptionalView?)->()) {
-    onDisplayClosures += closure
+  public func onDisplay(closure: @escaping (Int, OptionalView?)->()) -> String? {
+    let key = "closure: \(onDisplayClosures.count)"
+    onDisplayClosures[key] = closure
+    return key
+  }
+  
+  /// removes a closure to call when a cell is newly displayed  from closures by given key
+  public func removeOnDisplay(forKey: String) {
+    onDisplayClosures[forKey] = nil
   }
   
   // closure to execute on end display
@@ -308,7 +315,7 @@ open class PageCollectionView: UICollectionView, UICollectionViewDelegate,
 
   /// Call all onDisplay closures
   fileprivate func callOnDisplay(idx: Int, oview: OptionalView?) 
-    { for cl in onDisplayClosures { cl(idx, oview) } }
+  { for cl in onDisplayClosures.values { cl(idx, oview) } }
   
   // updateDisplaying is called when the scrollview has been scrolled which
   // might have changed the view currently visible

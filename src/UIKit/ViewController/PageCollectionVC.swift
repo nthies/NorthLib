@@ -98,9 +98,15 @@ open class PageCollectionVC: UIViewController {
   
   public required init?(coder: NSCoder) { super.init(coder: coder) }
 
-  /// Define closure to call when a cell is newly displayed  
-  public func onDisplay(closure: @escaping (Int, OptionalView?)->()) {
-    collectionView?.onDisplay(closure: closure)
+  @discardableResult
+  /// Define closure to call when a cell is newly displayed
+  public func onDisplay(closure: @escaping (Int, OptionalView?)->()) -> String? {
+    return collectionView?.onDisplay(closure: closure)
+  }
+  
+  /// removes a closure to call when a cell is newly displayed  from closures by given key
+  public func removeOnDisplay(forKey: String) {
+    collectionView?.removeOnDisplay(forKey: forKey)
   }
   
   /// Define closure to call when a cell is newly displayed
