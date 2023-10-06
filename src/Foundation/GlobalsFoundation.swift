@@ -62,6 +62,15 @@ public func ensureMain(closure: @escaping ()->()) {
   }
 }
 
+/// Ensures that the passed closure is NOT executed in the main thread.
+/// If the current thread is the main thread, the closure is executed asynchronously on a Background Thread.
+/// otherwise it is executed immediately,
+/// - Parameter closure: closute to execute
+public func ensureBackground(closure: @escaping ()->()) {
+  if Thread.isMainThread {  onThread { closure() } }
+  else {  closure()  }
+}
+
 
 /// Delays execution of a closure on the main thread for a number of seconds
 public func delay(seconds: Double, closure: @escaping ()->()) {

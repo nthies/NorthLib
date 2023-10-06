@@ -16,10 +16,18 @@ import MessageUI
 open class NavigationController: UINavigationController,
   UIGestureRecognizerDelegate, MailingVC {
   
+  public var navigationDelegate:NavigationDelegate?
+  
   open override func viewDidLoad() {
     super.viewDidLoad()
     self.interactivePopGestureRecognizer?.delegate = self
   }
+  
+  open override func popViewController(animated: Bool) -> UIViewController? {
+    navigationDelegate?.popViewController()
+    return super.popViewController(animated: animated)
+  }
+
   
   public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
     return self.viewControllers.count > 1
@@ -39,3 +47,7 @@ open class NavigationController: UINavigationController,
   }
   
 } // NavigationController
+
+public protocol NavigationDelegate  {
+  func popViewController()
+}
