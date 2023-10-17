@@ -361,18 +361,6 @@ extension ZoomedImageView{
     self.scrollView.scrollRectToVisible(CGRect(x: 0, y: 0, width: 1, height: 1), animated: animated)
   }
   
-  // MARK: scrollToTopRight
-  public func scrollToTopRight(animated:Bool = false) -> Bool{
-    let widthScale = 2*self.bounds.size.width / (imageView.image?.size.width ?? 2)
-    let minScale = min(widthScale, 1)
-    let needScroll = (self.scrollView.contentOffset.x + 2) < self.scrollView.contentSize.width/2
-    if self.scrollView.zoomScale > minScale {
-      self.scrollView.setZoomScale(minScale, animated: animated)
-    }
-    self.scrollView.scrollRectToVisible(CGRect(x: 0, y: 0, width: scrollView.contentSize.width, height: 1), animated: animated)
-    return needScroll
-  }
-  
   // MARK: zoomToFitHeight
   public func zoomToFitHeight(animated:Bool = false){
     let adjustment = useExtendedLayoutAdjustments
