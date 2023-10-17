@@ -195,6 +195,25 @@ open class WebViewCollectionVC: PageCollectionVC {
     super.viewDidLoad()
     self.view.backgroundColor = UIColor.white
     inset = 0
+    onLeftTap {[weak self] in
+      guard let sv = self?.currentWebView?.scrollView,
+      sv.contentOffset.y - 2 > 0
+      else { return false }
+      let y = max(sv.contentOffset.y - sv.frame.size.height, 0)
+      sv.setContentOffset(CGPoint(x: 0, y: y), animated: true)
+      return true
+    }
+    onRightTap {[weak self] in
+      guard let sv = self?.currentWebView?.scrollView,
+            let adSafeInsets = self?.additionalSafeAreaInsets,
+            sv.contentOffset.y + 2 + sv.frame.size.height < sv.contentSize.height
+      else { return false }
+      let y = min(sv.contentOffset.y + sv.frame.size.height
+                  - 110 - adSafeInsets.verticalInsets,
+                  sv.contentSize.height - sv.frame.size.height + UIWindow.verticalInsets + 30)
+      sv.setContentOffset(CGPoint(x: 0, y: y), animated: true)
+      return true
+    }
     viewProvider { [weak self] (index, oview) in
       guard let self = self else { return UIView() }
       if let ov = oview as? OptionalWebView {

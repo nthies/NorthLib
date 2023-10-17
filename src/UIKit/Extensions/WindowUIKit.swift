@@ -112,3 +112,9 @@ public extension UIScreen {
     return window.traitCollection.horizontalSizeClass == .regular
   }
 }
+
+extension UIEdgeInsets {
+  var verticalInsets: CGFloat {
+    return self.top + self.bottom
+  }
+}
