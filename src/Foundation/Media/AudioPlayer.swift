@@ -157,6 +157,9 @@ open class AudioPlayer: NSObject, DoesLog {
   public func onEnd(closure: ((Error?)->())?) { _onEnd = closure }
   private var _onEnd: ((Error?)->())?
   
+  public func onStatusChange(closure: ((AVPlayerItem.Status)->())?) { _onStatusChange = closure }
+  private var _onStatusChange: ((AVPlayerItem.Status)->())?
+  
   // the observation object (in case of errors)
   private var observation: NSKeyValueObservation?
     
@@ -179,6 +182,7 @@ open class AudioPlayer: NSObject, DoesLog {
         self?.close()
       }
       else if item.status == .readyToPlay {}
+      self?._onStatusChange?(item.status)
     }
     self.player = AVPlayer(playerItem: item)
     if #available(iOS 15.0, macOS 12, *) {
@@ -389,3 +393,14 @@ open class AudioPlayer: NSObject, DoesLog {
   }
   
 }  // AudioPlayer
+
+fileprivate extension AVPlayer.Status {
+  var string: String {
+    switch self {
+      case .failed: return "failed"
+      case .readyToPlay: return "readyToPlay"
+      case .unknown: return "unknown"
+      default: return "unknown new"
+    }
+  }
+}
