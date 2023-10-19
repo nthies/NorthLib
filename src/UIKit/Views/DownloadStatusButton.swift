@@ -247,7 +247,9 @@ public class ProgressCircle: CALayer {
   public var progress: Float = 0.0 {
     didSet{
       waiting = false
-      if let tv = self.animation.toValue as? Float, progress - tv < (isDownloadButtonItem ? 0.1 : 0.01) { return }
+      let tv = self.animation.toValue as? Float ?? 0.0
+      if progress < tv { self.animation.toValue = 0.0; self.animation.fromValue = 0.0 }
+      else if progress - tv < (isDownloadButtonItem ? 0.1 : 0.01) { return }
       self.progressCircle.strokeColor = color.cgColor
       onMain { [weak self] in
         guard let self = self else { return }
