@@ -384,3 +384,49 @@ public class ProgressCircle: CALayer {
     self.addSublayer(stopIcon)
   }
 }
+
+/*
+class TestCtrl: UIViewController {
+  
+  var plus = UIButton()
+  var reset = UIButton()
+  var waitUnwait = UIButton()
+  var dsb = DownloadStatusButton()
+  
+  override func viewDidLoad() {
+    self.view.addSubview(plus)
+    self.view.addSubview(reset)
+    self.view.addSubview(waitUnwait)
+    self.view.addSubview(dsb)
+    dsb.addBorder(.red)
+    dsb.pinSize(CGSize(width: 70, height: 70))
+    plus.setTitle("+", for: .normal)
+    reset.setTitle("reset", for: .normal)
+    waitUnwait.setTitle("waitUnwait", for: .normal)
+    plus.onTapping { [weak self] _ in
+      self?.dsb.indicator.percent += 0.1
+    }
+    reset.onTapping { [weak self] _ in
+      self?.dsb.indicator.percent = 0.0
+    }
+    waitUnwait.onTapping { [weak self] _ in
+      if self?.dsb.indicator.downloadState == .waiting {
+        self?.dsb.indicator.downloadState = .process
+      }
+      else {
+        self?.dsb.indicator.downloadState = .waiting
+      }
+    }
+    dsb.center()
+    dsb.indicator.downloadState = .waiting
+    self.view.backgroundColor = .lightGray
+    
+    pin(plus.right, to: self.view.right, dist: -10.0)
+    pin(plus.bottom, to: self.view.bottom, dist: -80.0)
+    pin(reset.left, to: self.view.left, dist: 10.0)
+    pin(reset.bottom, to: self.view.bottom, dist: -80.0)
+    pin(waitUnwait.bottom, to: self.view.bottom, dist: -80.0)
+    waitUnwait.centerX()
+  }
+}
+*/
