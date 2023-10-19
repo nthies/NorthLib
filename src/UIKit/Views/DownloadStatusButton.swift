@@ -270,12 +270,14 @@ public class ProgressCircle: CALayer {
       if waiting == oldValue { return }
       
       self.progressCircle.strokeColor = color.cgColor
-      self.progressCircle.strokeEnd = 0.3
+      self.progressCircle.strokeEnd = waiting ? 0.3 : 0.0
       onMain { [weak self] in
         guard let self = self else { return }
         if self.waiting == false
             && self.progressCircle.animation(forKey: "waitingAnimation") != nil{
           self.progressCircle.removeAnimation(forKey: "waitingAnimation")
+          self.animation.fromValue = progress
+          self.animation.toValue = progress
           return
         }
         self.progressCircle.add(self.waitingAnimation, forKey: "waitingAnimation")
