@@ -191,6 +191,40 @@ open class WebViewCollectionVC: PageCollectionVC {
     }
   }
   
+//  public lazy var ruler: UIView = {
+//   let v = UIView()
+//    v.backgroundColor = UIColor.red.withAlphaComponent(0.3)
+//    return v
+//  }()
+//  
+//  func showRuler(atTop: Bool){
+//    let co = self.currentWebView?.scrollView.contentOffset.y ?? 0.0
+//    let csh = self.currentWebView?.scrollView.frame.size.height ?? 0.0
+//    var y
+//    = atTop
+//    ? co
+//    : co + csh
+//    
+//    ruler.frame = CGRect(x: 0, y: y, width: UIWindow.size.width, height: 20)
+//    if ruler.superview != self.currentWebView?.scrollView.subviews.first {
+//      self.currentWebView?.scrollView.subviews.first?.addSubview(ruler)
+//    }
+//    ruler.layer.removeAllAnimations()
+//    ruler.showAnimated()
+//    self.hideRulerDelayed()
+//  }
+//  
+//  private func hideRulerDelayed(force: Bool = false){
+//    onMain(after: 5.0) {[weak self] in
+//      if self?.ruler.alpha == 1.0 || force {
+//        self?.ruler.hideAnimated()
+//      }
+//      else {
+//        self?.hideRulerDelayed(force: true)
+//      }
+//      
+//    }
+//  }
   open override func viewDidLoad() {
     super.viewDidLoad()
     self.view.backgroundColor = UIColor.white
@@ -200,6 +234,7 @@ open class WebViewCollectionVC: PageCollectionVC {
       sv.contentOffset.y - 2 > 0
       else { return false }
       let y = max(sv.contentOffset.y - sv.frame.size.height, 0)
+//      self?.showRuler(atTop: true)
       sv.setContentOffset(CGPoint(x: 0, y: y), animated: true)
       return true
     }
@@ -211,6 +246,7 @@ open class WebViewCollectionVC: PageCollectionVC {
       let y = min(sv.contentOffset.y + sv.frame.size.height
                   - 110 - adSafeInsets.verticalInsets,
                   sv.contentSize.height - sv.frame.size.height + UIWindow.verticalInsets + 30)
+//      self.showRuler(atTop: false)
       sv.setContentOffset(CGPoint(x: 0, y: y), animated: true)
       return true
     }
