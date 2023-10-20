@@ -190,42 +190,7 @@ open class WebViewCollectionVC: PageCollectionVC {
       }
     }
   }
-  
-//  public lazy var ruler: UIView = {
-//   let v = UIView()
-//    v.backgroundColor = UIColor.red.withAlphaComponent(0.3)
-//    return v
-//  }()
-//  
-//  func showRuler(atTop: Bool){
-//    let co = self.currentWebView?.scrollView.contentOffset.y ?? 0.0
-//    let csh = self.currentWebView?.scrollView.frame.size.height ?? 0.0
-//    var y
-//    = atTop
-//    ? co
-//    : co + csh
-//    
-//    ruler.frame = CGRect(x: 0, y: y, width: UIWindow.size.width, height: 20)
-//    if ruler.superview != self.currentWebView?.scrollView.subviews.first {
-//      self.currentWebView?.scrollView.subviews.first?.addSubview(ruler)
-//    }
-//    ruler.layer.removeAllAnimations()
-//    ruler.showAnimated()
-//    self.hideRulerDelayed()
-//  }
-//  
-//  private func hideRulerDelayed(force: Bool = false){
-//    onMain(after: 5.0) {[weak self] in
-//      if self?.ruler.alpha == 1.0 || force {
-//        self?.ruler.hideAnimated()
-//      }
-//      else {
-//        self?.hideRulerDelayed(force: true)
-//      }
-//      
-//    }
-//  }
-  
+    
   open var addtionalBarHeight: CGFloat { return 0.0 }
   open var textLineHeight: CGFloat { return 0.0 }
   
@@ -238,7 +203,6 @@ open class WebViewCollectionVC: PageCollectionVC {
             let sv = self.currentWebView?.scrollView,
       sv.contentOffset.y - 2 > 0
       else { return false }
-//      self?.showRuler(atTop: true)
       let y = max(sv.contentOffset.y - sv.frame.size.height + self.addtionalBarHeight + self.textLineHeight, 0)
       sv.setContentOffset(CGPoint(x: 0, y: y), animated: true)
       return true
@@ -248,7 +212,6 @@ open class WebViewCollectionVC: PageCollectionVC {
             let sv = self.currentWebView?.scrollView,
             sv.contentOffset.y + 2 + sv.frame.size.height < sv.contentSize.height
       else { return false }
-//      self.showRuler(atTop: false)
       let y = min(sv.contentOffset.y + sv.frame.size.height - self.addtionalBarHeight - self.textLineHeight,
                   sv.contentSize.height - sv.frame.size.height + self.addtionalBarHeight)
       sv.setContentOffset(CGPoint(x: 0, y: y), animated: true)
