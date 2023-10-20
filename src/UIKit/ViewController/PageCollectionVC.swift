@@ -30,6 +30,9 @@ open class PageCollectionVC: UIViewController {
   /// inset from top/bottom/left/right as factor to min(width,height)
   open var inset = 0.025
   
+  open var leftTapBottomDist:CGFloat = 20.0
+  open var leftTapBottomMargin:Bool  = true
+  
   public var invalidateLayoutNeededOnViewWillAppear:Bool = false
   
   // The raw cell size (without bounds)
@@ -186,8 +189,8 @@ open class PageCollectionVC: UIViewController {
     self.view.addSubview(right)
     pin(left.left, to: self.view.left, dist: -size*0.3)
     pin(right.right, to: self.view.right, dist: size*0.3)
-    pin(left.bottom, to: self.view.bottomGuide(isMargin: true), dist: -20)
-    pin(right.bottom, to: self.view.bottomGuide(isMargin: true), dist: -20)
+    pin(left.bottom, to: self.view.bottomGuide(isMargin: leftTapBottomMargin), dist: -leftTapBottomDist)
+    pin(right.bottom, to: self.view.bottomGuide(isMargin: leftTapBottomMargin), dist: -leftTapBottomDist)
     left.onTapping {[weak self] _ in
       if self?.onLeftTapClosure?() == true { return }
       guard let idx = self?.index, idx > 0 else { return }
