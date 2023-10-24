@@ -205,6 +205,7 @@ open class WebViewCollectionVC: PageCollectionVC {
       else { return false }
       let y = max(sv.contentOffset.y - sv.frame.size.height + self.addtionalBarHeight + self.textLineHeight, 0)
       sv.setContentOffset(CGPoint(x: 0, y: y), animated: true)
+      sv.flashScrollIndicators()
       return true
     }
     onRightTap {[weak self] in
@@ -215,6 +216,7 @@ open class WebViewCollectionVC: PageCollectionVC {
       let y = min(sv.contentOffset.y + sv.frame.size.height - self.addtionalBarHeight - self.textLineHeight,
                   sv.contentSize.height - sv.frame.size.height + self.addtionalBarHeight)
       sv.setContentOffset(CGPoint(x: 0, y: y), animated: true)
+      sv.flashScrollIndicators()
       return true
     }
     viewProvider { [weak self] (index, oview) in
