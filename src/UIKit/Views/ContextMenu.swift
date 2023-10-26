@@ -7,16 +7,15 @@
 
 import UIKit
 
-public typealias menuAction = (title: String, icon: String?, group: Int, closure: (Any?)->())
+public typealias menuAction = (title: String, icon: String?, group: Int, enabled: Bool?, closure: (Any?)->())
 
 public class MenuActions {
   
   public init() { self.actions = [] }
   public var actions: [menuAction]
   /// Add an additional menu item
-  public func addMenuItem(title: String, icon: String?, group: Int? = nil,
-                   closure: @escaping (Any?)->()) {
-    actions += (title: title, icon: icon, group: group ?? 0, closure: closure)
+  public func addMenuItem(title: String, icon: String?, group: Int? = nil, enabled: Bool? = nil, closure: @escaping (Any?)->()) {
+    actions += (title: title, icon: icon, group: group ?? 0, enabled: enabled, closure: closure)
   }
   
   public var contextMenu: UIMenu {
@@ -28,7 +27,9 @@ public class MenuActions {
         img = UIImage(name: icon) ?? UIImage(named: icon)
       }
       subItems.append(UIAction(title: m.title,
-                         image:img) { [weak self] _ in
+                               image:img,
+                               attributes: m.enabled == false ? .disabled : []
+                              ) { [weak self] _ in
         m.closure(self)
       })
       itms[m.group] = subItems
@@ -41,7 +42,7 @@ public class MenuActions {
     let menuItems
     = itms.sorted(by: { $0.key < $1.key })
       .map {_, itm in UIMenu(title: "",
-                             options: .displayInline,
+                       options: .displayInline,
                              children:itm) }
     
     return UIMenu(title: "",
