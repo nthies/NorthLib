@@ -11,6 +11,7 @@ import UIKit
 //PagePDFVC array von pages mit Image und page
 /// Provides functionallity to view, zoom in PDF Pages. Swipe on Side Corner shows next/prev Page if available
 open class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
+  open override var preventEdgeTapToNavigate: Bool { false }
   public var cellScrollIndicatorInsets:UIEdgeInsets?
   public var cellVerticalScrollIndicatorInsets:UIEdgeInsets?
   public var cellHorizontalScrollIndicatorInsets:UIEdgeInsets?

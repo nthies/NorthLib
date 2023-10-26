@@ -11,6 +11,8 @@ fileprivate var countVC = 0
 
 
 open class PageCollectionVC: UIViewController {
+  /// option to overwrite edge tap enabled for custom subclasses
+  open var preventEdgeTapToNavigate: Bool { false }
   
   @Default("edgeTapToNavigate")
   public var edgeTapToNavigate: Bool
@@ -181,6 +183,7 @@ open class PageCollectionVC: UIViewController {
   
   func setupTapArea(){
     if edgeTapToNavigate == false { return }
+    if preventEdgeTapToNavigate == true { return }
     let size: CGFloat = 100.0
     let left = UIView()
     let right = UIView()

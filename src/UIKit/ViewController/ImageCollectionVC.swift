@@ -11,7 +11,7 @@ import UIKit
 
 // MARK: - ImageCollectionVC
 open class ImageCollectionVC: PageCollectionVC, ImageCollectionVCSpec {
-  
+  open override var preventEdgeTapToNavigate: Bool { true }
   // MARK: Properties
   private var onHighResImgNeededClosure: ((OptionalImage, @escaping (Bool) -> ()) -> ())?
   private var onHighResImgNeededZoomFactor: CGFloat = 1.1
