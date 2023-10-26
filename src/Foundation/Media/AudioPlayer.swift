@@ -167,7 +167,7 @@ open class AudioPlayer: NSObject, DoesLog {
     guard player == nil else { return }
     guard let file = self.file else { return }
     openRemoteCommands()
-    var url = URL(string: file)
+    var url = file.starts(with: "/") ? URL(fileURLWithPath: file) : URL(string: file)
     if url == nil {
       url = URL(fileURLWithPath: file)
       isStream = false
