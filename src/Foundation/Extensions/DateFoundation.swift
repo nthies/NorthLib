@@ -95,6 +95,7 @@ public extension TimeInterval {
 
 public extension TimeInterval {
   var minuteSecondsString: String? {
+    guard self.isFinite && self.isNaN == false else { return nil }
     let formater = DateComponentsFormatter()
     formater.zeroFormattingBehavior = .pad
     formater.unitsStyle = .positional

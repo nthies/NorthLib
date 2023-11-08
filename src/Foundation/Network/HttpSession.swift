@@ -111,7 +111,7 @@ open class HttpJob: DoesLog {
   /// The task performing the request in its own thread
   public var task: URLSessionTask
   /// The task ID
-  public var tid: Int { return task.taskIdentifier }
+  public var cid: String { return task.cid }
   /// If an error was encountered, this variable points to it
   public var httpError: Error?
   /// returns true if an error was encountered
@@ -159,7 +159,7 @@ open class HttpJob: DoesLog {
   fileprivate func fileDownloaded(file: URL) {
     var fn = self.filename
     if fn == nil { fn = tmppath() }
-    debug("Task \(tid): downloaded \(File.basename(fn!))")
+    debug("Task \(cid): downloaded \(File.basename(fn!))")
     File(file).move(to: fn!)
   }
   
@@ -182,6 +182,7 @@ open class HttpJob: DoesLog {
   // Notify completion of download
   fileprivate func notifyDownload() {
     let nc = NotificationCenter.default
+    #warning("MAY ACTIVATE NOTIFICATION CURRENTLY UNUSED")
     nc.post(name: Notification.Name.httpSessionDownload, object: self)
   }
   
@@ -193,6 +194,13 @@ open class HttpJob: DoesLog {
   }
 
 } // HttpJob
+
+
+extension URLSessionTask {
+  fileprivate var cid: String {
+    return "\(self.taskIdentifier)+\(self.originalRequest?.url?.lastPathComponent ?? "empty")"
+  }
+}
 
 
 /** 
@@ -229,22 +237,31 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
   fileprivate var _config: URLSessionConfiguration? { didSet { _session = nil } }
   /// Session configuration
   public var config: URLSessionConfiguration {
-    if _config == nil { _config = getConfig() }
-    return _config!
+    let cfg = _config ?? getConfig()
+    if _config == nil {
+      _config = cfg
+      log("request a new session for thread: \(Thread.current) at: \(Date().timeIntervalSinceReferenceDate)")
+    }
+    return cfg
   }
   
-  public var _session: URLSession?  
+  public var _session: URLSession?
   /// URLSession
   public var session: URLSession {
+    let sess = _session ?? URLSession(configuration: config, delegate: self, delegateQueue: nil)
     if _session == nil {
+      _session = sess
       ///intel imac simulator crash: Thread 11: EXC_BAD_ACCESS (code=EXC_I386_GPFLT)
       ///EXC_I386_GPFLT is surely referring to "General Protection fault", which is the x86's way to tell you that "you did something that you are not allowed to do".
       ///in thread stack there are 7 Threads like:>> Thread 3/4/6/8/9/11/12 Queue : com.apple.root.background-qos (concurrent)
       ///all containing: ...in HttpSession.session.getter...
-      log("request a new session for thread: \(Thread.current) at: \(Date().timeIntervalSinceReferenceDate)")
-      _session = URLSession(configuration: config, delegate: self, delegateQueue: nil)
+      ///Crashes in Debug session 23-09-18 before this commits changes
+      ///Crash on Debug after ResetApp, Device Locked for 3 Minutes, Unlock continue debug session
+      ///Thread 7: EXC_BAD_ACCESS (code=1, address=0x10)
+      ///Crash again in Wochentaz Tiles after app to backgrounf => Foreground switch to PDF
+      ///after changing no crash while extensive try to reproduce stept... but this must not mean problem solved
     }
-    return _session!
+    return sess
   }
   
   // Number of HttpSession incarnations
@@ -258,12 +275,12 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
   }()
   
   // Dictionary of running HttpJobs
-  fileprivate var jobs: [Int:HttpJob] = [:]
+  fileprivate var jobs: [String:HttpJob] = [:]
   
   /// Return Job for given task ID
-  public func job(_ tid: Int) -> HttpJob? {
+  public func job(_ cid: String) -> HttpJob? {
     syncQueue.sync { [weak self] in
-      self?.jobs[tid]
+      self?.jobs[cid]
     }
   }
   
@@ -271,17 +288,17 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
   public func createJob(task: URLSessionTask, filename: String? = nil,
                         closure: @escaping(HttpJob)->()) {
     let job = HttpJob(task: task, filename: filename, closure: closure)
-    log("New HTTP Job \(job.tid) created: \(job.url ?? "[undefined URL]")")
+//    debug("New HTTP Job \(job.cid) created: \(job.url ?? "[undefined URL]")")
     syncQueue.sync { [weak self] in
       guard let self = self else { return }
       //crash: simulator 16.6. +2
       //reproduceable on simulator, not reproduceable on 4 devices
-      
-      if self.jobs[job.tid] == nil {
-        self.jobs[job.tid] = job
+      let key = task.cid
+      if self.jobs[key] == nil {
+        self.jobs[key] = job
       }
       else {
-        job.httpError = error("job with \(job.tid) still exists")
+        job.httpError = error("job with \(job.cid) still exists")
       }
     }
     if job.wasError == false {
@@ -293,14 +310,14 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
   }
   
   /// Close a job with given task ID
-  public func closeJob(tid: Int, error: Error? = nil, fileReceived: URL? = nil) {
+  public func closeJob(cid: String, error: Error? = nil, fileReceived: URL? = nil) {
     var job: HttpJob?
     syncQueue.sync {[weak self] in
-      job = self?.jobs[tid]
-      self?.jobs[tid] = nil
+      job = self?.jobs[cid]
+      self?.jobs[cid] = nil
     }
     if let job = job {
-      debug("Closing HTTP Job \(job.tid): \(job.url ?? "[undefined URL]")")
+      debug("Closing HTTP Job \(job.cid): \(job.url ?? "[undefined URL]") task cid: \(cid)")
       job.close(error: error, fileReceived: fileReceived)
     }
   }
@@ -455,30 +472,43 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
       createJob(task: task, filename: toFile.path) { [weak self] job in
         guard self != nil else { return }
         if job.wasError {
-          job.close()
+          let err = job.httpError
           ///retry job if 2 jobs with same task.taskIdentifier started; may create another task instead before
           if doRetry == true
-              && (job.httpError?.description.contains("still exists") ?? false) == true {
+              && (err?.description.contains("still exists") ?? false) == true {
             self?.downloadDlFile(baseUrl: baseUrl, file: file, toDir: toDir, cacheDir: cacheDir, doRetry: false, closure: closure)
           }
           else {
             //fixes: Thread 2: Fatal error: Unexpectedly found nil while unwrapping an Optional value
-            closure(.failure(job.httpError ?? self!.error("unknown")))
+            closure(.failure(err ?? self!.error("unknown")))
           }
         }
         else { 
           var err: Error? = nil
+          var reason = ""
           toFile.mTime = file.moTime
-          if toFile.size != file.size 
-            { err = HttpError.unexpectedFileSize(toFile.size, file.size) }
-          else if toFile.sha256 != file.sha256
-            { err = HttpError.invalidSHA256(toFile.sha256) }
-          else { closure(.success(job)) }
+          if toFile.size != file.size {
+            err = HttpError.unexpectedFileSize(toFile.size, file.size)
+            reason = "filesize \(toFile.size) != \(file.size)"
+          }
+          else if toFile.sha256 != file.sha256 {
+            err = HttpError.invalidSHA256(toFile.sha256)
+            reason = "checksum"
+          }
+          else {
+            closure(.success(job))
+          }
+          
           if let err = err { 
             self?.error(err)
             self?.log("* Warning: File \(file.name) successfully downloaded " +
-                      "but size and/or checksum is incorrect source URL:\(url)" )
-            closure(.failure(err))
+                      "but \(reason) is incorrect! source URL:\(url)" )
+            #warning("ToDo, To Discuss: if failure responded wrong data would not be shown in App")
+            ///e.g. Issue 2023-08-22, loading never succed if responde with error Article Berlin 4/12 BERLIN RINGT UM OLYMPIA never shown
+            ///is wrong data on server?, what happen if issue refreshed /re-delivered are checksums/filesize korrekt
+            closure(.success(job))
+            // TODO: Report error when the higher layers have been fixed
+            //closure(.failure(err))
           }
         }
       }
@@ -515,7 +545,7 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
   
   // Task has finished data transfer
   public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError completionError: Swift.Error?) {
-    let tid = task.taskIdentifier
+    let cid = task.cid
     var err = completionError
     if let resp = task.response as? HTTPURLResponse {
       let statusCode = resp.statusCode
@@ -524,34 +554,34 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
       }
     }
     if err != nil { 
-      error("Task \(tid): Download failed.")
+      error("Task \(cid): Download failed.")
       error(err!) 
     }
-    else { debug("Task \(tid): Finished data transfer successfully") }
-    closeJob(tid: tid, error: err)
+    else { debug("Task \(cid): Finished data transfer successfully") }
+    closeJob(cid: cid, error: err)
   }
   
   // Server requests "redirect" (not in background)
   public func urlSession(_ session: URLSession, task: URLSessionTask, 
                          willPerformHTTPRedirection response: HTTPURLResponse, newRequest request: URLRequest, 
                          completionHandler: @escaping (URLRequest?) -> Void) {
-    let tid = task.taskIdentifier
-    debug("Task \(tid): Redirect to \(request.url?.absoluteString ?? "[unknown]") received")
+    let cid = task.cid
+    debug("Task \(cid): Redirect to \(request.url?.absoluteString ?? "[unknown]") received")
     completionHandler(request)
   }
   
   // Upload: data sent to server
   public func urlSession(_ session: URLSession, task: URLSessionTask, 
                          didSendBodyData bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) {
-    let tid = task.taskIdentifier
-    debug("Task \(tid): Upload data: \(bytesSent) bytes sent, \(totalBytesSent) total bytes sent, \(totalBytesExpectedToSend) total size")
+    let cid = task.cid
+    debug("Task \(cid): Upload data: \(bytesSent) bytes sent, \(totalBytesSent) total bytes sent, \(totalBytesExpectedToSend) total size")
   }
   
   // Upload data: need more data
   public func urlSession(_ session: URLSession, task: URLSessionTask, 
                          needNewBodyStream completionHandler: @escaping (InputStream?) -> Void) {
-    let tid = task.taskIdentifier
-    debug("Task \(tid): Upload data: need more data")
+    let cid = task.cid
+    debug("Task \(cid): Upload data: need more data")
   }
   
   // Task authentication challenge received
@@ -566,24 +596,24 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
     willBeginDelayedRequest request: URLRequest, 
     completionHandler: @escaping (URLSession.DelayedRequestDisposition, 
                                   URLRequest?) -> Void) {
-    let tid = task.taskIdentifier
-    debug("Task \(tid): Delayed background task is ready to run")
+    let cid = task.cid
+    debug("Task \(cid): Delayed background task is ready to run")
     completionHandler(.continueLoading, nil)
   }
   
   // Task is waiting for network availability (may be reflected in the UI)
   public func urlSession(_ session: URLSession, taskIsWaitingForConnectivity task: URLSessionTask) {
-    let tid = task.taskIdentifier
-    debug("Task \(tid): Task is waiting for network availability")
+    let cid = task.cid
+    debug("Task \(cid): Task is waiting for network availability")
   }
   
   // Task metrics received
   public func urlSession(_ session: URLSession, task: URLSessionTask, 
                          didFinishCollecting metrics: URLSessionTaskMetrics) {
-    let tid = task.taskIdentifier
+    let cid = task.cid
     let sent = metrics.transactionMetrics[0].countOfRequestBodyBytesSent
     let received = metrics.transactionMetrics[0].countOfResponseBodyBytesReceived
-    debug("Task \(tid): Task metrics received - \(sent) bytes sent, \(received) bytes received")
+    debug("Task \(cid): Task metrics received - \(sent) bytes sent, \(received) bytes received")
   }
   
   // MARK: - URLSessionDownloadDelegate Protocol
@@ -592,8 +622,8 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
   public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, 
     didFinishDownloadingTo location: URL) {
     var err: Error? = nil
-    let tid = downloadTask.taskIdentifier
-    if let job = job(tid) { 
+    let cid = downloadTask.cid
+    if let job = job(cid) {
       if let resp = job.response {
         let statusCode = resp.statusCode
         if !(200...299).contains(statusCode) {
@@ -601,24 +631,24 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
           error(err!)
         }
       }
-      debug("Task \(tid): Download completed to: .../\(location.lastPathComponent)")
-      closeJob(tid: tid, error: err, fileReceived: location)
+      debug("Task \(cid): Download completed to: .../\(location.lastPathComponent)")
+      closeJob(cid: cid, error: err, fileReceived: location)
     }
   }
   
   // Paused download has been resumed
   public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, 
                          didResumeAtOffset fileOffset: Int64, expectedTotalBytes: Int64) {
-    let tid = downloadTask.taskIdentifier
-    debug("Task \(tid): Resume paused Download")
+    let cid = downloadTask.cid
+    debug("Task \(cid): Resume paused Download")
   }
   
   // Data received and written to file
   public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, 
                          didWriteData bytesWritten: Int64, totalBytesWritten: Int64,
                          totalBytesExpectedToWrite: Int64) {
-    let tid = downloadTask.taskIdentifier
-    if let job = job(tid) { job.progress() }
+    let cid = downloadTask.cid
+    if let job = job(cid) { job.progress() }
     //debug("Task \(tid): Data received: \(bytesWritten) bytes written to file")
   }
   
@@ -626,36 +656,36 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
   
   // Data received
   public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
-    let tid = dataTask.taskIdentifier
+    let cid = dataTask.cid
     //debug("Task \(tid): Data received: \(data.count) bytes")
-    if let job = job(tid) { job.dataReceived(data: data) }
+    if let job = job(cid) { job.dataReceived(data: data) }
   }
   
   // Data task was converted to download task
   public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, 
                          didBecome downloadTask: URLSessionDownloadTask) {
-    let tid = dataTask.taskIdentifier
-    if let job = job(tid) { job.task = downloadTask }
-    debug("Task \(tid): Data task converted to download task")
+    let cid = dataTask.cid
+    if let job = job(cid) { job.task = downloadTask }
+    debug("Task \(cid): Data task converted to download task")
   }
   
   // Data task was converted to stream task
   public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, 
                          didBecome streamTask: URLSessionStreamTask) {
-    let tid = dataTask.taskIdentifier
-    if let job = job(tid) { job.task = streamTask }
-    debug("Task \(tid): Data task converted to stream task")
+    let cid = dataTask.cid
+    if let job = job(cid) { job.task = streamTask }
+    debug("Task \(cid): Data task converted to stream task")
   }
   
   // Initial reply from server received
   public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, 
     didReceive response: URLResponse, completionHandler: 
     @escaping (URLSession.ResponseDisposition) -> Void) {
-    let tid = dataTask.taskIdentifier
-    guard let job = job(tid) else { return }
+    let cid = dataTask.cid
+    guard let job = job(cid) else { return }
     var err: Error?
     if let response = response as? HTTPURLResponse {
-      debug("Task \(tid): Initial reply from server received: \(response.statusCode)")
+      debug("Task \(cid): Initial reply from server received: \(response.statusCode)")
       if (200...299).contains(response.statusCode) {
         if let mtype = job.expectedMimeType, mtype != response.mimeType {
           err = HttpError.unexpectedMimeType(response.mimeType ?? "[undefined]")
@@ -664,7 +694,7 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
       }
       else { err = HttpError.serverError(response.statusCode) }
       completionHandler(.cancel)
-      closeJob(tid: tid, error: err)
+      closeJob(cid: cid, error: err)
     }
   }
   
@@ -672,8 +702,8 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
   public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, 
                          willCacheResponse proposedResponse: CachedURLResponse, completionHandler: 
     @escaping (CachedURLResponse?) -> Void) {
-    let tid = dataTask.taskIdentifier
-    debug("Task \(tid): Caching policy requested")
+    let cid = dataTask.cid
+    debug("Task \(cid): Caching policy requested")
     completionHandler(proposedResponse)
   }
 

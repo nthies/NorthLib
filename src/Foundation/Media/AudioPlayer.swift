@@ -60,6 +60,9 @@ public extension UIImage {
 /// A very simple audio player utilizing AVPlayer
 open class AudioPlayer: NSObject, DoesLog {
   
+  @Default("playbackRate")
+  public var playbackRate: Double
+  
   private var _file: String? = nil
   
   /// file or String url to play
@@ -154,6 +157,9 @@ open class AudioPlayer: NSObject, DoesLog {
   public func onEnd(closure: ((Error?)->())?) { _onEnd = closure }
   private var _onEnd: ((Error?)->())?
   
+  public func onStatusChange(closure: ((AVPlayerItem.Status)->())?) { _onStatusChange = closure }
+  private var _onStatusChange: ((AVPlayerItem.Status)->())?
+  
   // the observation object (in case of errors)
   private var observation: NSKeyValueObservation?
     
@@ -161,7 +167,7 @@ open class AudioPlayer: NSObject, DoesLog {
     guard player == nil else { return }
     guard let file = self.file else { return }
     openRemoteCommands()
-    var url = URL(string: file)
+    var url = file.starts(with: "/") ? URL(fileURLWithPath: file) : URL(string: file)
     if url == nil {
       url = URL(fileURLWithPath: file)
       isStream = false
@@ -176,12 +182,16 @@ open class AudioPlayer: NSObject, DoesLog {
         self?.close()
       }
       else if item.status == .readyToPlay {}
+      self?._onStatusChange?(item.status)
     }
     self.player = AVPlayer(playerItem: item)
     if #available(iOS 15.0, macOS 12, *) {
       self.player?.audiovisualBackgroundPlaybackPolicy = .continuesIfPossible
-    } 
-    updatePlayingInfo()
+    }
+    onThread {[weak self] in
+      self?.updatePlayingInfo()
+    }
+    
     NotificationCenter.default.addObserver(self, selector: #selector(playerHasFinished),
       name: .AVPlayerItemDidPlayToEndTime, object: item)
     NotificationCenter.default.addObserver(self, selector:
@@ -271,6 +281,9 @@ open class AudioPlayer: NSObject, DoesLog {
         info[MPMediaItemPropertyArtist] = artist
       }
       info[MPNowPlayingInfoPropertyIsLiveStream] = false
+      //WARNING THIS IS SLOW & BLOCKES UI MULTIPLE TIMES; MAYBE MOVE TO BG PROCESS!?
+      //Test with bad internet!
+      #warning("Blocks UI")
       info[MPMediaItemPropertyPlaybackDuration] = player.currentItem!.asset.duration.seconds
       info[MPNowPlayingInfoPropertyPlaybackRate] = player.rate
       info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = player.currentItem!.currentTime().seconds
@@ -287,6 +300,7 @@ open class AudioPlayer: NSObject, DoesLog {
     guard let player = self.player else { return }
     wasPlaying = true
     player.play()
+    player.rate = Float(playbackRate)
   }
   
   /// stop stops the current playback (pauses it)
@@ -379,3 +393,14 @@ open class AudioPlayer: NSObject, DoesLog {
   }
   
 }  // AudioPlayer
+
+fileprivate extension AVPlayer.Status {
+  var string: String {
+    switch self {
+      case .failed: return "failed"
+      case .readyToPlay: return "readyToPlay"
+      case .unknown: return "unknown"
+      default: return "unknown new"
+    }
+  }
+}

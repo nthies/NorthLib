@@ -11,6 +11,14 @@ fileprivate var countVC = 0
 
 
 open class PageCollectionVC: UIViewController {
+  /// option to overwrite edge tap enabled for custom subclasses
+  open var preventEdgeTapToNavigate: Bool { false }
+  
+  @Default("edgeTapToNavigate")
+  public var edgeTapToNavigate: Bool
+  
+  @Default("edgeTapToNavigateVisible")
+  public var edgeTapToNavigateVisible: Bool
   
   /// The collection view displaying OptionalViews
   open var collectionView:PageCollectionView? = PageCollectionView()
@@ -23,6 +31,18 @@ open class PageCollectionVC: UIViewController {
   
   /// inset from top/bottom/left/right as factor to min(width,height)
   open var inset = 0.025
+  
+  private var leftTapBottomDistConstraint: NSLayoutConstraint?
+  private var rightTapBottomDistConstraint: NSLayoutConstraint?
+  
+  open var leftTapBottomDist:CGFloat = -30.0 {
+    didSet {
+      
+      leftTapBottomDistConstraint?.constant = leftTapBottomDist
+      rightTapBottomDistConstraint?.constant = leftTapBottomDist
+    }
+  }
+  open var leftTapBottomMargin:Bool  = true
   
   public var invalidateLayoutNeededOnViewWillAppear:Bool = false
   
@@ -98,9 +118,15 @@ open class PageCollectionVC: UIViewController {
   
   public required init?(coder: NSCoder) { super.init(coder: coder) }
 
-  /// Define closure to call when a cell is newly displayed  
-  public func onDisplay(closure: @escaping (Int, OptionalView?)->()) {
-    collectionView?.onDisplay(closure: closure)
+  @discardableResult
+  /// Define closure to call when a cell is newly displayed
+  public func onDisplay(closure: @escaping (Int, OptionalView?)->()) -> String? {
+    return collectionView?.onDisplay(closure: closure)
+  }
+  
+  /// removes a closure to call when a cell is newly displayed  from closures by given key
+  public func removeOnDisplay(forKey: String) {
+    collectionView?.removeOnDisplay(forKey: forKey)
   }
   
   /// Define closure to call when a cell is newly displayed
@@ -137,6 +163,58 @@ open class PageCollectionVC: UIViewController {
   open override func viewDidLoad() {
     super.viewDidLoad()
     if count != 0 { collectionView?.reloadData() }
+    setupTapArea()
+  }
+  
+  private var onRightTapClosure: (()->(Bool))?
+  
+  /// primary right tap handler for right edge tap, is available, add scroll or zoom behaviour if needed
+  /// - Parameter closure: closure to call; return true if event handled and index not needed to change
+  public func onRightTap(closure: @escaping ()->(Bool)) {
+    onRightTapClosure = closure
+  }
+  private var onLeftTapClosure: (()->(Bool))?
+
+  /// primary left tap handler for right edge tap, is available, add scroll or zoom behaviour if needed
+  /// - Parameter closure: closure to call; return true if event handled and index not needed to change
+  public func onLeftTap(closure: @escaping ()->(Bool)) {
+    onLeftTapClosure = closure
+  }
+  
+  func setupTapArea(){
+    if edgeTapToNavigate == false { return }
+    if preventEdgeTapToNavigate == true { return }
+    let size: CGFloat = 100.0
+    let left = UIView()
+    let right = UIView()
+    right.layer.cornerRadius = size*0.5
+    right.pinSize(CGSize(width: size, height: size))
+    left.layer.cornerRadius = size*0.5
+    left.pinSize(CGSize(width: size, height: size))
+    if edgeTapToNavigateVisible {
+      right.backgroundColor = UIColor.gray.withAlphaComponent(0.15)
+      right.addBorder(.gray.withAlphaComponent(0.25))
+      left.backgroundColor = UIColor.gray.withAlphaComponent(0.15)
+      left.addBorder(.gray.withAlphaComponent(0.25))
+    }
+    self.view.addSubview(left)
+    self.view.addSubview(right)
+    pin(left.left, to: self.view.left, dist: -size*0.3)
+    pin(right.right, to: self.view.right, dist: size*0.3)
+    leftTapBottomDistConstraint
+    = pin(left.bottom, to: self.view.bottomGuide(isMargin: leftTapBottomMargin), dist: leftTapBottomDist)
+    rightTapBottomDistConstraint
+    = pin(right.bottom, to: self.view.bottomGuide(isMargin: leftTapBottomMargin), dist: leftTapBottomDist)
+    left.onTapping {[weak self] _ in
+      if self?.onLeftTapClosure?() == true { return }
+      guard let idx = self?.index, idx > 0 else { return }
+      self?.collectionView?.scrollto(idx-1, animated: true)
+    }
+    right.onTapping {[weak self] _ in
+      if self?.onRightTapClosure?() == true { return }
+      guard let idx = self?.index else { return }
+      self?.collectionView?.scrollto(idx+1, animated: true)
+    }
   }
   
   // TODO: transition/rotation better with collectionViewLayout subclass as described in:

@@ -247,7 +247,9 @@ public class ProgressCircle: CALayer {
   public var progress: Float = 0.0 {
     didSet{
       waiting = false
-      if let tv = self.animation.toValue as? Float, progress - tv < (isDownloadButtonItem ? 0.1 : 0.01) { return }
+      let tv = self.animation.toValue as? Float ?? 0.0
+      if progress < tv { self.animation.toValue = 0.0; self.animation.fromValue = 0.0 }
+      else if progress - tv < (isDownloadButtonItem ? 0.1 : 0.01) { return }
       self.progressCircle.strokeColor = color.cgColor
       onMain { [weak self] in
         guard let self = self else { return }
@@ -270,12 +272,14 @@ public class ProgressCircle: CALayer {
       if waiting == oldValue { return }
       
       self.progressCircle.strokeColor = color.cgColor
-      self.progressCircle.strokeEnd = 0.3
+      self.progressCircle.strokeEnd = waiting ? 0.3 : 0.0
       onMain { [weak self] in
         guard let self = self else { return }
         if self.waiting == false
             && self.progressCircle.animation(forKey: "waitingAnimation") != nil{
           self.progressCircle.removeAnimation(forKey: "waitingAnimation")
+          self.animation.fromValue = progress
+          self.animation.toValue = progress
           return
         }
         self.progressCircle.add(self.waitingAnimation, forKey: "waitingAnimation")
@@ -384,3 +388,49 @@ public class ProgressCircle: CALayer {
     self.addSublayer(stopIcon)
   }
 }
+
+/*
+class TestCtrl: UIViewController {
+  
+  var plus = UIButton()
+  var reset = UIButton()
+  var waitUnwait = UIButton()
+  var dsb = DownloadStatusButton()
+  
+  override func viewDidLoad() {
+    self.view.addSubview(plus)
+    self.view.addSubview(reset)
+    self.view.addSubview(waitUnwait)
+    self.view.addSubview(dsb)
+    dsb.addBorder(.red)
+    dsb.pinSize(CGSize(width: 70, height: 70))
+    plus.setTitle("+", for: .normal)
+    reset.setTitle("reset", for: .normal)
+    waitUnwait.setTitle("waitUnwait", for: .normal)
+    plus.onTapping { [weak self] _ in
+      self?.dsb.indicator.percent += 0.1
+    }
+    reset.onTapping { [weak self] _ in
+      self?.dsb.indicator.percent = 0.0
+    }
+    waitUnwait.onTapping { [weak self] _ in
+      if self?.dsb.indicator.downloadState == .waiting {
+        self?.dsb.indicator.downloadState = .process
+      }
+      else {
+        self?.dsb.indicator.downloadState = .waiting
+      }
+    }
+    dsb.center()
+    dsb.indicator.downloadState = .waiting
+    self.view.backgroundColor = .lightGray
+    
+    pin(plus.right, to: self.view.right, dist: -10.0)
+    pin(plus.bottom, to: self.view.bottom, dist: -80.0)
+    pin(reset.left, to: self.view.left, dist: 10.0)
+    pin(reset.bottom, to: self.view.bottom, dist: -80.0)
+    pin(waitUnwait.bottom, to: self.view.bottom, dist: -80.0)
+    waitUnwait.centerX()
+  }
+}
+*/

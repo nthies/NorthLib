@@ -69,7 +69,7 @@ public protocol OptionalView {
 
 public extension OptionalView {
   /// Returns the view that should currently be displayed
-  var activeView: UIView { return isAvailable ? mainView! : (waitingView ?? UndefinedView()) }
+  var activeView: UIView { return isAvailable ? (mainView ?? waitingView ?? UndefinedView()) : (waitingView ?? UndefinedView()) }
 }
 
 /// Common Views can be optional
