@@ -404,6 +404,17 @@ public func pin(_ view: UIView, to: UIView, dist: CGFloat = 0, priority: UILayou
   return (top, bottom, left, right)
 }
 
+/// Pin all edges of one view to the edges of another view
+@discardableResult
+public func pin(_ view: UIView, to: UIView, margins: UIEdgeInsets, priority: UILayoutPriority? = nil) -> (top: NSLayoutConstraint,
+  bottom: NSLayoutConstraint, left: NSLayoutConstraint, right: NSLayoutConstraint) {
+  let top = pin(view.top, to: to.top, dist: margins.top, priority: priority)
+  let bottom = pin(view.bottom, to: to.bottom, dist: -margins.bottom, priority: priority)
+  let left = pin(view.left, to: to.left, dist: margins.left, priority: priority)
+  let right = pin(view.right, to: to.right, dist: -margins.right, priority: priority)
+  return (top, bottom, left, right)
+}
+
 /// Pin all edges of one view to the edges of another view's safe layout guide
 @discardableResult
 public func pin(_ view: UIView, toSafe: UIView, dist: CGFloat = 0) -> (top: NSLayoutConstraint, 

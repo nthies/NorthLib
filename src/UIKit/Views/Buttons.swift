@@ -1279,8 +1279,14 @@ open class ImageView: ButtonView {
 
   open var imageView = UIImageView()
   public var pinAspect = true
+  public var pinImageWidth = true //just allow one of them
+  {didSet { if pinImageWidth { pinImageHeight = false } }}
+  public var pinImageHeight = false //just allow one of them
+  {didSet { if pinImageHeight { pinImageWidth = false } }}
+
   private var aspectConstraint: NSLayoutConstraint?
   private var widthConstraint: NSLayoutConstraint?
+  private var heightConstraint: NSLayoutConstraint?
   
   open var image: UIImage? {
     get { imageView.image }
@@ -1330,9 +1336,98 @@ open class ImageView: ButtonView {
     
   override open func layoutSubviews() {
     super.layoutSubviews()
-    let w = bounds.size.width * (1-2*hinset)
     widthConstraint?.isActive = false
-    widthConstraint = imageView.pinWidth(w)
+    heightConstraint?.isActive = false
+    if pinImageWidth {
+      let w = bounds.size.width * (1-2*hinset)
+      widthConstraint = imageView.pinWidth(w)
+    }
+    if pinImageHeight {
+      let h = bounds.size.height * (1-2*vinset)
+      heightConstraint = imageView.pinHeight(h)
+    }
+  }
+} // class ImageView
+
+
+/**
+  ButtonView displaying an Image and Label
+*/
+// MARK: - ImageView
+@IBDesignable
+open class ImageLabelView: ButtonView {
+
+  open var imageView = UIImageView()
+  open var label = UILabel()
+  
+  open var text: String? {
+    set {label.text = newValue }
+    get {label.text}
+  }
+  
+  open var image: UIImage? {
+    get { imageView.image }
+    set (img) {
+      imageView.image = img
+      imageView.tintColor = strokeColor
+    }
+  }
+  
+  open var symbol: String? {
+    didSet {
+      if let sym = symbol {
+        self.image = UIImage(name: sym)
+        self.imageView.contentMode = .scaleAspectFit
+      }
+    }
+  }
+  
+  open var name: String? {
+    didSet {
+      if let name = name {
+        self.image = UIImage(named: name)
+      }
+    }
+  }
+  open override var isActivated: Bool {
+    get{ return super.isActivated }
+    set{
+      super.isActivated = newValue;
+      imageView.tintColor = strokeColor
+      label.textColor = strokeColor
+    }
+  }
+
+  open override var color: UIColor {
+    didSet {
+      imageView.tintColor = strokeColor
+      label.textColor = strokeColor
+    }
+  }
+  
+  open var vPadding: CGFloat = 8.0 {
+    didSet {
+      topConstraint?.constant = vPadding
+      bottomConstraint?.constant = -vPadding
+    }
+  }
+  
+  var topConstraint: NSLayoutConstraint?
+  var bottomConstraint: NSLayoutConstraint?
+    
+  override open func setup() {
+    super.setup()
+    imageView.setContentCompressionResistancePriority(.fittingSizeLevel, for: .vertical)
+    label.setContentCompressionResistancePriority(.defaultHigh, for: .vertical)
+    addSubview(imageView)
+    addSubview(label)
+    imageView.pinHeight(31.0)
+    imageView.centerX()
+    imageView.contentMode = .scaleAspectFit
+    label.centerX()
+    topConstraint = pin(imageView.top, to: self.top, dist: vPadding)
+    bottomConstraint = pin(label.bottom, to: self.bottom, dist: -vPadding)
+    pin(label.top, to: imageView.bottom)
   }
 } // class ImageView
 

@@ -69,6 +69,11 @@ public extension UIWindow {
     return UIScreen.main.bounds.size
   }
   
+  /// Returns width of the window
+  static var width: CGFloat {
+    return size.width
+  }
+  
   /// Returns short side's size of the window
   static var shortSide: CGFloat {
     let s = size

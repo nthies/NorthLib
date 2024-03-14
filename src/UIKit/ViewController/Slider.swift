@@ -723,6 +723,61 @@ open class BottomSheet: VerticalSheet {
   }
 }
 
+/// A BottomSheet is a vertical Slider growing from the bottom
+/// its the next Iteration for TabletLayout
+/// width is 704 px if screenWidth is > 750; otherwise screenWidth
+open class BottomSheet2: VerticalSheet {
+  
+  public func updateMaxWidth(for screenWidth: CGFloat = UIWindow.width){
+    let defaultWidth = 704.0//measured on iPAd min i and 9 in iPadOS 17.4
+    let maxWidth = 750.0 //alternative round defaultWidth*1.1
+    let width = screenWidth > maxWidth ? defaultWidth : screenWidth
+    /*
+    print("isIpadRegularSize: \(UIScreen.isIpadRegularSize) screenWidth: \(screenWidth) sheetWidth: \(width)")
+     ...lock good, but no active adjustment on rotate or change yet
+     isIpadRegularSize: false screenWidth: 375.0 sheetWidth: 375.0 //Portrait Split
+     isIpadRegularSize: false screenWidth: 639.0 sheetWidth: 639.0 //landscape 1/3
+     
+     isIpadRegularSize: true screenWidth: 678.0 sheetWidth: 678.0
+      isIpadRegularSize: true screenWidth: 1366.0 sheetWidth: 704.0
+      isIpadRegularSize: true screenWidth: 981.0 sheetWidth: 704.0
+      isIpadRegularSize: true screenWidth: 678.0 sheetWidth: 678.0
+      isIpadRegularSize: true screenWidth: 981.0 sheetWidth: 704.0
+    */
+    if btnSheetWidthConstraint != nil {
+      btnSheetWidthConstraint?.constant = width
+      return
+    }
+    if let view = active.view {
+      for constraint in horizontalnvariableConstraints ?? [] {
+        constraint.isActive = false
+      }
+      //iOS 12 dislike change of Priority even in init
+      horizontalnvariableConstraints = [
+        pin(sliderView.left, to: view.left, priority: .defaultHigh),
+        pin(sliderView.right, to: view.right, priority: .defaultHigh)]
+      
+      btnSheetWidthConstraint = sliderView.pinWidth(width, relation: .lessThanOrEqual, priority: .required)
+      sliderView.centerX()
+    }
+    
+  }
+  
+  private var btnSheetWidthConstraint: NSLayoutConstraint?
+  
+  public init(slider: UIViewController, into active: UIViewController) {
+    super.init(slider: slider, into: active, fromBottom: true)
+    sliderView.centerX()
+  }
+  
+  public func setCoverage(_ coverage: CGFloat, for activeViewHeight:CGFloat?){
+    let aH = activeViewHeight ?? active.view.bounds.height
+    let cov =  min(coverage, aH)
+    coverageRatio = cov/aH
+  }
+}
+
+
 public class FullscreenBottomSheet : BottomSheet{
   
   public var onUserSlideToClose : (()->())?
