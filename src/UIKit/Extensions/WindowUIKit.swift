@@ -111,7 +111,7 @@ public extension UIScreen {
     return max(s.width, s.height)
   }
   
-  static var isIpadRegularSize: Bool {
+  static var isIpadRegularHorizontalSize: Bool {
     guard Device.isIpad else {  return false }
     guard let window = UIWindow.keyWindow else {  return false }
     return window.traitCollection.horizontalSizeClass == .regular

@@ -406,12 +406,16 @@ public func pin(_ view: UIView, to: UIView, dist: CGFloat = 0, priority: UILayou
 
 /// Pin all edges of one view to the edges of another view
 @discardableResult
-public func pin(_ view: UIView, to: UIView, margins: UIEdgeInsets, priority: UILayoutPriority? = nil) -> (top: NSLayoutConstraint,
-  bottom: NSLayoutConstraint, left: NSLayoutConstraint, right: NSLayoutConstraint) {
-  let top = pin(view.top, to: to.top, dist: margins.top, priority: priority)
-  let bottom = pin(view.bottom, to: to.bottom, dist: -margins.bottom, priority: priority)
-  let left = pin(view.left, to: to.left, dist: margins.left, priority: priority)
-  let right = pin(view.right, to: to.right, dist: -margins.right, priority: priority)
+public func pin(_ view: UIView, to: UIView, margins: UIEdgeInsets, priority: UILayoutPriority? = nil, exclude: UIRectEdge? = nil) -> tblrConstrains {
+  var top:NSLayoutConstraint?, left:NSLayoutConstraint?, bottom:NSLayoutConstraint?, right:NSLayoutConstraint?
+  exclude != UIRectEdge.top ?
+  top = pin(view.top, to: to.top, dist: margins.top, priority: priority) : nil
+  exclude != UIRectEdge.bottom ? 
+  bottom = pin(view.bottom, to: to.bottom, dist: -margins.bottom, priority: priority) : nil
+  exclude != UIRectEdge.left ? 
+  left = pin(view.left, to: to.left, dist: margins.left, priority: priority) : nil
+  exclude != UIRectEdge.right ? 
+  right = pin(view.right, to: to.right, dist: -margins.right, priority: priority) : nil
   return (top, bottom, left, right)
 }
 

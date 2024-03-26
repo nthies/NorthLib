@@ -87,7 +87,7 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
     closeClosure = closure
   }
   
-  var shadeView = UIView()
+  public private(set) var shadeView = UIView()
   public private(set) var sliderView = UIView()
   var contentView = UIView()
   var handleView: RoundedRect?

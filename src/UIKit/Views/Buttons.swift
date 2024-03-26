@@ -1405,7 +1405,7 @@ open class ImageLabelView: ButtonView {
     }
   }
   
-  open var vPadding: CGFloat = 8.0 {
+  open var vPadding: CGFloat = 10.0 {
     didSet {
       topConstraint?.constant = vPadding
       bottomConstraint?.constant = -vPadding
@@ -1427,7 +1427,7 @@ open class ImageLabelView: ButtonView {
     label.centerX()
     topConstraint = pin(imageView.top, to: self.top, dist: vPadding)
     bottomConstraint = pin(label.bottom, to: self.bottom, dist: -vPadding)
-    pin(label.top, to: imageView.bottom)
+    pin(label.top, to: imageView.bottom, dist: 2.0)
   }
 } // class ImageView
 
