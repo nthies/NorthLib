@@ -112,6 +112,8 @@ open class WebViewCollectionVC: PageCollectionVC {
   /// The bridge (if any) to use for JS interaction
   public var bridge: JSBridgeObject?
   
+  open var isMultiColumnMode = false
+  
   public var currentWebView: WebView? { return currentView?.activeView as? WebView }
   public var indicatorStyle:  UIScrollView.IndicatorStyle = .default
 
@@ -203,31 +205,17 @@ open class WebViewCollectionVC: PageCollectionVC {
     
   open var addtionalBarHeight: CGFloat { return 0.0 }
   open var textLineHeight: CGFloat { return 0.0 }
+  open var multiColumnGap: CGFloat = 0.0
   
   open override func viewDidLoad() {
     super.viewDidLoad()
     self.view.backgroundColor = UIColor.white
     inset = 0
     onLeftTap {[weak self] in
-      guard let self = self,
-            let sv = self.currentWebView?.scrollView,
-      sv.contentOffset.y - 2 > 0
-      else { return false }
-      let y = max(sv.contentOffset.y - sv.frame.size.height + self.addtionalBarHeight + self.textLineHeight, 0)
-      sv.setContentOffset(CGPoint(x: 0, y: y), animated: true)
-      sv.flashScrollIndicators()
-      return true
+      return self?.handleLeftTap() ?? false
     }
     onRightTap {[weak self] in
-      guard let self = self,
-            let sv = self.currentWebView?.scrollView,
-            sv.contentOffset.y + 2 + sv.frame.size.height < sv.contentSize.height
-      else { return false }
-      let y = min(sv.contentOffset.y + sv.frame.size.height - self.addtionalBarHeight - self.textLineHeight,
-                  sv.contentSize.height - sv.frame.size.height + self.addtionalBarHeight)
-      sv.setContentOffset(CGPoint(x: 0, y: y), animated: true)
-      sv.flashScrollIndicators()
-      return true
+      return self?.handleRightTap() ?? false
     }
     viewProvider { [weak self] (index, oview) in
       guard let self = self else { return UIView() }
@@ -250,6 +238,41 @@ open class WebViewCollectionVC: PageCollectionVC {
         return owv
       }
     }
+  }
+  
+  private func handleLeftTap() -> Bool {
+    guard let sv = self.currentWebView?.scrollView  else { return false }
+    if isMultiColumnMode {
+      if sv.contentOffset.x - 2 < 0 { return false }
+      let x = max(sv.contentOffset.x - sv.frame.size.width, 0)
+      sv.setContentOffset(CGPoint(x: x, y: 0), animated: true)
+      sv.flashScrollIndicators()
+      return true
+    }
+    
+    if sv.contentOffset.y - 2 > 0 { return false }
+    let y = max(sv.contentOffset.y - sv.frame.size.height + self.addtionalBarHeight + self.textLineHeight, 0)
+    sv.setContentOffset(CGPoint(x: 0, y: y), animated: true)
+    sv.flashScrollIndicators()
+    return true
+  }
+  private func handleRightTap() -> Bool {
+    guard let sv = self.currentWebView?.scrollView  else { return false }
+    if isMultiColumnMode {
+      if sv.contentOffset.x + 2 + sv.frame.size.width > sv.contentSize.width { return false }
+      var x = min(sv.contentOffset.x + sv.frame.size.width - multiColumnGap,
+                  sv.contentSize.width - sv.frame.size.width)
+//      x = sv.contentOffset.x + sv.frame.size.width - multiColumnGap//Experimental have empty rows on right side
+      sv.setContentOffset(CGPoint(x: x, y: 0), animated: true)
+      sv.flashScrollIndicators()
+      return true
+    }
+    if sv.contentOffset.y + 2 + sv.frame.size.height < sv.contentSize.height { return false }
+    let y = min(sv.contentOffset.y + sv.frame.size.height - self.addtionalBarHeight - self.textLineHeight,
+                sv.contentSize.height - sv.frame.size.height + self.addtionalBarHeight)
+    sv.setContentOffset(CGPoint(x: 0, y: y), animated: true)
+    sv.flashScrollIndicators()
+    return true
   }
   
   func initWebView(oView: OptionalWebView) {
