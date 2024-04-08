@@ -205,7 +205,6 @@ open class WebViewCollectionVC: PageCollectionVC {
     
   open var addtionalBarHeight: CGFloat { return 0.0 }
   open var textLineHeight: CGFloat { return 0.0 }
-  open var multiColumnGap: CGFloat = 0.0
   
   open override func viewDidLoad() {
     super.viewDidLoad()
@@ -240,32 +239,16 @@ open class WebViewCollectionVC: PageCollectionVC {
     }
   }
   
-  private func handleLeftTap() -> Bool {
+  open func handleLeftTap() -> Bool {
     guard let sv = self.currentWebView?.scrollView  else { return false }
-    if isMultiColumnMode {
-      if sv.contentOffset.x - 2 < 0 { return false }
-      let x = max(sv.contentOffset.x - sv.frame.size.width + multiColumnGap, 0)
-      sv.setContentOffset(CGPoint(x: x, y: 0), animated: true)
-      sv.flashScrollIndicators()
-      return true
-    }
-    
     if sv.contentOffset.y - 2 > 0 { return false }
     let y = max(sv.contentOffset.y - sv.frame.size.height + self.addtionalBarHeight + self.textLineHeight, 0)
     sv.setContentOffset(CGPoint(x: 0, y: y), animated: true)
     sv.flashScrollIndicators()
     return true
   }
-  private func handleRightTap() -> Bool {
+  open func handleRightTap() -> Bool {
     guard let sv = self.currentWebView?.scrollView  else { return false }
-    if isMultiColumnMode {
-      if sv.contentOffset.x + 2 + sv.frame.size.width > sv.contentSize.width { return false }
-      var x = min(sv.contentOffset.x + sv.frame.size.width - multiColumnGap,
-                  sv.contentSize.width - sv.frame.size.width)
-      sv.setContentOffset(CGPoint(x: x, y: 0), animated: true)
-      sv.flashScrollIndicators()
-      return true
-    }
     if sv.contentOffset.y + 2 + sv.frame.size.height < sv.contentSize.height { return false }
     let y = min(sv.contentOffset.y + sv.frame.size.height - self.addtionalBarHeight - self.textLineHeight,
                 sv.contentSize.height - sv.frame.size.height + self.addtionalBarHeight)
