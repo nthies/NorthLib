@@ -244,7 +244,7 @@ open class WebViewCollectionVC: PageCollectionVC {
     guard let sv = self.currentWebView?.scrollView  else { return false }
     if isMultiColumnMode {
       if sv.contentOffset.x - 2 < 0 { return false }
-      let x = max(sv.contentOffset.x - sv.frame.size.width, 0)
+      let x = max(sv.contentOffset.x - sv.frame.size.width + multiColumnGap, 0)
       sv.setContentOffset(CGPoint(x: x, y: 0), animated: true)
       sv.flashScrollIndicators()
       return true
@@ -262,7 +262,6 @@ open class WebViewCollectionVC: PageCollectionVC {
       if sv.contentOffset.x + 2 + sv.frame.size.width > sv.contentSize.width { return false }
       var x = min(sv.contentOffset.x + sv.frame.size.width - multiColumnGap,
                   sv.contentSize.width - sv.frame.size.width)
-//      x = sv.contentOffset.x + sv.frame.size.width - multiColumnGap//Experimental have empty rows on right side
       sv.setContentOffset(CGPoint(x: x, y: 0), animated: true)
       sv.flashScrollIndicators()
       return true
