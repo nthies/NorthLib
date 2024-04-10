@@ -227,7 +227,8 @@ open class WebViewCollectionVC: PageCollectionVC {
         let owv = OptionalWebView(url: self.urls[index], baseDir: self.baseDir)
 //        self.debug("viewProvider: new -> \(owv.url.url.lastPathComponent)")
         self.initWebView(oView: owv)
-        owv.webView?.scrollView.scrollIndicatorInsets = UIEdgeInsets(top: 58, left: 0, bottom: 50, right: 0)
+        ///50>72
+        owv.webView?.scrollView.scrollIndicatorInsets = UIEdgeInsets(top: 58, left: 0, bottom: 72, right: 0)
         self.optionalWebViews.append(owv)
         if let bridge = self.bridge {
           owv.webView?.addBridge(bridge)
