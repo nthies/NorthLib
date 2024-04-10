@@ -112,7 +112,6 @@ open class WebViewCollectionVC: PageCollectionVC {
   /// The bridge (if any) to use for JS interaction
   public var bridge: JSBridgeObject?
   
-  open var isMultiColumnMode = false
   
   public var currentWebView: WebView? { return currentView?.activeView as? WebView }
   public var indicatorStyle:  UIScrollView.IndicatorStyle = .default

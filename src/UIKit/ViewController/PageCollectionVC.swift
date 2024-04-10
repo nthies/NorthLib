@@ -37,7 +37,6 @@ open class PageCollectionVC: UIViewController {
   
   open var tapButtonsBottomDist:CGFloat = -30.0 {
     didSet {
-      
       leftTapBottomDistConstraint?.constant = tapButtonsBottomDist
       rightTapBottomDistConstraint?.constant = tapButtonsBottomDist
     }
@@ -143,6 +142,7 @@ open class PageCollectionVC: UIViewController {
   open override func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
     collectionView?.preventInit = false
+    updateTapArea()
   }
 
   override open func loadView() {
@@ -163,7 +163,7 @@ open class PageCollectionVC: UIViewController {
   open override func viewDidLoad() {
     super.viewDidLoad()
     if count != 0 { collectionView?.reloadData() }
-    setupTapArea()
+    updateTapArea()
   }
   
   private var onRightTapClosure: (()->(Bool))?
@@ -181,46 +181,84 @@ open class PageCollectionVC: UIViewController {
     onLeftTapClosure = closure
   }
   
-  public private(set) var leftTapEnEdgeButton: UIView?
-  public private(set) var rightTapEnEdgeButton: UIView?
+  private let tapEnEdgeButtonSize: CGFloat = 100.0
   
-  func setupTapArea(){
-    if edgeTapToNavigate == false { return }
-    if preventEdgeTapToNavigate == true { return }
-    let size: CGFloat = 100.0
-    let left = UIView()
-    let right = UIView()
-    right.layer.cornerRadius = size*0.5
-    right.pinSize(CGSize(width: size, height: size))
-    left.layer.cornerRadius = size*0.5
-    left.pinSize(CGSize(width: size, height: size))
-    if edgeTapToNavigateVisible {
-      right.backgroundColor = UIColor.gray.withAlphaComponent(0.15)
-      right.addBorder(.gray.withAlphaComponent(0.25))
-      left.backgroundColor = UIColor.gray.withAlphaComponent(0.15)
-      left.addBorder(.gray.withAlphaComponent(0.25))
-    }
-    self.view.addSubview(left)
-    self.view.addSubview(right)
-    pin(left.left, to: self.view.left, dist: -size*0.3)
-    pin(right.right, to: self.view.right, dist: size*0.3)
-    leftTapBottomDistConstraint
-    = pin(left.bottom, to: self.view.bottomGuide(isMargin: leftTapBottomMargin), dist: tapButtonsBottomDist)
-    rightTapBottomDistConstraint
-    = pin(right.bottom, to: self.view.bottomGuide(isMargin: leftTapBottomMargin), dist: tapButtonsBottomDist)
-    left.onTapping {[weak self] _ in
+  public lazy var leftTapEnEdgeButton: UIView = {
+    let btn = UIView()
+    btn.layer.cornerRadius = tapEnEdgeButtonSize*0.5
+    btn.pinSize(CGSize(width: tapEnEdgeButtonSize, height: tapEnEdgeButtonSize))
+    btn.backgroundColor = UIColor.gray.withAlphaComponent(0.15)
+    btn.addBorder(.gray.withAlphaComponent(0.25))
+    btn.onTapping {[weak self] _ in
       if self?.onLeftTapClosure?() == true { return }
       guard let idx = self?.index, idx > 0 else { return }
       self?.collectionView?.scrollto(idx-1, animated: true)
     }
-    right.onTapping {[weak self] _ in
+    return btn
+  }()
+  public lazy var rightTapEnEdgeButton: UIView = {
+    let btn = UIView()
+    btn.layer.cornerRadius = tapEnEdgeButtonSize*0.5
+    btn.pinSize(CGSize(width: tapEnEdgeButtonSize, height: tapEnEdgeButtonSize))
+    btn.backgroundColor = UIColor.gray.withAlphaComponent(0.15)
+    btn.addBorder(.gray.withAlphaComponent(0.25))
+    btn.onTapping {[weak self] _ in
       if self?.onRightTapClosure?() == true { return }
       guard let idx = self?.index else { return }
       self?.collectionView?.scrollto(idx+1, animated: true)
     }
+    return btn
+  }()
     
-    leftTapEnEdgeButton = left
-    rightTapEnEdgeButton = right
+  func updateTapArea(){
+    if edgeTapToNavigate == false || preventEdgeTapToNavigate == true {
+      leftTapEnEdgeButton.isHidden = true
+      rightTapEnEdgeButton.isHidden = true
+      return
+    }
+    
+    leftTapEnEdgeButton.isHidden = false
+    rightTapEnEdgeButton.isHidden = false
+    
+    leftTapEnEdgeButton.backgroundColor 
+    = edgeTapToNavigateVisible
+    ? UIColor.gray.withAlphaComponent(0.15)
+    : .clear
+    leftTapEnEdgeButton.layer.borderColor
+    = edgeTapToNavigateVisible
+    ? UIColor.gray.withAlphaComponent(0.25).cgColor
+    : UIColor.clear.cgColor
+    
+    rightTapEnEdgeButton.backgroundColor
+    = edgeTapToNavigateVisible
+    ? UIColor.gray.withAlphaComponent(0.15)
+    : .clear
+    rightTapEnEdgeButton.layer.borderColor
+    = edgeTapToNavigateVisible
+    ? UIColor.gray.withAlphaComponent(0.25).cgColor
+    : UIColor.clear.cgColor
+    
+    if leftTapEnEdgeButton.superview == nil {
+      self.view.addSubview(leftTapEnEdgeButton)
+      pin(leftTapEnEdgeButton.left, 
+          to: self.view.left,
+          dist: -tapEnEdgeButtonSize*0.3)
+      leftTapBottomDistConstraint
+      = pin(leftTapEnEdgeButton.bottom, 
+            to: self.view.bottomGuide(isMargin: leftTapBottomMargin),
+            dist: tapButtonsBottomDist)
+    }
+    
+    if rightTapEnEdgeButton.superview == nil {
+      self.view.addSubview(rightTapEnEdgeButton)
+      pin(rightTapEnEdgeButton.right, 
+          to: self.view.right,
+          dist: tapEnEdgeButtonSize*0.3)
+      rightTapBottomDistConstraint
+      = pin(rightTapEnEdgeButton.bottom,
+            to: self.view.bottomGuide(isMargin: leftTapBottomMargin),
+            dist: tapButtonsBottomDist)
+    }
   }
   
   // TODO: transition/rotation better with collectionViewLayout subclass as described in:
