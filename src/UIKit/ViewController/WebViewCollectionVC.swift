@@ -239,25 +239,26 @@ open class WebViewCollectionVC: PageCollectionVC {
     }
   }
   
-  open func handleLeftTap() -> Bool {
-    guard let sv = self.currentWebView?.scrollView  else { return false }
-    if sv.contentOffset.y - 2 > 0 { return false }
-    let y = max(sv.contentOffset.y - sv.frame.size.height + self.addtionalBarHeight + self.textLineHeight, 0)
-    sv.setContentOffset(CGPoint(x: 0, y: y), animated: true)
-    sv.flashScrollIndicators()
-    return true
-  }
-  open func handleRightTap() -> Bool {
-    
-    guard let sv = self.currentWebView?.scrollView  else { return false }
-    if sv.contentOffset.y + 2 + sv.frame.size.height < sv.contentSize.height { 
-      print("not scroll, change index")
-      return false }
+  open func handleRightTap() -> Bool{
+    guard let sv = self.currentWebView?.scrollView,
+          sv.contentOffset.y + 2 + sv.frame.size.height < sv.contentSize.height
+    else { return false }
     let y = min(sv.contentOffset.y + sv.frame.size.height - self.addtionalBarHeight - self.textLineHeight,
                 sv.contentSize.height - sv.frame.size.height + self.addtionalBarHeight)
     sv.setContentOffset(CGPoint(x: 0, y: y), animated: true)
     sv.flashScrollIndicators()
     return true
+  }
+  
+  open func handleLeftTap() -> Bool{
+    guard let sv = self.currentWebView?.scrollView,
+    sv.contentOffset.y - 2 > 0
+    else { return false }
+    let y = max(sv.contentOffset.y - sv.frame.size.height + self.addtionalBarHeight + self.textLineHeight, 0)
+    sv.setContentOffset(CGPoint(x: 0, y: y), animated: true)
+    sv.flashScrollIndicators()
+    return true
+    
   }
   
   func initWebView(oView: OptionalWebView) {
