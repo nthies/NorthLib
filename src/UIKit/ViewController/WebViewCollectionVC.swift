@@ -194,10 +194,13 @@ open class WebViewCollectionVC: PageCollectionVC {
   open func needsReload(webView: WebView) -> Bool { true }
   
   open func reloadAllWebViews(){
+    let bottomInset = 52 + UIWindow.bottomInset
     optionalWebViews.forEach {
       if let wv = $0.webView {
         if needsReload(webView: wv) { wv.reload() }
         wv.scrollView.indicatorStyle = indicatorStyle
+        wv.scrollView.scrollIndicatorInsets
+        = UIEdgeInsets(top: 58, left: 0, bottom: bottomInset , right: 0)
       }
     }
   }
@@ -223,12 +226,12 @@ open class WebViewCollectionVC: PageCollectionVC {
         ov.url = self.urls[index]
         return ov
       }
-      else { 
+      else {
         let owv = OptionalWebView(url: self.urls[index], baseDir: self.baseDir)
 //        self.debug("viewProvider: new -> \(owv.url.url.lastPathComponent)")
         self.initWebView(oView: owv)
-        ///50>72
-        owv.webView?.scrollView.scrollIndicatorInsets = UIEdgeInsets(top: 58, left: 0, bottom: 72, right: 0)
+        let bottomInset = 52 + UIWindow.bottomInset
+        owv.webView?.scrollView.scrollIndicatorInsets = UIEdgeInsets(top: 58, left: 0, bottom: bottomInset, right: 0)
         self.optionalWebViews.append(owv)
         if let bridge = self.bridge {
           owv.webView?.addBridge(bridge)
