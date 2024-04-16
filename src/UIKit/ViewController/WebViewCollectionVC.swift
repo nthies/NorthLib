@@ -52,13 +52,23 @@ class OptionalWebView: OptionalView, DoesLog {
   }
   
   fileprivate func createWebView() {
-    self.webView = WebView(frame: .zero)
+    let js = "document.querySelector('meta[name=viewport]').setAttribute('content', 'width=device-width, initial-scale=1.0, shrink-to-fit=no');"
+    let us = WKUserScript(source: js, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
+    let ucc = WKUserContentController()
+    ucc.addUserScript(us)
+    let config = WKWebViewConfiguration()
+    config.userContentController = ucc
+    
+    self.webView = WebView(frame: .zero, configuration: config)
     guard let webView = self.webView else { return }
     webView.backgroundColor = UIColor.clear
     webView.scrollView.backgroundColor = UIColor.clear
     webView.allowsBackForwardNavigationGestures = false
     webView.scrollView.isDirectionalLockEnabled = true
-    webView.scrollView.showsHorizontalScrollIndicator = false
+    webView.scrollView.scrollIndicatorInsets = .zero
+    webView.scrollView.automaticallyAdjustsScrollIndicatorInsets = false
+    webView.scrollView.bounces = false //ONLY FOR MULTI COLUMN SCROLLING!
+    webView.scrollView.showsHorizontalScrollIndicator = true //True horizontalScrolling / false otherwise
     webView.scrollDelegate.minScrollRatio = 0.01
     if #available(iOS 16.4, *) {
       webView.isInspectable = true
