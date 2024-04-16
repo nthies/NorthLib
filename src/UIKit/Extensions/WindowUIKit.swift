@@ -94,7 +94,18 @@ public extension UIWindow {
   
   /// check if current window's width is larger than its height
   static var isLandscape: Bool { !UIWindow.isPortrait }
-
+  
+  static var isLandscapeInterface: Bool {
+    guard let io = UIWindow.keyWindow?.windowScene?.interfaceOrientation else {
+      return isLandscape
+    }
+    switch io {
+      case .landscapeLeft, .landscapeRight:
+        return true
+      default:
+        return false
+    }
+  }
 } // UIWindow
 
 /// A simple UIScreen extension
