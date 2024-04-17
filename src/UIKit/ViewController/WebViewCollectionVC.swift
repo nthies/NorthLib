@@ -141,6 +141,10 @@ open class WebViewCollectionVC: PageCollectionVC {
   @Callback<CGFloat>
   public var scrollViewDidEndDragging: Callback<CGFloat>.Store
   
+  /// The closures to call when end dragging
+  @Callback<CGPoint>
+  public var scrollViewDidEndScrolling: Callback<CGPoint>.Store
+  
   /// The closures to call when begindragging
   @Callback<CGFloat>
   public var scrollViewWillBeginDragging: Callback<CGFloat>.Store
@@ -285,6 +289,10 @@ open class WebViewCollectionVC: PageCollectionVC {
     }
     webView.scrollDelegate.scrollViewWillBeginDragging { [weak self] ratio in
       self?.$scrollViewWillBeginDragging.notify(sender: self, content: ratio)
+    }
+    
+    webView.scrollDelegate.scrollViewDidEndScrolling { [weak self] offset in
+      self?.$scrollViewDidEndScrolling.notify(sender: self, content: offset)
     }
     
     webView.scrollDelegate.scrollViewDidEndDragging { [weak self] ratio in

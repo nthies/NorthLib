@@ -560,6 +560,10 @@ public class WebViewScrollDelegate: NSObject, UIScrollViewDelegate{
   @Callback<CGFloat>
   public var scrollViewDidEndDragging: Callback<CGFloat>.Store
   
+  /// The closures to call when end dragging
+  @Callback<CGPoint>
+  public var scrollViewDidEndScrolling: Callback<CGPoint>.Store
+  
   /// The closures to call when begindragging
   @Callback<CGFloat>
   public var scrollViewWillBeginDragging: Callback<CGFloat>.Store
@@ -600,7 +604,22 @@ public class WebViewScrollDelegate: NSObject, UIScrollViewDelegate{
     if $scrollViewDidEndDragging.needsNotification {
       $scrollViewDidEndDragging.notify(sender: self, content: scrollView.contentOffset.y)
     }
-    
+    let horizontalScrollable
+    = scrollView.frame.size.width + scrollView.contentOffset.x + 10
+    < scrollView.contentSize.width
+    if horizontalScrollable,
+       decelerate == false,
+       $scrollViewDidEndScrolling.needsNotification {
+      $scrollViewDidEndScrolling.notify(sender: self,
+                                        content: scrollView.contentOffset)
+    }
+  }
+  
+  public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+    if $scrollViewDidEndScrolling.needsNotification {
+      $scrollViewDidEndScrolling.notify(sender: self,
+                                        content: scrollView.contentOffset)
+    }
   }
   
   // When dragging stops, check whether the end of content is visible
