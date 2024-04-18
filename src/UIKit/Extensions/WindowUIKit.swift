@@ -134,3 +134,14 @@ extension UIEdgeInsets {
     return self.top + self.bottom
   }
 }
+public extension UIDevice {
+  static var isLandscape: Bool { return !isPortrait }
+  static var isPortrait: Bool {
+    let orientation = UIDevice.current.orientation
+    if !orientation.isValidInterfaceOrientation {
+      // fix device orientation return UIDeviceOrientationUnknown unless device orientation notifications is being generated.
+      return UIWindow.isPortrait
+    }
+    return orientation.isPortrait
+  }
+}

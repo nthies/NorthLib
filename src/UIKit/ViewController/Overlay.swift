@@ -598,7 +598,7 @@ public class Overlay: NSObject, OverlaySpec, UIGestureRecognizerDelegate {
   @IBAction func didPinchWith(gestureRecognizer: UIPinchGestureRecognizer) {
     if let sv = otherGestureRecognizersScrollView {
       if gestureRecognizer.state == .began {
-        if UIDevice.current.orientation.isLandscape {
+        if UIDevice.isLandscape {
           heightToClose = panCloseRatio * sv.frame.size.height
           widthToClose = nil
           _a = 1/((1-panShadowRatio)*sv.frame.size.height)
