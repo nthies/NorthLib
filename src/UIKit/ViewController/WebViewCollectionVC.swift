@@ -65,10 +65,7 @@ class OptionalWebView: OptionalView, DoesLog {
     webView.scrollView.backgroundColor = UIColor.clear
     webView.allowsBackForwardNavigationGestures = false
     webView.scrollView.isDirectionalLockEnabled = true
-    webView.scrollView.scrollIndicatorInsets = .zero
-    webView.scrollView.automaticallyAdjustsScrollIndicatorInsets = false
-    webView.scrollView.bounces = false //ONLY FOR MULTI COLUMN SCROLLING!
-    webView.scrollView.showsHorizontalScrollIndicator = true //True horizontalScrolling / false otherwise
+    webView.scrollView.showsHorizontalScrollIndicator = false
     webView.scrollDelegate.minScrollRatio = 0.01
     if #available(iOS 16.4, *) {
       webView.isInspectable = true
