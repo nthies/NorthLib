@@ -274,6 +274,7 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
     self.active = active
     self.isHorizontal = isHorizontal
     self.fromDefault = isFromDefault
+    self.wasPortrait = UIDevice.isPortrait
     super.init()
     shadeView.backgroundColor = UIColor.black
     shadeView.translatesAutoresizingMaskIntoConstraints = false
@@ -298,13 +299,17 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
     if isHorizontal { if ics.width > 0 { coverage = ics.width } }
     else { if ics.height > 0 { coverage = ics.height } }
     resetConstraints()
-    
     onOrientationChange{ [weak self] in
+      if self?.wasPortrait == UIDevice.isPortrait { return }
+      self?.wasPortrait = UIDevice.isPortrait
       onMainAfter {
         self?.resetConstraints()
       }
     }
+    self.wasPortrait = UIDevice.isPortrait
   }
+  
+  private var wasPortrait: Bool
   
   public func slide(toOpen: Bool, animated: Bool = true) {
     let view = active.view!
