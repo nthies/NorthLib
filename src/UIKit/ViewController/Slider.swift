@@ -25,7 +25,7 @@ open class Slider: NSObject, DoesLog, HandleOrientation {
   /// Default handle height
   var handleHeight: CGFloat = 5
   /// currently active view controller to slide into
-  var active: UIViewController
+  public fileprivate(set) var active: UIViewController
   /// view controller being slid in
   var slider: UIViewController
   /// Horizontal or vertical slide (from top or bottom)
@@ -733,8 +733,8 @@ open class BottomSheet: VerticalSheet {
 /// width is 704 px if screenWidth is > 750; otherwise screenWidth
 open class BottomSheet2: VerticalSheet {
   
-  public func updateMaxWidth(for screenWidth: CGFloat = UIWindow.width){
-    let defaultWidth = 704.0//measured on iPAd min i and 9 in iPadOS 17.4
+  public func updateMaxWidth(for screenWidth: CGFloat = UIWindow.width, defaultWidth: CGFloat = 704.0){
+    //defaultWidth = 704.0//measured on iPAd min i and 9 in iPadOS 17.4
     let maxWidth = 750.0 //alternative round defaultWidth*1.1
     let width = screenWidth > maxWidth ? defaultWidth : screenWidth
     /*
@@ -766,6 +766,22 @@ open class BottomSheet2: VerticalSheet {
       sliderView.centerX()
     }
     
+  }
+  
+  public var xButton = Button<ImageView>()
+  
+  override func decorateSlider(_ isDecorate: Bool) {
+    super.decorateSlider(isDecorate)
+    sliderView.addSubview(xButton)
+    pin(xButton.right, to: sliderView.rightGuide(), dist: -12)
+    pin(xButton.top, to: sliderView.topGuide(), dist: 12)
+  }
+  
+  public var handle: UIView? { return handleView }
+  
+  public func onX(closure: @escaping ()->()) {
+    xButton.isHidden = false
+    xButton.onPress {_ in closure() }
   }
   
   private var btnSheetWidthConstraint: NSLayoutConstraint?

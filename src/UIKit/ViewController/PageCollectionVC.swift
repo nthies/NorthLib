@@ -210,7 +210,7 @@ open class PageCollectionVC: UIViewController {
     return btn
   }()
     
-  func updateTapArea(){
+  public func updateTapArea(){
     if edgeTapToNavigate == false || preventEdgeTapToNavigate == true {
       leftTapEnEdgeButton.isHidden = true
       rightTapEnEdgeButton.isHidden = true
