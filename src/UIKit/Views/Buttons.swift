@@ -1328,8 +1328,8 @@ open class ImageView: ButtonView {
   override open func setup() {
     super.setup()
     addSubview(imageView)
-//    self.addBorder(.blue, 0.2)
-//    self.imageView.addBorder(.green, 0.2)
+//    imageView.backgroundColor = .red
+//    self.backgroundColor = .green
     pin(imageView.centerX, to: self.centerX)
     pin(imageView.centerY, to: self.centerY)
   }
