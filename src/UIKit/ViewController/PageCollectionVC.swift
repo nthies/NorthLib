@@ -31,18 +31,7 @@ open class PageCollectionVC: UIViewController {
   
   /// inset from top/bottom/left/right as factor to min(width,height)
   open var inset = 0.025
-  
-  private var leftTapBottomDistConstraint: NSLayoutConstraint?
-  private var rightTapBottomDistConstraint: NSLayoutConstraint?
-  
-  open var tapButtonsBottomDist:CGFloat = -30.0 {
-    didSet {
-      leftTapBottomDistConstraint?.constant = tapButtonsBottomDist
-      rightTapBottomDistConstraint?.constant = tapButtonsBottomDist
-    }
-  }
-  open var leftTapBottomMargin:Bool  = true
-  
+    
   public var invalidateLayoutNeededOnViewWillAppear:Bool = false
   
   // The raw cell size (without bounds)
@@ -181,12 +170,11 @@ open class PageCollectionVC: UIViewController {
     onLeftTapClosure = closure
   }
   
-  private let tapEnEdgeButtonSize: CGFloat = 100.0
+  private let tapEnEdgeButtonWidth: CGFloat = 10.0
   
   public lazy var leftTapEnEdgeButton: UIView = {
     let btn = UIView()
-    btn.layer.cornerRadius = tapEnEdgeButtonSize*0.5
-    btn.pinSize(CGSize(width: tapEnEdgeButtonSize, height: tapEnEdgeButtonSize))
+    btn.pinWidth(tapEnEdgeButtonWidth)
     btn.backgroundColor = UIColor.gray.withAlphaComponent(0.15)
     btn.addBorder(.gray.withAlphaComponent(0.25))
     btn.onTapping {[weak self] _ in
@@ -198,8 +186,7 @@ open class PageCollectionVC: UIViewController {
   }()
   public lazy var rightTapEnEdgeButton: UIView = {
     let btn = UIView()
-    btn.layer.cornerRadius = tapEnEdgeButtonSize*0.5
-    btn.pinSize(CGSize(width: tapEnEdgeButtonSize, height: tapEnEdgeButtonSize))
+    btn.pinWidth(tapEnEdgeButtonWidth)
     btn.backgroundColor = UIColor.gray.withAlphaComponent(0.15)
     btn.addBorder(.gray.withAlphaComponent(0.25))
     btn.onTapping {[weak self] _ in
@@ -240,24 +227,12 @@ open class PageCollectionVC: UIViewController {
     
     if leftTapEnEdgeButton.superview == nil {
       self.view.addSubview(leftTapEnEdgeButton)
-      pin(leftTapEnEdgeButton.left, 
-          to: self.view.left,
-          dist: -tapEnEdgeButtonSize*0.3)
-      leftTapBottomDistConstraint
-      = pin(leftTapEnEdgeButton.bottom, 
-            to: self.view.bottomGuide(isMargin: leftTapBottomMargin),
-            dist: tapButtonsBottomDist)
+      pin(leftTapEnEdgeButton, to: self.view, exclude: .right)
     }
     
     if rightTapEnEdgeButton.superview == nil {
       self.view.addSubview(rightTapEnEdgeButton)
-      pin(rightTapEnEdgeButton.right, 
-          to: self.view.right,
-          dist: tapEnEdgeButtonSize*0.3)
-      rightTapBottomDistConstraint
-      = pin(rightTapEnEdgeButton.bottom,
-            to: self.view.bottomGuide(isMargin: leftTapBottomMargin),
-            dist: tapButtonsBottomDist)
+      pin(rightTapEnEdgeButton, to: self.view, exclude: .left)
     }
   }
   
