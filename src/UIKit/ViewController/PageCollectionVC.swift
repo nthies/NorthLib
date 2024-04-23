@@ -170,7 +170,7 @@ open class PageCollectionVC: UIViewController {
     onLeftTapClosure = closure
   }
   
-  private let tapEnEdgeButtonWidth: CGFloat = 10.0
+  private let tapEnEdgeButtonWidth: CGFloat = 28.0
   
   public lazy var leftTapEnEdgeButton: UIView = {
     let btn = UIView()
