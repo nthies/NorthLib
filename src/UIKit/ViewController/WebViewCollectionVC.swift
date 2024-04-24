@@ -52,7 +52,7 @@ class OptionalWebView: OptionalView, DoesLog {
   }
   
   fileprivate func createWebView() {
-    let js = "document.querySelector('meta[name=viewport]').setAttribute('content', 'width=device-width, initial-scale=1.0, shrink-to-fit=no');"
+    let js = "document.querySelector('meta[name=viewport]').setAttribute('content', 'width=device-width, initial-scale=1.0, shrink-to-fit=no, maximum-scale=1.0');"
     let us = WKUserScript(source: js, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
     let ucc = WKUserContentController()
     ucc.addUserScript(us)
