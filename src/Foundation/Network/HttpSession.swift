@@ -455,6 +455,30 @@ open class HttpSession: NSObject, URLSessionDelegate, URLSessionTaskDelegate, UR
                              doRetry: Bool = true,
                              closure: @escaping(Result<HttpJob?,Error>)->()) {
     if file.exists(inDir: toDir) { closure(.success(nil)) }
+    else if baseUrl.isEmpty {
+      #warning("ToDo: Improvement needed?!")//
+      /// **Workaround implemented**
+      /// in Downloader.downloadIssueData: not download/enqueue BookmarkIssue content
+      /// @seen in:
+      /// - Bookmarked demo articles
+      /// - open demo Article in Bookmarks
+      /// - scroll down; expired form appeared
+      /// - reactivated account
+      /// - send app in background and bring back to foreground > feeder checks status & reactivation
+      /// - overlay & download issue data
+      /// - bookmark issue data also enqueued > created infinity loop to download
+      /// ...but what happen in other cases of invalid urls?
+      /// **UNTESTED/UN-TESTABLE?**
+      /// the described use case was not reproduceable anymore, even if Downloader.downloadIssueData
+      /// not skipped the Bookmark issues; it may depend on a secific combination of downloaded and not downloaded issues
+      /// **ToDo:** check it and implement a better solution!*/
+
+      //closure with failure did not work; downloader will repead it infinity >
+      //closure(.failure(error(HttpError.invalidURL(file.name))))
+      log("WARNING cannot Download file with empty BaseURL: \(file.name)")
+      //Workaround: say download success to not enqueue again
+      closure(.success(nil))
+    }
     else if let cache = cacheDir, file.exists(inDir: cache) {
       let src = File(cache + "/" + file.name)
       src.copy(to: toDir + "/" + file.name)
