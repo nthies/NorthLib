@@ -22,7 +22,8 @@ extension UIView {
   public func addBorderView(_ color:UIColor,
                             _ width:CGFloat=1.0,
                             edge: UIRectEdge,
-                            insets: UIEdgeInsets = .zero) -> UIView{
+                            insets: UIEdgeInsets = .zero,
+                            lastEdgePriority: UILayoutPriority? = nil) -> UIView{
     let v = UIView()
     v.backgroundColor = color
     switch edge {
@@ -32,7 +33,15 @@ extension UIView {
         v.pinHeight(width)
     }
     self.addSubview(v)
-    pin(v, to: self, insets: insets, exclude: edge.opposite)
+    let constr = pin(v, to: self, insets: insets, exclude: edge.opposite)
+    if let prio = lastEdgePriority {
+      if edge == .left || edge == .right {
+        constr.bottom?.priority = prio
+      }
+      else {
+        constr.right?.priority = prio
+      }
+    }
     return v
   }
   
