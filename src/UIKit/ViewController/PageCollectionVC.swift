@@ -17,8 +17,8 @@ open class PageCollectionVC: UIViewController {
   @Default("edgeTapToNavigate")
   public var edgeTapToNavigate: Bool
   
-  @Default("edgeTapToNavigateVisible")
-  public var edgeTapToNavigateVisible: Bool
+  @Default("edgeTapToNavigateVisible2")
+  public var edgeTapToNavigateVisible2: Bool
   
   /// The collection view displaying OptionalViews
   open var collectionView:PageCollectionView? = PageCollectionView()
@@ -208,20 +208,20 @@ open class PageCollectionVC: UIViewController {
     rightTapEnEdgeButton.isHidden = false
     
     leftTapEnEdgeButton.backgroundColor 
-    = edgeTapToNavigateVisible
+    = edgeTapToNavigateVisible2
     ? UIColor.gray.withAlphaComponent(0.15)
     : .clear
     leftTapEnEdgeButton.layer.borderColor
-    = edgeTapToNavigateVisible
+    = edgeTapToNavigateVisible2
     ? UIColor.gray.withAlphaComponent(0.25).cgColor
     : UIColor.clear.cgColor
     
     rightTapEnEdgeButton.backgroundColor
-    = edgeTapToNavigateVisible
+    = edgeTapToNavigateVisible2
     ? UIColor.gray.withAlphaComponent(0.15)
     : .clear
     rightTapEnEdgeButton.layer.borderColor
-    = edgeTapToNavigateVisible
+    = edgeTapToNavigateVisible2
     ? UIColor.gray.withAlphaComponent(0.25).cgColor
     : UIColor.clear.cgColor
     
