@@ -83,6 +83,14 @@ public extension Date {
     }
   }
   
+  var timeFromDate:String{
+    get{
+      let dateFormatterGet = DateFormatter()
+      dateFormatterGet.dateFormat = "HH:mm"
+      return dateFormatterGet.string(from: self)
+    }
+  }
+  
 } // extension Date
 
 /// A small extension to yield seconds
