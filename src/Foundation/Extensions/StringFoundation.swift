@@ -79,8 +79,8 @@ public extension String {
     return self.trimmingCharacters(in: .whitespacesAndNewlines)
   }
   
-  /// Remove leading and trailing white space
-  var lastPathComponent: String? {
+  /// returns lastPathComponent
+  var lastPathComponent: String {
     return (self as NSString).lastPathComponent
   }
 
