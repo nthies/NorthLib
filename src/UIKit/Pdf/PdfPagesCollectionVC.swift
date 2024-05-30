@@ -30,7 +30,6 @@ open class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
     }
   }
   
-  
   func updateData(){
     guard let model = pdfModel else { return }
     self.index = model.index
@@ -81,12 +80,6 @@ open class PdfPagesCollectionVC : ImageCollectionVC, CanRotate{
 
   open override func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
-    //PDF>Article>Rotate>PDF: fix layout pos
-    if let ziv = self.currentView as? ZoomedImageViewSpec {
-      onMainAfter(0.3) {
-        ziv.invalidateLayout()
-      }
-    }
     handleTraitsChange(self.view.frame.size)
   }
 
