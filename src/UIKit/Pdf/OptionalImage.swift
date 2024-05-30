@@ -35,7 +35,8 @@ public protocol ZoomedPdfImageSpec : OptionalImage, DoesLog {
 
 open class ZoomedPdfImage: OptionalImageItem, ZoomedPdfImageSpec, Equatable {
   public static func == (lhs: ZoomedPdfImage, rhs: ZoomedPdfImage) -> Bool {
-    return lhs.pdfPage == rhs.pdfPage &&  rhs.pdfPage != nil
+//    print("\(lhs.pdfPage)  \(rhs.pdfPage)")
+    return lhs.pdfPage?.pageRef == rhs.pdfPage?.pageRef &&  rhs.pdfPage?.pageRef != nil
   }
   
   open var pageType : PdfPageType = .left
