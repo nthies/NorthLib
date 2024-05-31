@@ -66,7 +66,10 @@ open class Alert {
         alert.addAction(action)
       }
       let target = presentationController ?? UIViewController.top()
-      target?.present(alert, animated: true, completion: nil)
+      target?.present(alert, animated: true, completion: {
+        guard target?.view.window == nil else { return }
+        Self.message(title: title, message: message, actions: actions, presentationController: presentationController)
+      })
     }
   }
   
