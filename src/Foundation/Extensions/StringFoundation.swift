@@ -48,7 +48,7 @@ public extension String {
         }
       }
     } catch let error {
-      Log.fatal(error)
+      Log.fatal(error, origin: nil)
       return []
     }
   }

@@ -73,14 +73,14 @@ extension DoesLog {
   
   @discardableResult
   public func fatal(_ msg: String? = nil, file: String = #file, line: Int = #line,
-                    function: String = #function) -> Log.Error {
-    return Log.fatal(msg, object: self, file: file, line: line, function: function)
+                    function: String = #function, origin: String? = nil) -> Log.Error {
+    return Log.fatal(msg, object: self, file: file, line: line, function: function, origin: origin)
   }
   
   @discardableResult
   public func fatal<T: Swift.Error>(_ error: T, file: String = #file, line: Int = #line,
-                function: String = #function) -> Log.EnclosedError<T> {
-    return Log.fatal(error, object: self, file: file, line: line, function: function)
+                                    function: String = #function, origin: String? = nil ) -> Log.EnclosedError<T> {
+    return Log.fatal(error, object: self, file: file, line: line, function: function, origin: origin)
   }
   
   @discardableResult
@@ -200,20 +200,20 @@ extension Log {
   @discardableResult
   public static func fatal(_ message: String? = nil, previous: Log.Error? = nil, object: Any? = nil,
     logLevel: LogLevel = .Fatal, file: String = #file, line: Int = #line,
-    function: String = #function) -> Log.Error {
+                           function: String = #function, origin: String? ) -> Log.Error {
     let msg = Error(level: logLevel, className: class2s(object), fileName: file, funcName: function,
                     line: line, message: message, previous: previous)
-    log(msg.message)
+    log(msg.message, origin: origin)
     return msg
   }
   
   @discardableResult
   public static func fatal<T: Swift.Error>(_ error: T, previous: Log.Error? = nil, object: Any? = nil,
     logLevel: LogLevel = .Fatal, file: String = #file, line: Int = #line,
-    function: String = #function) -> EnclosedError<T> {
+    function: String = #function, origin: String?) -> EnclosedError<T> {
     let msg = EnclosedError<T>(enclosed: error, level: logLevel, className: class2s(object), 
       fileName: file, funcName: function, line: line, message: nil, previous: previous)
-    log(msg.message)
+    log(msg.message, origin: origin)
     return msg
   }
   

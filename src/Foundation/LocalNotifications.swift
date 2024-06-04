@@ -35,7 +35,7 @@ open class LocalNotifications: DoesLog {
         let attachment = try UNNotificationAttachment(identifier: "\(identifier)-ai", url: attachmentURL)
         content.attachments = [attachment]
       }
-      catch let error { Log.fatal(error) }
+      catch let error { Log.fatal(error, origin: nil) }
     }
     if let categoryIdentifier = categoryIdentifier { content.categoryIdentifier = categoryIdentifier }
     if let badge = badge { content.badge = NSNumber(value: badge) }
