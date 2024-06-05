@@ -9,14 +9,14 @@
 extension DoesLog {
   
   public func log(_ msg: String? = nil, logLevel: Log.LogLevel = .Info, file:
-    String = #file, line: Int = #line, function: String = #function, origin: String? = nil) {
-    Log.log(msg, object: self, logLevel: logLevel, file: file, line: line, function: function, origin: origin)
+    String = #file, line: Int = #line, function: String = #function) {
+    Log.log(msg, object: self, logLevel: logLevel, file: file, line: line, function: function)
   }
   
   public func debug(_ msg: String? = nil, file: String = #file, line: Int = #line,
-              function: String = #function, origin: String? = nil) {
+              function: String = #function) {
     if isDebugLogging {
-      Log.debug(msg, object: self, file: file, line: line, function: function, origin: origin)
+      Log.debug(msg, object: self, file: file, line: line, function: function)
     }
   }
   
@@ -168,9 +168,9 @@ public class Log {
   static public var debugClasses: [String:Bool] = [:]
   
   /// Closure to call on main thread in case of fatal error
-  static var fatalClosure: ((Log.Message, String?)->())? = nil
+  static var fatalClosure: ((Log.Message)->())? = nil
   
-  static public func onFatal(closure: ((Log.Message, String?)->())?) { fatalClosure = closure }
+  static public func onFatal(closure: ((Log.Message)->())?) { fatalClosure = closure }
   
   // Log objects shall not be created
   private init() {}
@@ -219,7 +219,7 @@ public class Log {
   }
   
   /// logs a LogMessage
-  static public func log( _ msg: Message, origin: String? = nil ) {
+  static public func log( _ msg: Message ) {
     guard (msg.logLevel.rawValue >= minLogLevel.rawValue) ||
           isDebugClass(msg.className) else { return }
     queue {
@@ -236,7 +236,7 @@ public class Log {
       }
     }
     if let closure = fatalClosure, msg.logLevel == .Fatal {
-      Task { await MainActor.run { closure(msg, origin) } }
+      Task { await MainActor.run { closure(msg) } }
     }
   }
   
@@ -244,19 +244,19 @@ public class Log {
   @discardableResult
   public static func log( _ message: String? = nil, object: Any? = nil,
     logLevel: LogLevel = .Info, file: String = #file, line: Int = #line,
-                          function: String = #function, origin: String? = nil) -> Message {
+    function: String = #function ) -> Message {
     let msg = Message( level: logLevel, object: object, fileName: file,
                        funcName: function, line: line, message: message )
-    log(msg, origin: origin)
+    log(msg)
     return msg
   }
   
   @discardableResult
   public static func debug( _ msg: String? = nil, object: Any? = nil,
     file: String = #file, line: Int = #line,
-    function: String = #function, origin: String? = nil ) -> Message {
+    function: String = #function ) -> Message {
     return log( msg, object: object, logLevel: .Debug, file: file, line: line,
-                function: function, origin: origin)
+                function: function )
   }
   
 } // class Log
