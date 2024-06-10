@@ -68,7 +68,17 @@ open class Alert {
       let target = presentationController ?? UIViewController.top()
       target?.present(alert, animated: true, completion: {
         guard target?.view.window == nil else { return }
-        Self.message(title: title, message: message, actions: actions, presentationController: presentationController)
+        ///if calling self again, Actions have no handler anymore :-(
+        /// e.g.: Self.message(title: title, message: message, actions: actions, presentationController: presentationController)
+        /// so need to dismiss and present again...
+        target?.dismiss(animated: false){
+          ///unfortunally with aditional delay otherwise ...present already presented exception
+          ///this happen e.g. on startup if a gql error occoures
+          onMainAfter {
+            let target = presentationController ?? UIViewController.top()
+            target?.present(alert, animated: true)
+          }
+        }
       })
     }
   }
