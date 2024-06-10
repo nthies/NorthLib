@@ -67,6 +67,7 @@ open class Alert {
       }
       let target = presentationController ?? UIViewController.top()
       target?.present(alert, animated: true, completion: {
+        //WARNING AFTER MAIL COMPOSER DISMISS MESSAGE IS MAY NOT DISPLAYED
         guard target?.view.window == nil else { return }
         ///if calling self again, Actions have no handler anymore :-(
         /// e.g.: Self.message(title: title, message: message, actions: actions, presentationController: presentationController)
