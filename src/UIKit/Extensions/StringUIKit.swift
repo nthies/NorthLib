@@ -91,4 +91,16 @@ extension String {
       }
     }
   }
+}///extension String htmlAttributed
+
+// MARK: - extension String MutableAttributedString with Modifier
+public extension String {
+  func attributedStringWith(lineHeightMultiplier: CGFloat) -> NSMutableAttributedString{
+    let attributedString = NSMutableAttributedString(string: self)
+    let paragraphStyle = NSMutableParagraphStyle()
+    paragraphStyle.lineHeightMultiple = lineHeightMultiplier
+    attributedString.addAttribute(NSAttributedString.Key.paragraphStyle, value:paragraphStyle, range:NSMakeRange(0, self.length))
+    return attributedString
+  }
+ 
 }
