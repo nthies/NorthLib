@@ -175,7 +175,7 @@ public class Overlay: NSObject, OverlaySpec, UIGestureRecognizerDelegate {
     
     let constr = pin(overlayView, toSafe: activeVC.view)
     if let offset = bottomOffset {
-      constr.bottom.isActive = false
+      constr.bottom?.isActive = false
       pin(overlayView.bottom, to: activeVC.view.bottom, dist: -offset)
     }
     
