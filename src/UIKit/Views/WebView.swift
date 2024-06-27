@@ -683,7 +683,7 @@ open class ButtonedWebView: UIView {
     required init?(coder: NSCoder) { super.init(coder: coder) }
   } 
   
-  public var webView = WebView()
+  public var webView: WebView
   /// The label acting as a button
   public lazy var buttonLabel = LabelButton(bwv: self)
   /// The X-Button (may be used to close the webview)
@@ -773,18 +773,21 @@ open class ButtonedWebView: UIView {
   
   public override init(frame: CGRect) {
     self.xButton = Button<CircledXView>()
+    self.webView = WebView()
     super.init(frame: frame)
     setup()
   }
   
   public required init?(coder: NSCoder) {
     self.xButton = Button<CircledXView>()
+    self.webView = WebView()
     super.init(coder: coder)
     setup()
   }
   
-  public init(customXButton:ButtonControl) {
+  public init(customXButton:ButtonControl, configuration: WKWebViewConfiguration?) {
     self.xButton = customXButton
+    self.webView = WebView(frame: .zero, configuration: configuration)
     super.init(frame: .zero)
     setup()
   }
