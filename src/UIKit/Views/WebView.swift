@@ -420,13 +420,7 @@ open class WebView: WKWebView, WKScriptMessageHandler,
   public func scrollToTop() {
     scrollView.setContentOffset(CGPoint(x:0, y:0), animated: false)
   }
-  
-  /// Passes the WebView's content as PDF to the given closure
-  @available(iOS 14.0, *)
-  public func pdf(closure: @escaping (Data?)->()) {
-    createPDF { res in closure(res.value()) }
-  }
-  
+    
   private func nav2a(webView: WKWebView, nav: WKNavigationAction) -> String {
     if let wv = webView as? WebView {
       let url = wv.url?.lastPathComponent ?? "[undefined url]"
