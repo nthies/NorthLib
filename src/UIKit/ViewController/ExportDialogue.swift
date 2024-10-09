@@ -96,8 +96,8 @@ open class ExportDialogue<T>: NSObject, UIActivityItemSource {
   }
   
   /// Create export dialogue
-  public func present(item: T, view: UIView? = nil, subject: String? = nil, onlineLink: String? = nil) {
-    present(item: item, altText: nil, onlineLink: onlineLink, view: view, subject: subject)
+  public func present(item: T, view: UIView? = nil, subject: String? = nil, onlineLink: String? = nil, image: UIImage? = nil) {
+    present(item: item, altText: nil, onlineLink: onlineLink, view: view, subject: subject, image: image)
   }
 
 } // ExportDialogue
