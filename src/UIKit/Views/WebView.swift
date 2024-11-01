@@ -441,11 +441,18 @@ open class WebView: WKWebView, WKScriptMessageHandler,
   // MARK: - WKNavigationDelegate protocol
   public func webView(_ webView: WKWebView, decidePolicyFor nav: WKNavigationAction,
                       decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-//    debug(nav2a(webView: webView, nav: nav))
+    //debug(nav2a(webView: webView, nav: nav))
     if let wv = webView as? WebView {
       let from = wv.originalUrl?.absoluteString
       let to = nav.request.description
+      //debug("from: \(from ?? "-") to: \(to) nav: \(nav.navigationType)")
       if from != to, to != "about:blank" {
+        guard nav.navigationType == .linkActivated else {
+          /// decisionHandler(.cancel) && webView.reload() or... .allow is possible
+          /// "reverts" 5d0384a by ringo 17.10.22 ...handled something to open link in app
+          decisionHandler(.allow)
+          return
+        }
         let content = (wv.originalUrl, URL(string: to))
         if $whenLinkPressed.count > 0 {
           $whenLinkPressed.notify(sender: self, content: content)
