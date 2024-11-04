@@ -257,6 +257,10 @@ open class WebView: WKWebView, WKScriptMessageHandler,
   @Callback<(from: URL?, to: URL?)>
   public var whenLinkPressed: Callback<(from: URL?, to: URL?)>.Store
   
+  /// on rotation on some iPhones sometimes whenLinkPressed is called with another random content url,
+  /// prevent this on tom open in section
+  public var suppressLinkPressedNotification: Bool = false
+  
   /// The closures to call when a load error has been detected
   /// The content passed will be err: Error
   @Callback<Error>
@@ -441,14 +445,17 @@ open class WebView: WKWebView, WKScriptMessageHandler,
   // MARK: - WKNavigationDelegate protocol
   public func webView(_ webView: WKWebView, decidePolicyFor nav: WKNavigationAction,
                       decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-//    debug(nav2a(webView: webView, nav: nav))
+    ///debug(nav2a(webView: webView, nav: nav))
     if let wv = webView as? WebView {
       let from = wv.originalUrl?.absoluteString
       let to = nav.request.description
       if from != to, to != "about:blank" {
         let content = (wv.originalUrl, URL(string: to))
+        ///debug("from: \(from ?? "-") to: \(to) nav: \(nav.navigationType)")
         if $whenLinkPressed.count > 0 {
-          $whenLinkPressed.notify(sender: self, content: content)
+          if suppressLinkPressedNotification == false {
+            $whenLinkPressed.notify(sender: self, content: content)
+          }
           decisionHandler(.cancel)
         }
         else { decisionHandler(.allow) }
