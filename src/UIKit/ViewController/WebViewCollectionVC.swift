@@ -165,8 +165,8 @@ open class WebViewCollectionVC: PageCollectionVC {
     var idx = 0
     debug("searching for: \(url.lastPathComponent)")
     for u in urls {
-      if u.url == url { 
-        self.index = idx 
+      if u.url.nonPublicURL == url.nonPublicURL {
+        self.index = idx
         debug("found at index: \(idx)")
         return 
       }
@@ -304,4 +304,11 @@ open class WebViewCollectionVC: PageCollectionVC {
   ///Overrideable
   open func onPageChange(){}
   
+}
+
+
+fileprivate extension URL {
+  var nonPublicURL:URL {
+    return URL(fileURLWithPath: self.absoluteString.replacingOccurrences(of: ".public.", with: "."))
+  }
 }
