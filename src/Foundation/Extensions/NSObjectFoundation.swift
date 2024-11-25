@@ -45,8 +45,17 @@ public extension String {
     OnceExecutedHelper.sharedInstance.timedRun[self] = Date()
     return false
   }
+  
+  /// Returns the last `n` path components of the string.
+  /// - Parameter count: The number of components to extract.
+  /// - Returns: A string containing the last `count` components, joined by `/`.
+  func lastPathComponents(_ count: Int) -> String {
+    if count < 1 { return "" }
+    let components = (self as NSString).pathComponents.suffix(count)
+    return "/" + components.joined(separator: "/").trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+  }
+  
 }
-
 
 public extension NSObject {
     
