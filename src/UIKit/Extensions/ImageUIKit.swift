@@ -116,4 +116,35 @@ extension UIImage {
     UIGraphicsEndImageContext()
     return newImage
   }
+  
+  public func imageWith(size: CGSize,
+                        scale: CGFloat = UIScreen.main.scale,
+                        tintColor: UIColor? = nil) -> UIImage? {
+      let aspectWidth = size.width / self.size.width
+      let aspectHeight = size.height / self.size.height
+      let aspectRatio = min(aspectWidth, aspectHeight) // scale proportional
+      
+      // calculate size, keep aspect
+      let newSize = CGSize(width: self.size.width * aspectRatio, height: self.size.height * aspectRatio)
+      
+      // calculate offset to draw centered
+      let xOffset = (size.width - newSize.width) / 2
+      let yOffset = (size.height - newSize.height) / 2
+      let drawRect = CGRect(origin: CGPoint(x: xOffset, y: yOffset), size: newSize)
+      
+    UIGraphicsBeginImageContextWithOptions(size, false, scale)
+      
+      
+    if let color = tintColor {
+        color.set()
+        self.withRenderingMode(.alwaysTemplate).draw(in: drawRect)
+    } else {
+        self.draw(in: drawRect)
+    }
+    
+      let resizedImage = UIGraphicsGetImageFromCurrentImageContext()
+      UIGraphicsEndImageContext()
+      
+      return resizedImage
+  }
 }
