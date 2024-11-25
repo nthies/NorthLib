@@ -66,8 +66,8 @@ public class Toast {
     
     tip.isUserInteractionEnabled = true
     tip.onTapping { _ in
+      completion?(true)
       tip.hideAnimated(duration: 1.0) {
-        completion?(true)
         Toast.removeTip(tip)
       }
     }

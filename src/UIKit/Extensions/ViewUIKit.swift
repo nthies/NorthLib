@@ -94,7 +94,7 @@ public extension UIView {
   }
   
   func hideAnimated(duration:CGFloat=0.3, completion: (()->())? = nil){
-    if isHidden == true { completion?(); return }
+    if isHidden == true { return }///do not call compleetion this causes an error in bookmarks revert double toggle!
     onMain { [weak self] in
       UIView.animate(withDuration: TimeInterval(duration)) {[weak self] in
         self?.alpha = 0.0
