@@ -400,6 +400,23 @@ open class File: ToString, DoesLog {
   }
   
   /**
+   copy resource with time
+   copies a file to a destination given by its pathname.
+   After copying the destination file's mtime is set to that of the source
+   file.
+   */
+  @discardableResult
+  public func copyResourceWT(to: String) -> Int {
+    var status = -123
+    let dest = File(to)
+    if dest.mtime != self.mtime {
+      status = self.copy(to: to)
+      dest.mtime = self.mtime
+    }
+    return status
+  }
+
+  /**
    * Moves the file to a new location.
    *
    * This method moves regular files only.
