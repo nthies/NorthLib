@@ -214,7 +214,7 @@ open class File: ToString, DoesLog {
     guard hasStat else { throw serror("\(path): No file status available") }
     let old = status!.st_mode
     let new = mode.withCString { s in stat_a2mode(old, s, 0) }
-    guard new != -1 else { throw error("\(mode): Invalid mode string") }
+    ///guard new != -1 else { throw error("\(mode): Invalid mode string") }///did not return -1 (anymore)
     self.mode = Int64(new)
   }
 
