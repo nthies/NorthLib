@@ -127,8 +127,11 @@ open class Alert {
   }
 
   /// Presents an action sheet with a number of buttons
-  public static func actionSheet(title: String? = nil, message: String? = nil,
-                                 actions: [UIAlertAction], completion : (()->())? = nil)  {
+  public static func actionSheet(title: String? = nil,
+                                 message: String? = nil,
+                                 actions: [UIAlertAction],
+                                 cancelTitle: String = "Abbrechen",
+                                 completion : (()->())? = nil)  {
     
     onMain {
       var msg: String? = nil
@@ -136,7 +139,7 @@ open class Alert {
       //Use Alert on iPad due provide popoverPresentationControllers Source view is unknown
       let style : UIAlertController.Style = Device.singleton == .iPad ? .alert : .actionSheet
       let alert = AlertController(title: title, message: msg, preferredStyle: style)
-      let cancelButton = UIAlertAction(title: "Abbrechen", style: .cancel)
+      let cancelButton = UIAlertAction(title: cancelTitle, style: .cancel)
       alert.onDisappear(closure: completion)
       for a in actions { alert.addAction(a) }
       alert.addAction(cancelButton)
