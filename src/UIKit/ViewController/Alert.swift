@@ -131,7 +131,8 @@ open class Alert {
                                  message: String? = nil,
                                  actions: [UIAlertAction],
                                  cancelTitle: String = "Abbrechen",
-                                 completion : (()->())? = nil)  {
+                                 completion : (()->())? = nil,
+                                 cancelHandler : ((UIAlertAction)->())? = nil)  {
     
     onMain {
       var msg: String? = nil
@@ -139,7 +140,7 @@ open class Alert {
       //Use Alert on iPad due provide popoverPresentationControllers Source view is unknown
       let style : UIAlertController.Style = Device.singleton == .iPad ? .alert : .actionSheet
       let alert = AlertController(title: title, message: msg, preferredStyle: style)
-      let cancelButton = UIAlertAction(title: cancelTitle, style: .cancel)
+      let cancelButton = UIAlertAction(title: cancelTitle, style: .cancel, handler: cancelHandler)
       alert.onDisappear(closure: completion)
       for a in actions { alert.addAction(a) }
       alert.addAction(cancelButton)
