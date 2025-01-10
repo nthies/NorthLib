@@ -258,7 +258,8 @@ open class AudioPlayer: NSObject, DoesLog {
         info[MPMediaItemPropertyArtwork] =
         MPMediaItemArtwork(boundsSize: image.size) { [weak self] s in 
           guard let self = self else { return UIImage() }
-          if self.resizedImage == nil {
+          if self.resizedImage == nil,
+             logoToAdd != image {///not add logo to same file!
             self.resizedImage
             = addLogo && gt_iOS16
             ? image.resized(to: s, withLogo: logoToAdd)
