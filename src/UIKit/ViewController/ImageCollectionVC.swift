@@ -41,6 +41,7 @@ open class ImageCollectionVC: PageCollectionVC, ImageCollectionVCSpec {
     setupXButton()
     setupPageControl()
     setupViewProvider()
+    xButton.additionalTapOffset = 30
     xButton.isHidden = false
     xButton.onPress {[weak self] _ in
       if let closure = self?.onXClosure {

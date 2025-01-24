@@ -460,7 +460,8 @@ open class ButtonControl: UIControl {
   based on the BView ButtonView subclass.
  */
 // MARK: - Button<View: ButtonView>
-open class Button<View: ButtonView>: ButtonControl {  
+open class Button<View: ButtonView>: ButtonControl {
+  public var additionalTapOffset:CGFloat = 0
   open var buttonView: View { return super.view as! View }
   public init( frame: CGRect ) { super.init( view: View(), frame: frame ) }
   public convenience init( width: CGFloat = 30, height: CGFloat = 30 ) {
@@ -469,7 +470,11 @@ open class Button<View: ButtonView>: ButtonControl {
   required public init?(coder aDecoder: NSCoder) {
     super.init(coder: aDecoder)
     fatal("init(coder:) has not been implemented")
-  }  
+  }
+  
+  public override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
+        return bounds.insetBy(dx: -additionalTapOffset, dy: -additionalTapOffset).contains(point)
+    }
 } // Button<View>
 
 
