@@ -361,11 +361,10 @@ open class BackgroundSession: HttpSession {
       File(path).move(to: dest)
       log("Background download: file downloaded to \(dest)")
     }
-    cleanup(err)
   }
   
   // Background download failed
-  fileprivate func downloadFailed(error err: Error) {
+  fileprivate func downloadFinished(error err: Error? = nil) {
     cleanup(err)
   }
   
@@ -388,14 +387,14 @@ open class BackgroundSession: HttpSession {
   @_documentation(visibility: private)
   public override func urlSession(_ session: URLSession, task: URLSessionTask, 
                                   didCompleteWithError completionError: Swift.Error?) {
-    var err = completionError
+    var err: Error? = nil
     if let resp = task.response as? HTTPURLResponse {
       let statusCode = resp.statusCode
       if !(200...299).contains(statusCode) {
         err = HttpError.serverError(statusCode)
       }
     }
-    if let err { downloadFailed(error: err) }
+    downloadFinished(error: err)
   }
   
   // MARK: - URLSessionDownloadDelegate Protocol
