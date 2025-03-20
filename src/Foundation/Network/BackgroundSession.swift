@@ -231,11 +231,47 @@ open class BackgroundSession: HttpSession {
   /// - Throws: `BgSessionError.alreadyInUse` if a session for the same URL is already in use 
   ///   
   public convenience init(_ url: String, callback: @escaping (Error?)->()) throws {
-    for (name, bgsess) in BackgroundSession.bgSessions {
-      if bgsess.url == url { throw BgSessionError.alreadyInUse(url) }
-    }
+    if BackgroundSession.search(url: url) { throw BgSessionError.alreadyInUse(url) }
     self.init(url)
     self.callback = callback
+  }
+  
+  // Search for active (in memory) BackgroundSession
+  static private func searchActive(url: String) -> Bool {
+    for (name, sess) in bgSessions {
+      if sess.url == url { return true; }
+    }
+    return false
+  }
+  
+  // Search for BackgroundSession waiting for completion
+  static private func searchWaiting(url: String) -> String? {
+    let udef = UserDefaults()
+    if let sessions = udef.dictionary(forKey: "BackgroundSessions") {
+      for (name, sess) in sessions {
+        if let s = sess as? [String:Any], let surl = s["url"] as? String {
+          if surl == url { return name }
+        }
+      }
+    }
+    return nil
+  }
+  
+  /// Search for active (in memory) BackgroundSessions or Sessions waiting to
+  /// be resumed.
+  /// 
+  /// This methods takes a String _url_ as argument and searches for BackgroundSessions
+  /// downloading this _url_. Such a Session may be in memory (has been started and 
+  /// the App has not been suspended) or is represented via UserDefaults and is
+  /// waiting to be resumed.
+  /// 
+  /// - Parameters:
+  ///   - url: the url of the file to download
+  ///   
+  /// - Returns: true (is downloading) or false
+  /// 
+  static public func search(url: String) -> Bool {
+    return searchActive(url: url) || searchWaiting(url: url) != nil
   }
     
   /// Factory method returning an already defined session (if it has been previously created)
